@@ -18,6 +18,9 @@
 - **系统监控**：服务器信息（CPU/内存/JVM/磁盘）、在线用户、缓存监控（基于 MXBean + Redis INFO）。
 - **工程化**：后端多阶段 `Dockerfile`、前端 `Dockerfile` + `nginx.conf`、生产 `docker-compose.prod.yml`、部署文档。
 
+### 修复
+- 修复启动期 Bean 循环依赖：`DataScopeHelper` 在 MyBatis `sqlSessionFactory` 构建阶段即被需要，而其注入的 `SysDeptService` 底层依赖 Mapper 会形成循环。改为对 `SysDeptService` 使用 `@Lazy` 懒加载代理，仅在请求执行带 `@DataScope` 的查询时才初始化。
+
 ### 技术栈
 - 后端：Spring Boot 4.1.0 + Java 25、Spring Security 7.1、MyBatis-Plus 3.5.15、PostgreSQL 17、Redis 8、Redisson 4.6。
 - 前端：Vite 8 + React 19 + TypeScript 7、Ant Design 6.5、Tailwind CSS 4、Zustand 5、TanStack Query 5。

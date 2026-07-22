@@ -2,7 +2,7 @@ package com.nova.admin.modules.system.datascope;
 
 import com.nova.admin.modules.system.service.SysDeptService;
 import com.nova.admin.security.LoginUser;
-import lombok.RequiredArgsConstructor;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -12,12 +12,20 @@ import java.util.stream.Collectors;
  * 根据当前登录用户的数据范围，生成可用于 SQL WHERE 的布尔表达式片段。
  *
  * <p>返回 null 表示不加任何过滤（全部数据权限）。
+ *
+ * <p>注意：{@code deptService} 使用 {@link Lazy} 注入。本类在 MyBatis 的
+ * {@code sqlSessionFactory} 构建阶段（MybatisPlusAutoConfiguration）就需要就绪，
+ * 而 deptService 底层依赖 Mapper / sqlSessionFactory，直接注入会形成启动期循环依赖。
+ * 改为懒加载代理后，仅在请求真正执行带 @DataScope 的查询时才会初始化 deptService。
  */
 @Component
-@RequiredArgsConstructor
 public class DataScopeHelper {
 
     private final SysDeptService deptService;
+
+    public DataScopeHelper(@Lazy SysDeptService deptService) {
+        this.deptService = deptService;
+    }
 
     /**
      * 生成数据权限过滤 SQL 片段（不含 AND 关键字，调用方负责拼接）。
