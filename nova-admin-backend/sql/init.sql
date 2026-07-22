@@ -350,6 +350,39 @@ VALUES
     (32, 31, '上传文件', 'F', 'infra:file:upload', '',            '',                 '',                   0, 0, 1, NOW()),
     (33, 31, '删除文件', 'F', 'infra:file:remove', '',            '',                 '',                   1, 0, 1, NOW());
 
+-- 系统管理子菜单与权限（补全此前模块所需的种子数据，否则超管无权限访问）
+INSERT INTO sys_menu (id, parent_id, name, type, perms, path, component, icon, sort, visible, status, create_time)
+VALUES
+    -- 部门管理
+    (11, 1, '部门管理', 'C', 'system:dept:list',   '/system/dept', 'system/dept/index', 'ApartmentOutlined', 0, 1, 1, NOW()),
+    (12, 11, '新增部门', 'F', 'system:dept:add',    '', '', '', 0, 0, 1, NOW()),
+    (13, 11, '修改部门', 'F', 'system:dept:edit',   '', '', '', 1, 0, 1, NOW()),
+    (14, 11, '删除部门', 'F', 'system:dept:remove', '', '', '', 2, 0, 1, NOW()),
+    -- 用户管理
+    (15, 1, '用户管理', 'C', 'system:user:list',      '/system/user', 'system/user/index', 'UserOutlined', 1, 1, 1, NOW()),
+    (16, 15, '新增用户', 'F', 'system:user:add',       '', '', '', 0, 0, 1, NOW()),
+    (17, 15, '修改用户', 'F', 'system:user:edit',      '', '', '', 1, 0, 1, NOW()),
+    (18, 15, '删除用户', 'F', 'system:user:remove',    '', '', '', 2, 0, 1, NOW()),
+    (19, 15, '重置密码', 'F', 'system:user:reset-pwd', '', '', '', 3, 0, 1, NOW()),
+    -- 角色管理
+    (20, 1, '角色管理', 'C', 'system:role:list',   '/system/role', 'system/role/index', 'TeamOutlined', 2, 1, 1, NOW()),
+    (21, 20, '新增角色', 'F', 'system:role:add',    '', '', '', 0, 0, 1, NOW()),
+    (22, 20, '修改角色', 'F', 'system:role:edit',   '', '', '', 1, 0, 1, NOW()),
+    (23, 20, '删除角色', 'F', 'system:role:remove', '', '', '', 2, 0, 1, NOW()),
+    -- 菜单管理
+    (24, 1, '菜单管理', 'C', 'system:menu:list',   '/system/menu', 'system/menu/index', 'MenuOutlined', 3, 1, 1, NOW()),
+    (25, 24, '新增菜单', 'F', 'system:menu:add',    '', '', '', 0, 0, 1, NOW()),
+    (26, 24, '修改菜单', 'F', 'system:menu:edit',   '', '', '', 1, 0, 1, NOW()),
+    (27, 24, '删除菜单', 'F', 'system:menu:remove', '', '', '', 2, 0, 1, NOW()),
+    -- 字典管理
+    (28, 1, '字典管理', 'C', 'system:dict:list',   '/system/dict', 'system/dict/index', 'BookOutlined', 4, 1, 1, NOW()),
+    (29, 28, '新增字典', 'F', 'system:dict:add',    '', '', '', 0, 0, 1, NOW()),
+    (30, 28, '修改字典', 'F', 'system:dict:edit',   '', '', '', 1, 0, 1, NOW()),
+    (34, 28, '删除字典', 'F', 'system:dict:remove', '', '', '', 2, 0, 1, NOW()),
+    -- 日志管理
+    (35, 1, '日志管理', 'C', 'system:log:list',    '/system/log', 'system/log/index', 'FileOutlined', 5, 1, 1, NOW()),
+    (36, 35, '删除日志', 'F', 'system:log:remove', '', '', '', 0, 0, 1, NOW());
+
 -- 超级管理员用户 (密码 admin123 的 BCrypt 哈希)
 -- 替换为你生成的实际哈希
 INSERT INTO sys_user (id, username, password, nickname, dept_id, super_admin, status, create_time)
