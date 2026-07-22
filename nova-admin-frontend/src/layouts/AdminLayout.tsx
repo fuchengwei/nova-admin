@@ -175,30 +175,34 @@ export default function AdminLayout() {
     ];
   }, [menus, t]);
 
-  // 根据当前路径计算需要展开的父菜单
-  const defaultOpenKeys = useMemo(() => {
-    const pathname = location.pathname;
-    // 从动态菜单中查找
-    function findParentKeys(items: any[], target: string, parents: string[] = []): string[] {
-      for (const item of items) {
-        if (item.key === target) return parents;
-        if (item.children) {
-          const found = findParentKeys(item.children, target, [...parents, item.key]);
-          if (found.length > 0) return found;
-        }
+  // 收集所有含子菜单的父级 key，默认全部展开，保证功能菜单可见
+  const parentKeys = useMemo(() => collectOpenKeys(menuItems), [menuItems]);
+
+  // 根据当前路径查找祖先链
+  function findParentKeys(
+    items: any[],
+    target: string,
+    parents: string[] = [],
+  ): string[] {
+    for (const item of items) {
+      if (item.key === target) return parents;
+      if (item.children) {
+        const found = findParentKeys(item.children, target, [...parents, item.key]);
+        if (found.length > 0) return found;
       }
-      return [];
     }
-    return findParentKeys(menuItems, pathname);
-  }, [location.pathname, menuItems]);
+    return [];
+  }
 
-  const [openKeys, setOpenKeys] = useState<string[]>(defaultOpenKeys);
+  const [openKeys, setOpenKeys] = useState<string[]>([]);
 
+  // 菜单加载后默认展开所有父级；切换路由时额外展开当前路由的祖先节点
   useEffect(() => {
-    if (defaultOpenKeys.length > 0) {
-      setOpenKeys(defaultOpenKeys);
-    }
-  }, [defaultOpenKeys]);
+    const routeParents = findParentKeys(menuItems, location.pathname);
+    setOpenKeys((prev) =>
+      Array.from(new Set([...prev, ...parentKeys, ...routeParents])),
+    );
+  }, [location.pathname, parentKeys, menuItems]);
 
   const langMenu = {
     items: [
