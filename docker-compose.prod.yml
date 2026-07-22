@@ -1,0 +1,92 @@
+# 生产环境编排：基础设施 + 后端 + 前端（Nginx）
+# 用法：
+#   docker compose -f docker-compose.prod.yml build
+#   docker compose -f docker-compose.prod.yml up -d
+#
+# 说明：
+#   - 后端使用 prod profile，数据库连接信息通过环境变量注入
+#   - 前端 Nginx 暴露 80 端口，并把 /api 反向代理到 backend:8080
+#   - 生产请务必修改下方所有密码 / Secret
+
+name: nova-admin-prod
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: nova-postgres-prod
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: nova_admin
+      POSTGRES_USER: nova
+      POSTGRES_PASSWORD: ${NOVA_DB_PASSWORD:-nova_pass_2026}
+      TZ: Asia/Shanghai
+    volumes:
+      - pg-data:/var/lib/postgresql/data
+      - ./nova-admin-backend/sql/init.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
+    networks: [nova-net]
+
+  redis:
+    image: redis:8-alpine
+    container_name: nova-redis-prod
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes", "--requirepass", "${NOVA_REDIS_PASSWORD:-nova_redis_2026}"]
+    volumes:
+      - redis-data:/data
+    networks: [nova-net]
+
+  minio:
+    image: minio/minio:latest
+    container_name: nova-minio-prod
+    restart: unless-stopped
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-nova_minio}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-nova_minio_2026}
+    command: server /data --console-address ":9001"
+    volumes:
+      - minio-data:/data
+    networks: [nova-net]
+
+  backend:
+    build:
+      context: ./nova-admin-backend
+      dockerfile: Dockerfile
+    image: nova-admin-backend:1.0.0
+    container_name: nova-backend
+    restart: unless-stopped
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      NOVA_DB_URL: jdbc:postgresql://postgres:5432/nova_admin
+      NOVA_DB_USER: nova
+      NOVA_DB_PASSWORD: ${NOVA_DB_PASSWORD:-nova_pass_2026}
+      NOVA_REDIS_HOST: redis
+      NOVA_REDIS_PORT: "6379"
+      NOVA_REDIS_PASSWORD: ${NOVA_REDIS_PASSWORD:-nova_redis_2026}
+      NOVA_JWT_SECRET: ${NOVA_JWT_SECRET:?请通过环境变量提供 NOVA_JWT_SECRET}
+    depends_on:
+      postgres:
+        condition: service_started
+      redis:
+        condition: service_started
+    networks: [nova-net]
+
+  frontend:
+    build:
+      context: ./nova-admin-frontend
+      dockerfile: Dockerfile
+    image: nova-admin-frontend:1.0.0
+    container_name: nova-frontend
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    networks: [nova-net]
+
+networks:
+  nova-net:
+    driver: bridge
+
+volumes:
+  pg-data:
+  redis-data:
+  minio-data:

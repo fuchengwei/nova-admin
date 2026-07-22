@@ -63,9 +63,25 @@ pnpm dev
 | --- | --- | --- |
 | `admin` | `admin123` | 超级管理员 |
 
+## 部署
+
+容器化构建与编排见 [部署文档](docs/deployment.md)：
+
+```bash
+# 生产镜像构建并启动（后端 + 前端 + PG/Redis/MinIO）
+docker compose -f docker-compose.prod.yml build
+docker compose -f docker-compose.prod.yml up -d
+```
+
+- 前端（Nginx）暴露 `80`，并把 `/api` 反代到后端
+- 后端镜像：多阶段 `Dockerfile`（Maven 3.9 + Eclipse Temurin JDK 25）
+- 前端镜像：多阶段 `Dockerfile`（Node 22 构建 + Nginx 1.27 托管）
+
 ## 文档
 
 - 设计文档：[`docs/plans/2026-07-22-nova-admin-design.md`](docs/plans/2026-07-22-nova-admin-design.md)
+- 部署文档：[`docs/deployment.md`](docs/deployment.md)
+- 更新日志：[`CHANGELOG.md`](CHANGELOG.md)
 
 ## 许可证
 
