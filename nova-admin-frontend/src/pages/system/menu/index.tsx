@@ -1,11 +1,11 @@
 import { useState, useMemo } from 'react';
-import { Button, Tree, Space, Tag, Popconfirm, message } from 'antd';
-import type { DataNode } from 'antd/es/tree';
+import { Button, Tree, Space, Tag, Popconfirm, message, Form } from 'antd';
 import {
   PlusOutlined,
   EditOutlined,
   DeleteOutlined,
 } from '@ant-design/icons';
+import * as Icons from '@ant-design/icons';
 import {
   ProCard,
   ProDescriptions,
@@ -14,7 +14,6 @@ import {
   ProFormRadio,
   ProFormTreeSelect,
   ProFormDigit,
-  ProFormDependency,
 } from '@ant-design/pro-components';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
@@ -31,17 +30,25 @@ import type { MenuInfo } from '@/types/api';
 type TreeSelectNode = { value: number; title: string; children?: TreeSelectNode[] };
 
 const iconMap: Record<string, React.ReactNode> = {
-  DashboardOutlined: <span>📊</span>,
-  UserOutlined: <span>👤</span>,
-  SettingOutlined: <span>⚙️</span>,
-  BarsOutlined: <span>☰</span>,
-  ApartmentOutlined: <span>🏢</span>,
+  SettingOutlined: <Icons.SettingOutlined />,
+  ApartmentOutlined: <Icons.ApartmentOutlined />,
+  UserOutlined: <Icons.UserOutlined />,
+  TeamOutlined: <Icons.TeamOutlined />,
+  MenuOutlined: <Icons.MenuOutlined />,
+  BookOutlined: <Icons.BookOutlined />,
+  CodeOutlined: <Icons.CodeOutlined />,
+  FileOutlined: <Icons.FileOutlined />,
+  MonitorOutlined: <Icons.MonitorOutlined />,
+  CloudServerOutlined: <Icons.CloudServerOutlined />,
+  ScheduleOutlined: <Icons.ScheduleOutlined />,
+  DashboardOutlined: <Icons.DashboardOutlined />,
+  SafetyOutlined: <Icons.SafetyOutlined />,
+  TableOutlined: <Icons.TableOutlined />,
+  ToolOutlined: <Icons.ToolOutlined />,
 };
 
-const getIcon = (iconName?: string) => {
-  if (!iconName) return null;
-  return iconMap[iconName] ?? <span>{iconName}</span>;
-};
+const getIcon = (iconName?: string): React.ReactNode =>
+  (iconName && iconMap[iconName]) || <Icons.AppstoreOutlined />;
 
 const getTypeTag = (t: (k: string) => string, type?: string) => {
   if (type === 'M') return <Tag color="blue">{t('menu.typeDir')}</Tag>;
@@ -70,19 +77,24 @@ export default function MenuPage() {
   const updateMutation = useMutation({ mutationFn: updateMenu });
   const deleteMutation = useMutation({ mutationFn: deleteMenu });
 
-  const findMenu = (nodes: MenuInfo[] | undefined, id: number): MenuInfo | null => {
-    if (!nodes) return null;
-    for (const n of nodes) {
-      if (n.id === id) return n;
-      const f = findMenu(n.children, id);
-      if (f) return f;
-    }
-    return null;
-  };
+  const menuMap = useMemo(() => {
+    const map = new Map<number, MenuInfo>();
+    const walk = (nodes: MenuInfo[]) => {
+      for (const n of nodes) {
+        map.set(n.id, n);
+        if (n.children) walk(n.children);
+      }
+    };
+    if (menuTree) walk(menuTree);
+    return map;
+  }, [menuTree]);
 
-  const handleSelect = (_: unknown, info: { node: DataNode }) => {
-    const key = info.node.key as number;
-    setSelectedMenu(findMenu(menuTree, key));
+  const handleSelect = (selectedKeys: React.Key[]) => {
+    if (selectedKeys.length === 0) {
+      setSelectedMenu(null);
+      return;
+    }
+    setSelectedMenu(menuMap.get(Number(selectedKeys[0])) ?? null);
   };
 
   const handleAdd = () => {
@@ -101,31 +113,6 @@ export default function MenuPage() {
     setEditMode(true);
     setModalOpen(true);
   };
-
-  const menuNodes: DataNode[] = useMemo(
-    () =>
-      (menuTree ?? []).map((n) => ({
-        key: n.id,
-        title: (
-          <Space size={4}>
-            {getIcon(n.icon)}
-            <span>{n.name}</span>
-          </Space>
-        ),
-        children: n.children
-          ? (n.children.map((c) => ({
-              key: c.id,
-              title: (
-                <Space size={4}>
-                  {getIcon(c.icon)}
-                  <span>{c.name}</span>
-                </Space>
-              ),
-            })) as DataNode[])
-          : undefined,
-      })),
-    [menuTree],
-  );
 
   const buildTreeSelectData = (data: MenuInfo[]): TreeSelectNode[] =>
     data.map((item) => ({
@@ -146,26 +133,35 @@ export default function MenuPage() {
       </div>
 
       <div className="flex gap-4 flex-1 min-h-0">
-        <ProCard className="w-72 shrink-0 overflow-auto" loading={isLoading}>
-          {menuNodes.length > 0 && (
+        <ProCard className="flex-1 w-72 shrink-0 overflow-auto" loading={isLoading}>
+          {menuTree && menuTree.length > 0 && (
             <Tree
-              treeData={menuNodes}
+              treeData={menuTree}
+              fieldNames={{ key: 'id', title: 'name', children: 'children' }}
               defaultExpandAll
               showLine={{ showLeafIcon: false }}
-              showIcon
+              showIcon={false}
+              titleRender={(node: MenuInfo) => (
+                <Space size={4}>
+                  {getIcon(node.icon)}
+                  <span>{node.name}</span>
+                </Space>
+              )}
               onSelect={handleSelect}
               selectedKeys={selectedMenu ? [selectedMenu.id] : []}
             />
           )}
         </ProCard>
 
-        <ProCard className="flex-1 overflow-auto">
+        <ProCard className="flex-2 h-full">
           {selectedMenu ? (
             <>
               <ProDescriptions<MenuInfo>
                 title={selectedMenu.name}
                 dataSource={selectedMenu}
                 column={2}
+                bordered
+                size='small'
                 columns={[
                   { title: t('menu.menuName'), dataIndex: 'name' },
                   { title: t('menu.menuType'), dataIndex: 'type', render: (_, r) => getTypeTag(t, r.type) },
@@ -188,10 +184,12 @@ export default function MenuPage() {
                   {
                     title: t('menu.status'),
                     dataIndex: 'status',
-                    valueEnum: {
-                      1: { text: t('menu.enabled'), status: 'Success' },
-                      0: { text: t('menu.disabled'), status: 'Error' },
-                    },
+                    render: (_, r) =>
+                      r.status === 1 ? (
+                        <Tag color="green">{t('menu.enabled')}</Tag>
+                      ) : (
+                        <Tag color="red">{t('menu.disabled')}</Tag>
+                      ),
                   },
                   {
                     title: t('menu.keepAlive'),
@@ -262,29 +260,29 @@ export default function MenuPage() {
         initialValues={
           editMode && selectedMenu
             ? {
-                parentId: selectedMenu.parentId,
-                name: selectedMenu.name,
-                type: selectedMenu.type,
-                perms: selectedMenu.perms,
-                path: selectedMenu.path,
-                component: selectedMenu.component,
-                redirect: selectedMenu.redirect,
-                icon: selectedMenu.icon,
-                sort: selectedMenu.sort,
-                visible: selectedMenu.visible,
-                status: selectedMenu.status,
-                keepAlive: selectedMenu.keepAlive,
-                alwaysShow: selectedMenu.alwaysShow,
-              }
+              parentId: selectedMenu.parentId,
+              name: selectedMenu.name,
+              type: selectedMenu.type,
+              perms: selectedMenu.perms,
+              path: selectedMenu.path,
+              component: selectedMenu.component,
+              redirect: selectedMenu.redirect,
+              icon: selectedMenu.icon,
+              sort: selectedMenu.sort,
+              visible: selectedMenu.visible,
+              status: selectedMenu.status,
+              keepAlive: selectedMenu.keepAlive,
+              alwaysShow: selectedMenu.alwaysShow,
+            }
             : {
-                parentId: selectedMenu?.id ?? 0,
-                type: 'M',
-                sort: 0,
-                visible: 1,
-                status: 1,
-                keepAlive: 1,
-                alwaysShow: 1,
-              }
+              parentId: selectedMenu?.id ?? 0,
+              type: 'M',
+              sort: 0,
+              visible: 1,
+              status: 1,
+              keepAlive: 1,
+              alwaysShow: 1,
+            }
         }
         onFinish={async (values) => {
           const res =
@@ -328,9 +326,9 @@ export default function MenuPage() {
           rules={[{ required: true, message: t('menu.menuNameRequired') }]}
         />
 
-        <ProFormDependency name={['type']}>
-          {({ type }) => {
-            const mt = (type as string) || selectedMenu?.type || 'M';
+        <Form.Item noStyle shouldUpdate>
+          {(form) => {
+            const mt = ((form.getFieldValue('type') as string) || selectedMenu?.type || 'M');
             return (
               <>
                 {mt !== 'F' && <ProFormText name="icon" label={t('menu.icon')} />}
@@ -369,7 +367,7 @@ export default function MenuPage() {
               </>
             );
           }}
-        </ProFormDependency>
+        </Form.Item>
 
         <ProFormDigit name="sort" label={t('menu.sort')} min={0} />
         <ProFormRadio.Group
