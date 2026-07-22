@@ -343,6 +343,13 @@ VALUES
     (2, 0, '监控管理', 'M', '', '/monitor', '',          'MonitorOutlined',    1, 1, 1, NOW()),
     (3, 0, '基础设施', 'M', '', '/infra',   '',          'CloudServerOutlined',2, 1, 1, NOW());
 
+-- 基础设施-文件管理菜单与权限
+INSERT INTO sys_menu (id, parent_id, name, type, perms, path, component, icon, sort, visible, status, create_time)
+VALUES
+    (31, 3,  '文件管理', 'C', 'infra:file:list',   '/infra/file', 'infra/file/index', 'FolderOpenOutlined', 0, 1, 1, NOW()),
+    (32, 31, '上传文件', 'F', 'infra:file:upload', '',            '',                 '',                   0, 0, 1, NOW()),
+    (33, 31, '删除文件', 'F', 'infra:file:remove', '',            '',                 '',                   1, 0, 1, NOW());
+
 -- 超级管理员用户 (密码 admin123 的 BCrypt 哈希)
 -- 替换为你生成的实际哈希
 INSERT INTO sys_user (id, username, password, nickname, dept_id, super_admin, status, create_time)

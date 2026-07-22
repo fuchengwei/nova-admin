@@ -152,6 +152,14 @@ export default function AdminLayout() {
           { key: '/system/menu', icon: <Icons.MenuOutlined />, label: t('menu.menu') },
         ],
       },
+      {
+        key: '/infra',
+        icon: <Icons.CloudServerOutlined />,
+        label: t('menu.infra'),
+        children: [
+          { key: '/infra/file', icon: <Icons.FileOutlined />, label: t('menu.file') },
+        ],
+      },
     ];
   }, [menus, t]);
 
