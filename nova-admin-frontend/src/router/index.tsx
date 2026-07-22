@@ -19,6 +19,7 @@ import FilePage from '@/pages/infra/file';
 
 // 监控管理
 import JobPage from '@/pages/monitor/job';
+import ServerMonitorPage from '@/pages/monitor/server';
 
 // 系统工具
 import GenPage from '@/pages/tool/gen';
@@ -34,6 +35,7 @@ const componentMap: Record<string, () => React.JSX.Element> = {
   '/system/log': LogPage,
   '/infra/file': FilePage,
   '/monitor/job': JobPage,
+  '/monitor/server': ServerMonitorPage,
   '/tool/gen': GenPage,
 };
 
@@ -79,6 +81,7 @@ export const router = createBrowserRouter([
       { path: 'system/log', element: <LogPage /> },
       { path: 'infra/file', element: <FilePage /> },
       { path: 'monitor/job', element: <JobPage /> },
+      { path: 'monitor/server', element: <ServerMonitorPage /> },
       { path: 'tool/gen', element: <GenPage /> },
     ],
   },

@@ -169,6 +169,7 @@ export default function AdminLayout() {
         label: t('menu.monitor'),
         children: [
           { key: '/monitor/job', icon: <Icons.ScheduleOutlined />, label: t('menu.job') },
+          { key: '/monitor/server', icon: <Icons.DashboardOutlined />, label: t('menu.server') },
         ],
       },
     ];

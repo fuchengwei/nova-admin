@@ -400,6 +400,13 @@ VALUES
     (46, 41, '恢复任务', 'F', 'monitor:job:resume', '', '', '', 4, 0, 1, NOW()),
     (47, 41, '执行任务', 'F', 'monitor:job:run',    '', '', '', 5, 0, 1, NOW());
 
+-- 监控管理-服务监控菜单与权限（在线用户/缓存为同一页签下的权限点）
+INSERT INTO sys_menu (id, parent_id, name, type, perms, path, component, icon, sort, visible, status, create_time)
+VALUES
+    (52, 2,  '服务监控', 'C', 'monitor:server:list', '/monitor/server', 'monitor/server/index', 'DashboardOutlined', 1, 1, 1, NOW()),
+    (53, 52, '在线用户', 'F', 'monitor:online:list', '', '', '', 0, 0, 1, NOW()),
+    (54, 52, '缓存监控', 'F', 'monitor:cache:list', '', '', '', 1, 0, 1, NOW());
+
 -- 系统工具-代码生成器菜单与权限
 INSERT INTO sys_menu (id, parent_id, name, type, perms, path, component, icon, sort, visible, status, create_time)
 VALUES
