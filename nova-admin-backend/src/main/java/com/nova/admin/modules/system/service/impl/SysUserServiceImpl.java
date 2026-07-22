@@ -52,8 +52,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
                 .eq(query.getStatus() != null, SysUser::getStatus, query.getStatus())
                 .eq(query.getDeptId() != null, SysUser::getDeptId, query.getDeptId())
                 .ge(query.getCreateTimeStart() != null, SysUser::getCreateTime, query.getCreateTimeStart())
-                .le(query.getCreateTimeEnd() != null, SysUser::getCreateTime, query.getCreateTimeEnd())
-                .orderByDesc(SysUser::getCreateTime);
+                .le(query.getCreateTimeEnd() != null, SysUser::getCreateTime, query.getCreateTimeEnd());
 
         Page<SysUser> result = (Page<SysUser>) getBaseMapper().selectUserPage(page, wrapper);
 
