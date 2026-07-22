@@ -20,8 +20,8 @@ import {
   PlusOutlined,
   EditOutlined,
   DeleteOutlined,
-  ApartmentOutlined,
 } from '@ant-design/icons';
+import * as Icons from '@ant-design/icons';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import type { MenuInfo } from '@/types/api';
@@ -35,6 +35,28 @@ import {
 } from '@/api/menu';
 
 const QUERY_KEY = ['menuTree'];
+
+/** 字符串图标名 → React 图标组件映射 */
+const iconMap: Record<string, React.ReactNode> = {
+  SettingOutlined: <Icons.SettingOutlined />,
+  ApartmentOutlined: <Icons.ApartmentOutlined />,
+  UserOutlined: <Icons.UserOutlined />,
+  TeamOutlined: <Icons.TeamOutlined />,
+  MenuOutlined: <Icons.MenuOutlined />,
+  BookOutlined: <Icons.BookOutlined />,
+  CodeOutlined: <Icons.CodeOutlined />,
+  FileOutlined: <Icons.FileOutlined />,
+  MonitorOutlined: <Icons.MonitorOutlined />,
+  CloudServerOutlined: <Icons.CloudServerOutlined />,
+  ScheduleOutlined: <Icons.ScheduleOutlined />,
+  DashboardOutlined: <Icons.DashboardOutlined />,
+  SafetyOutlined: <Icons.SafetyOutlined />,
+  TableOutlined: <Icons.TableOutlined />,
+  ToolOutlined: <Icons.ToolOutlined />,
+};
+
+const getIcon = (iconName?: string): React.ReactNode =>
+  (iconName && iconMap[iconName]) || <Icons.AppstoreOutlined />;
 
 export default function MenuPage() {
   const { t } = useTranslation();
@@ -237,8 +259,13 @@ export default function MenuPage() {
               fieldNames={{ key: 'id', title: 'name', children: 'children' }}
               defaultExpandAll
               showLine={{ showLeafIcon: false }}
-              showIcon
-              icon={<ApartmentOutlined />}
+              showIcon={false}
+              titleRender={(node: any) => (
+                <Space size={4}>
+                  {getIcon(node.icon)}
+                  <span>{node.name}</span>
+                </Space>
+              )}
               onSelect={handleSelect}
               selectedKeys={selectedMenu ? [selectedMenu.id] : []}
             />

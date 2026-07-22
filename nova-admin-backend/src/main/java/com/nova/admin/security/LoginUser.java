@@ -47,4 +47,7 @@ public class LoginUser implements Serializable {
 
     /** 登录 IP */
     private String loginIp;
+
+    /** 当前 access token 的唯一标识（jti），用于精确黑名单（注销/踢下线） */
+    private String jti;
 }

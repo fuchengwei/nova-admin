@@ -62,6 +62,10 @@ public class AuthQueryService {
                 ? menuMapper.selectList(null)
                 : menuMapper.selectMenusByUserId(userId);
 
+        // 按 sort 升序排序，保证前后端菜单顺序一致
+        menus.sort(java.util.Comparator.comparingInt(
+                m -> m.getSort() == null ? 0 : m.getSort()));
+
         List<MenuTreeDTO> all = new ArrayList<>();
         Map<Long, MenuTreeDTO> map = new HashMap<>();
         for (SysMenu m : menus) {
@@ -81,6 +85,13 @@ public class AuthQueryService {
                     roots.add(dto);
                 }
             }
+        }
+        // 根节点与每个节点的子节点都按 sort 升序排序
+        roots.sort(java.util.Comparator.comparingInt(
+                d -> d.getSort() == null ? 0 : d.getSort()));
+        for (MenuTreeDTO dto : all) {
+            dto.getChildren().sort(java.util.Comparator.comparingInt(
+                    c -> c.getSort() == null ? 0 : c.getSort()));
         }
         return roots;
     }

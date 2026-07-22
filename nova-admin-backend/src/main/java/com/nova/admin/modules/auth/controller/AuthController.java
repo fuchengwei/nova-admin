@@ -49,7 +49,7 @@ public class AuthController extends BaseController {
     @Operation(summary = "注销（踢下线）")
     @PostMapping("/logout")
     public R<Void> logout() {
-        SecurityUtils.getLoginUser().ifPresent(u -> authService.logout(u.getUserId()));
+        SecurityUtils.getLoginUser().ifPresent(u -> authService.logout(u.getJti(), u.getUserId()));
         return ok();
     }
 }

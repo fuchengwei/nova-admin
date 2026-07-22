@@ -146,11 +146,18 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu> impl
 
         // 为每个节点设置 children
         for (MenuTreeDTO dto : dtoList) {
-            dto.setChildren(parentMap.getOrDefault(dto.getId(), new ArrayList<>()));
+            List<MenuTreeDTO> children = parentMap.getOrDefault(dto.getId(), new ArrayList<>());
+            // 子节点按 sort 升序排序
+            children.sort(java.util.Comparator.comparingInt(
+                    c -> c.getSort() == null ? 0 : c.getSort()));
+            dto.setChildren(children);
         }
 
-        // 根节点 parentId == 0
-        return parentMap.getOrDefault(0L, new ArrayList<>());
+        // 根节点 parentId == 0，按 sort 升序排序
+        List<MenuTreeDTO> roots = parentMap.getOrDefault(0L, new ArrayList<>());
+        roots.sort(java.util.Comparator.comparingInt(
+                r -> r.getSort() == null ? 0 : r.getSort()));
+        return roots;
     }
 
     /**

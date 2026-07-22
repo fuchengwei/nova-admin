@@ -48,17 +48,21 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                 if (!"access".equals(type)) {
                     throw new BizException(ResultCode.TOKEN_INVALID);
                 }
+                String jti = claims.get("jti", String.class);
                 String username = claims.get("username", String.class);
-                Long userId = Long.valueOf(claims.getSubject());
 
-                // 黑名单校验（被踢下线 / 主动注销）
-                Boolean blacklisted = redisTemplate.hasKey(Constants.REDIS_KEY_TOKEN_BLACKLIST + userId);
+                // 黑名单校验（被踢下线 / 主动注销）：按 token 唯一标识 jti 精确判断，
+                // 避免按 userId 拉黑导致注销后短时间内重新登录也被拦截
+                Boolean blacklisted = redisTemplate.hasKey(Constants.REDIS_KEY_TOKEN_BLACKLIST + jti);
                 if (Boolean.TRUE.equals(blacklisted)) {
                     throw new BizException(ResultCode.TOKEN_EXPIRED);
                 }
 
                 // 从 UserDetailsService 加载（已含角色/权限缓存）
                 UserDetails ud = userDetailsService.loadUserByUsername(username);
+                if (ud instanceof SecurityUser securityUser) {
+                    securityUser.getLoginUser().setJti(jti);
+                }
                 UsernamePasswordAuthenticationToken auth =
                         new UsernamePasswordAuthenticationToken(ud, null, ud.getAuthorities());
                 SecurityContextHolder.getContext().setAuthentication(auth);

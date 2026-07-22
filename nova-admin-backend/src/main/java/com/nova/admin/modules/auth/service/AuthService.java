@@ -118,10 +118,10 @@ public class AuthService {
                 .build();
     }
 
-    /** 注销（将当前 token 加入黑名单） */
-    public void logout(Long userId) {
+    /** 注销（将当前 access token 的 jti 加入黑名单，并清除 refresh 索引） */
+    public void logout(String jti, Long userId) {
         redisTemplate.opsForValue().set(
-                Constants.REDIS_KEY_TOKEN_BLACKLIST + userId,
+                Constants.REDIS_KEY_TOKEN_BLACKLIST + jti,
                 System.currentTimeMillis(),
                 jwtUtil.getAccessExpireSeconds(),
                 TimeUnit.SECONDS);

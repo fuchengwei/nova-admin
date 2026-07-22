@@ -71,7 +71,11 @@ function convertMenus(menus: MenuInfo[]): any[] {
         label: m.name,
       };
       if (m.children && m.children.length > 0) {
-        item.children = convertMenus(m.children);
+        const filteredChildren = convertMenus(m.children);
+        // 过滤后没有可见子项时不要挂 children，否则 antd Menu 会渲染展开箭头
+        if (filteredChildren.length > 0) {
+          item.children = filteredChildren;
+        }
       }
       return item;
     });
