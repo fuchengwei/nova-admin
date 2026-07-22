@@ -2,7 +2,9 @@ package com.nova.admin.security;
 
 import com.nova.admin.config.NovaProperties;
 import com.nova.admin.common.api.ResultCode;
+import com.nova.admin.common.constant.Constants;
 import com.nova.admin.common.exception.BizException;
+import com.nova.admin.modules.auth.security.UserDetailsServiceImpl;
 import io.jsonwebtoken.Claims;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -14,6 +16,7 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -22,7 +25,6 @@ import java.io.IOException;
 
 /**
  * JWT 认证过滤器：解析 Authorization -> 加载 LoginUser -> 写入 SecurityContext
- * <p>详细登录逻辑（校验密码、加载权限）将在 Phase 1 实现，本阶段只做骨架。
  */
 @Slf4j
 @Component
@@ -32,6 +34,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
     private final JwtUtil jwtUtil;
     private final NovaProperties novaProperties;
     private final RedisTemplate<String, Object> redisTemplate;
+    private final UserDetailsServiceImpl userDetailsService;
 
     @Override
     protected void doFilterInternal(@NonNull HttpServletRequest request,
@@ -45,24 +48,27 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                 if (!"access".equals(type)) {
                     throw new BizException(ResultCode.TOKEN_INVALID);
                 }
+                String username = claims.get("username", String.class);
                 Long userId = Long.valueOf(claims.getSubject());
-                String blacklistKey = "nova:token:blacklist:" + userId;
-                if (Boolean.TRUE.equals(redisTemplate.hasKey(blacklistKey))) {
+
+                // 黑名单校验（被踢下线 / 主动注销）
+                Boolean blacklisted = redisTemplate.hasKey(Constants.REDIS_KEY_TOKEN_BLACKLIST + userId);
+                if (Boolean.TRUE.equals(blacklisted)) {
                     throw new BizException(ResultCode.TOKEN_EXPIRED);
                 }
-                // TODO Phase 1: 从 Redis 加载完整 LoginUser（含 roles/permissions）
-                LoginUser loginUser = LoginUser.builder()
-                        .userId(userId)
-                        .username(claims.get("username", String.class))
-                        .build();
-                SecurityUser principal = new SecurityUser(loginUser, "");
+
+                // 从 UserDetailsService 加载（已含角色/权限缓存）
+                UserDetails ud = userDetailsService.loadUserByUsername(username);
                 UsernamePasswordAuthenticationToken auth =
-                        new UsernamePasswordAuthenticationToken(principal, null, principal.getAuthorities());
+                        new UsernamePasswordAuthenticationToken(ud, null, ud.getAuthorities());
                 SecurityContextHolder.getContext().setAuthentication(auth);
             }
         } catch (BizException ex) {
             SecurityContextHolder.clearContext();
             log.debug("JWT 解析失败: {}", ex.getMessage());
+        } catch (Exception ex) {
+            SecurityContextHolder.clearContext();
+            log.warn("JWT 处理异常", ex);
         }
         chain.doFilter(request, response);
     }

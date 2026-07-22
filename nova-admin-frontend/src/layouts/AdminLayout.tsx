@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { Layout, Menu, Dropdown, Avatar, Space, Button, theme as antdTheme } from 'antd';
 import {
   DashboardOutlined,
@@ -15,6 +16,7 @@ import { useTranslation } from 'react-i18next';
 import { useAppStore, type Locale } from '@/stores/appStore';
 import { useUserStore } from '@/stores/userStore';
 import { clearTokens } from '@/utils/request';
+import { getUserInfo, logout as apiLogout } from '@/api/auth';
 
 const { Header, Sider, Content } = Layout;
 
@@ -30,8 +32,19 @@ export default function AdminLayout() {
   const location = useLocation();
   const { t, i18n } = useTranslation();
   const { locale, sidebarCollapsed, toggleSidebar, setLocale } = useAppStore();
-  const { userInfo, reset } = useUserStore();
+  const { userInfo, setUserInfo, reset } = useUserStore();
   const { token } = antdTheme.useToken();
+
+  // 进入后台时加载用户信息（首次或刷新场景）
+  useEffect(() => {
+    if (!userInfo) {
+      getUserInfo()
+        .then((res) => {
+          if (res.code === 0 && res.data) setUserInfo(res.data);
+        })
+        .catch(() => undefined);
+    }
+  }, [userInfo, setUserInfo]);
 
   const items = menus.map((m) => ({
     key: m.key,
@@ -57,8 +70,13 @@ export default function AdminLayout() {
       { type: 'divider' as const },
       { key: 'logout', icon: <LogoutOutlined />, label: t('header.logout'), danger: true },
     ],
-    onClick: ({ key }: { key: string }) => {
+    onClick: async ({ key }: { key: string }) => {
       if (key === 'logout') {
+        try {
+          await apiLogout();
+        } catch {
+          // 忽略错误，继续本地清理
+        }
         clearTokens();
         reset();
         navigate('/login');

@@ -346,7 +346,7 @@ VALUES
 -- 超级管理员用户 (密码 admin123 的 BCrypt 哈希)
 -- 替换为你生成的实际哈希
 INSERT INTO sys_user (id, username, password, nickname, dept_id, super_admin, status, create_time)
-VALUES (1, 'admin', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', '超级管理员', 1, 1, 1, NOW());
+VALUES (1, 'admin', '$2a$10$YdS7uGOGKHdGsJdqb02Nz.X/IFPEaBmuYjPDRfvJSftiGZsPaKKcq', '超级管理员', 1, 1, 1, NOW());
 
 -- 用户角色关联
 INSERT INTO sys_user_role (user_id, role_id) VALUES (1, 1);

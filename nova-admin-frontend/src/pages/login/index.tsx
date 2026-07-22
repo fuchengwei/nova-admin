@@ -1,47 +1,93 @@
-import { useState } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Card, Form, Input, Button, Typography, message, theme as antdTheme } from 'antd';
-import { UserOutlined, LockOutlined, SafetyOutlined } from '@ant-design/icons';
+import {
+  UserOutlined,
+  LockOutlined,
+  SafetyOutlined,
+  ReloadOutlined,
+} from '@ant-design/icons';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { login } from '@/api/auth';
-import { setToken, getToken } from '@/utils/request';
+import { getCaptcha, login } from '@/api/auth';
+import { getToken } from '@/utils/request';
+import type { R } from '@/types/api';
 
 const { Title, Text } = Typography;
 
 interface LoginForm {
   username: string;
   password: string;
+  captchaCode: string;
 }
 
 export default function LoginPage() {
   const [loading, setLoading] = useState(false);
+  const [captchaKey, setCaptchaKey] = useState('');
+  const [captchaImg, setCaptchaImg] = useState('');
   const [form] = Form.useForm<LoginForm>();
   const navigate = useNavigate();
   const [params] = useSearchParams();
   const { t } = useTranslation();
   const { token } = antdTheme.useToken();
+  const loadingRef = useRef(false);
 
-  if (getToken()) {
-    navigate(params.get('redirect') || '/dashboard', { replace: true });
-  }
+  // 已登录直接跳转
+  useEffect(() => {
+    if (getToken()) {
+      navigate(params.get('redirect') || '/dashboard', { replace: true });
+    }
+  }, [navigate, params]);
+
+  // 加载验证码
+  const loadCaptcha = useCallback(async () => {
+    if (loadingRef.current) return;
+    loadingRef.current = true;
+    try {
+      const res = (await getCaptcha()) as unknown as R<{
+        captchaKey: string;
+        captchaImage: string;
+      }>;
+      if (res.code === 0 && res.data) {
+        setCaptchaKey(res.data.captchaKey);
+        setCaptchaImg(res.data.captchaImage);
+        form.setFieldValue('captchaCode', '');
+      } else {
+        message.error(res.msg || '验证码加载失败');
+      }
+    } catch (e) {
+      message.error('验证码加载失败，请检查后端服务');
+    } finally {
+      loadingRef.current = false;
+    }
+  }, [form]);
+
+  useEffect(() => {
+    loadCaptcha();
+  }, [loadCaptcha]);
 
   const onSubmit = async (values: LoginForm) => {
+    if (!captchaKey) {
+      message.error('验证码未就绪');
+      return;
+    }
     setLoading(true);
     try {
-      // Phase 0: 直接 setToken 占位，方便看到布局
-      // Phase 1: 接通 /auth/login + 验证码
-      const res = await login({ username: values.username, password: values.password });
+      const res = await login({
+        username: values.username,
+        password: values.password,
+        captchaKey,
+        captchaCode: values.captchaCode,
+      });
       if (res.code === 0) {
         message.success(t('login.welcome'));
         navigate(params.get('redirect') || '/dashboard', { replace: true });
       } else {
         message.error(res.msg || t('common.fail'));
+        loadCaptcha();
       }
-    } catch (e) {
-      // Phase 0 占位：后端未启动时也能进首页（开发体验）
-      setToken('dev-placeholder-token', 'dev-placeholder-refresh');
-      message.warning('当前为 Phase 0 演示模式，后端未联通');
-      navigate(params.get('redirect') || '/dashboard', { replace: true });
+    } catch {
+      message.error('登录失败，请检查后端服务');
+      loadCaptcha();
     } finally {
       setLoading(false);
     }
@@ -72,17 +118,53 @@ export default function LoginPage() {
             label={t('login.username')}
             rules={[{ required: true, message: `${t('login.username')} 不能为空` }]}
           >
-            <Input prefix={<UserOutlined />} size="large" placeholder="admin" />
+            <Input prefix={<UserOutlined />} size="large" placeholder="admin" autoComplete="username" />
           </Form.Item>
           <Form.Item
             name="password"
             label={t('login.password')}
             rules={[{ required: true, message: `${t('login.password')} 不能为空` }]}
           >
-            <Input.Password prefix={<LockOutlined />} size="large" placeholder="admin123" />
+            <Input.Password
+              prefix={<LockOutlined />}
+              size="large"
+              placeholder="admin123"
+              autoComplete="current-password"
+            />
           </Form.Item>
-          <Form.Item label={t('login.captcha')}>
-            <Input prefix={<SafetyOutlined />} size="large" placeholder="Phase 1 启用" disabled />
+          <Form.Item
+            name="captchaCode"
+            label={t('login.captcha')}
+            rules={[
+              { required: true, message: `${t('login.captcha')} 不能为空` },
+              { len: 4, message: '请输入 4 位验证码' },
+            ]}
+          >
+            <Input
+              prefix={<SafetyOutlined />}
+              size="large"
+              placeholder="请输入验证码"
+              maxLength={4}
+              autoComplete="off"
+              suffix={
+                <div
+                  className="cursor-pointer flex items-center"
+                  onClick={loadCaptcha}
+                  title="点击刷新"
+                >
+                  {captchaImg ? (
+                    <img
+                      src={captchaImg}
+                      alt="captcha"
+                      className="h-9 rounded border border-gray-200"
+                      style={{ minWidth: 120 }}
+                    />
+                  ) : (
+                    <ReloadOutlined className="text-lg" />
+                  )}
+                </div>
+              }
+            />
           </Form.Item>
           <Button type="primary" htmlType="submit" size="large" block loading={loading}>
             {t('login.submit')}

@@ -48,12 +48,15 @@ export interface MenuInfo {
   redirect?: string;
   icon?: string;
   sort: number;
-  visible: boolean;
+  visible: number;
   status: number;
+  keepAlive?: number;
+  alwaysShow?: number;
   children?: MenuInfo[];
 }
 
 export interface CaptchaResult {
   captchaKey: string;
   captchaImage: string;
+  expireSeconds: number;
 }

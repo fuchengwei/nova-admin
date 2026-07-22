@@ -2,7 +2,8 @@ import { request, setToken } from '@/utils/request';
 import type { R, CaptchaResult, LoginResult, UserInfo, MenuInfo } from '@/types/api';
 
 /** 获取图形验证码 */
-export const getCaptcha = () => request<R<CaptchaResult>>({ url: '/auth/captcha', method: 'GET' });
+export const getCaptcha = () =>
+  request<R<CaptchaResult>>({ url: '/auth/captcha', method: 'GET' });
 
 /** 登录 */
 export async function login(payload: {
@@ -25,6 +26,10 @@ export async function login(payload: {
 /** 注销 */
 export const logout = () => request<R<void>>({ url: '/auth/logout', method: 'POST' });
 
+/** 刷新 Token */
+export const refreshToken = (refreshToken: string) =>
+  request<R<LoginResult>>({ url: '/auth/refresh', method: 'POST', data: { refreshToken } });
+
 /** 获取当前用户信息 */
 export const getUserInfo = () => request<R<UserInfo>>({ url: '/system/user/me', method: 'GET' });
 
@@ -32,7 +37,8 @@ export const getUserInfo = () => request<R<UserInfo>>({ url: '/system/user/me', 
 export const getUserMenus = () => request<R<MenuInfo[]>>({ url: '/system/menu/routers', method: 'GET' });
 
 /** 健康检查 */
-export const ping = () => request<R<{ app: string; version: string; ts: string }>>({
-  url: '/public/ping',
-  method: 'GET',
-});
+export const ping = () =>
+  request<R<{ app: string; version: string; ts: string }>>({
+    url: '/public/ping',
+    method: 'GET',
+  });
