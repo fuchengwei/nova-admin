@@ -64,6 +64,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
                 .deptId(user.getDeptId())
                 .roles(roles)
                 .permissions(permissions)
+                .dataScope(resolveDataScope(user.getId()))
                 .build();
 
         // 缓存 30 分钟
@@ -85,6 +86,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
                 .deptId(user.getDeptId())
                 .roles(roles)
                 .permissions(permissions)
+                .dataScope(resolveDataScope(user.getId()))
                 .loginIp(loginIp)
                 .loginTime(System.currentTimeMillis())
                 .build();
@@ -96,5 +98,17 @@ public class UserDetailsServiceImpl implements UserDetailsService {
     /** 失效用户缓存（信息变更时调用） */
     public void evict(String username) {
         redisTemplate.delete(Constants.REDIS_KEY_USER + username);
+    }
+
+    /**
+     * 计算用户的实际数据范围：取所有角色 dataScope 中的最小值（数值越小权限越宽）。
+     * 超管角色 data_scope=1（全部），会自然得到最宽范围；无角色则默认仅本人(5)。
+     */
+    private Integer resolveDataScope(Long userId) {
+        List<Integer> scopes = roleMapper.selectDataScopesByUserId(userId);
+        if (scopes == null || scopes.isEmpty()) {
+            return 5;
+        }
+        return scopes.stream().min(Integer::compareTo).orElse(5);
     }
 }

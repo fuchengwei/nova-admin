@@ -55,7 +55,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
                 .le(query.getCreateTimeEnd() != null, SysUser::getCreateTime, query.getCreateTimeEnd())
                 .orderByDesc(SysUser::getCreateTime);
 
-        Page<SysUser> result = page(page, wrapper);
+        Page<SysUser> result = (Page<SysUser>) getBaseMapper().selectUserPage(page, wrapper);
 
         // 联查部门名称
         List<SysUser> records = result.getRecords();

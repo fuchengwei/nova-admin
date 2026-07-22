@@ -26,4 +26,12 @@ public interface SysRoleMapper extends BaseMapper<SysRole> {
             WHERE ur.user_id = #{userId} AND r.deleted = 0
             """)
     List<String> selectRoleCodesByUserId(Long userId);
+
+    /** 查询用户所有角色的数据权限集合（用于计算最宽的数据范围） */
+    @Select("""
+            SELECT DISTINCT r.data_scope FROM sys_role r
+            INNER JOIN sys_user_role ur ON ur.role_id = r.id
+            WHERE ur.user_id = #{userId} AND r.deleted = 0 AND r.data_scope IS NOT NULL
+            """)
+    List<Integer> selectDataScopesByUserId(Long userId);
 }

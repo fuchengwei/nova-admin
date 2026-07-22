@@ -19,6 +19,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
+import java.util.ArrayDeque;
+import java.util.Deque;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -150,6 +152,30 @@ public class SysDeptServiceImpl extends ServiceImpl<SysDeptMapper, SysDept> impl
                 .collect(Collectors.toList());
 
         return buildTree(filtered);
+    }
+
+    @Override
+    public List<Long> findSelfAndDescendantIds(Long deptId) {
+        List<SysDept> allDepts = baseMapper.selectListBySortOrder();
+        Map<Long, List<Long>> childrenMap = allDepts.stream()
+                .filter(d -> d.getParentId() != null)
+                .collect(Collectors.groupingBy(
+                        SysDept::getParentId,
+                        Collectors.mapping(SysDept::getId, Collectors.toList())));
+        List<Long> result = new ArrayList<>();
+        if (deptId != null) {
+            Deque<Long> queue = new ArrayDeque<>();
+            queue.add(deptId);
+            while (!queue.isEmpty()) {
+                Long current = queue.poll();
+                result.add(current);
+                List<Long> children = childrenMap.get(current);
+                if (children != null) {
+                    queue.addAll(children);
+                }
+            }
+        }
+        return result;
     }
 
     // ==================== 私有方法 ====================

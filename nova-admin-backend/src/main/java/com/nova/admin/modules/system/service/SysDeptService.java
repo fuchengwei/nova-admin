@@ -47,4 +47,13 @@ public interface SysDeptService extends IService<SysDept> {
      * @return 部门树
      */
     List<DeptTreeDTO> getDeptTreeExclude(Long excludeId);
+
+    /**
+     * 返回指定部门及其所有下级部门的 ID 列表（含自身）。
+     * 用于数据权限“本部门及下级”范围过滤。
+     *
+     * @param deptId 部门ID
+     * @return 包含自身及所有后代部门的 ID 列表
+     */
+    List<Long> findSelfAndDescendantIds(Long deptId);
 }

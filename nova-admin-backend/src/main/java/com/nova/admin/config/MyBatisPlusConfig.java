@@ -4,6 +4,8 @@ import com.baomidou.mybatisplus.annotation.DbType;
 import com.baomidou.mybatisplus.core.handlers.MetaObjectHandler;
 import com.baomidou.mybatisplus.extension.plugins.MybatisPlusInterceptor;
 import com.baomidou.mybatisplus.extension.plugins.inner.OptimisticLockerInnerInterceptor;
+import com.nova.admin.modules.system.datascope.DataScopeHelper;
+import com.nova.admin.modules.system.datascope.DataScopeInnerInterceptor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.ibatis.reflection.MetaObject;
 import org.springframework.context.annotation.Bean;
@@ -22,10 +24,12 @@ import java.time.LocalDateTime;
 public class MyBatisPlusConfig {
 
     @Bean
-    public MybatisPlusInterceptor mybatisPlusInterceptor() {
+    public MybatisPlusInterceptor mybatisPlusInterceptor(DataScopeHelper dataScopeHelper) {
         MybatisPlusInterceptor interceptor = new MybatisPlusInterceptor();
         // 乐观锁（@Version 字段自动处理）
         interceptor.addInnerInterceptor(new OptimisticLockerInnerInterceptor());
+        // 数据权限：根据当前登录用户的数据范围自动追加部门/人员过滤条件
+        interceptor.addInnerInterceptor(new DataScopeInnerInterceptor(dataScopeHelper));
         return interceptor;
     }
 
