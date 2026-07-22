@@ -30,17 +30,24 @@ nova-admin/
 ## 快速开始
 
 ### 1. 启动基础设施
+> **macOS 推荐使用 OrbStack**（轻量 Docker Desktop 替代品）：
+
 ```bash
+# 1) 启动 OrbStack（首次或关闭后）
+orb start
+
+# 2) 启动 PG / Redis / MinIO
 docker compose up -d
 ```
-启动 PostgreSQL 17、Redis 8、MinIO。
+
+> 也可以使用 Docker Desktop：`open -a Docker` → 等待就绪后执行 `docker compose up -d`。
 
 ### 2. 启动后端
 ```bash
 cd nova-admin-backend
-./mvnw spring-boot:run
+mvn spring-boot:run
 ```
-默认端口 `8080`，OpenAPI 文档：`http://localhost:8080/swagger-ui.html`
+默认端口 `8080`，OpenAPI 文档：`http://localhost:8080/api/swagger-ui.html`
 
 ### 3. 启动前端
 ```bash
