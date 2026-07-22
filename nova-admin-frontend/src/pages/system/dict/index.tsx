@@ -1,28 +1,17 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
+import { Button, Tag, Popconfirm, message, Tabs } from 'antd';
+import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
 import {
-  Card,
-  Table,
-  Button,
-  Space,
-  Tag,
-  Tabs,
-  Modal,
-  Form,
-  Input,
-  Radio,
-  InputNumber,
-  Popconfirm,
-  message,
-} from 'antd';
-import {
-  PlusOutlined,
-  EditOutlined,
-  DeleteOutlined,
-  ReloadOutlined,
-  SearchOutlined,
-  ArrowLeftOutlined,
-} from '@ant-design/icons';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+  ProTable,
+  ModalForm,
+  ProFormText,
+  ProFormTextArea,
+  ProFormDigit,
+  ProFormRadio,
+  type ProColumns,
+  type ActionType,
+} from '@ant-design/pro-components';
+import { useMutation } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import {
   getDictTypePage,
@@ -41,265 +30,45 @@ import {
   type DictDataUpdateRequest,
 } from '@/api/dict';
 
-const DICT_TYPE_KEY = ['dictTypePage'];
-const DICT_DATA_KEY = ['dictDataPage'];
-
 export default function DictPage() {
   const { t } = useTranslation();
-  const queryClient = useQueryClient();
-  const [typeForm] = Form.useForm();
-  const [dataForm] = Form.useForm();
-  const [typeSearchForm] = Form.useForm();
-  const [dataSearchForm] = Form.useForm();
+  const typeActionRef = useRef<ActionType>(null);
+  const dataActionRef = useRef<ActionType>(null);
 
-  // Tab state
   const [activeTab, setActiveTab] = useState<'type' | 'data'>('type');
   const [selectedDictType, setSelectedDictType] = useState<DictTypeRecord | null>(null);
 
-  // Dict type state
-  const [typePageParams, setTypePageParams] = useState<any>({ current: 1, size: 10 });
   const [typeModalOpen, setTypeModalOpen] = useState(false);
   const [typeEditMode, setTypeEditMode] = useState(false);
   const [editingType, setEditingType] = useState<DictTypeRecord | null>(null);
 
-  // Dict data state
-  const [dataPageParams, setDataPageParams] = useState<any>({ current: 1, size: 10 });
   const [dataModalOpen, setDataModalOpen] = useState(false);
   const [dataEditMode, setDataEditMode] = useState(false);
   const [editingData, setEditingData] = useState<DictDataRecord | null>(null);
 
-  // ========== Dict Type Queries & Mutations ==========
-  const { data: typeData, isLoading: typeLoading } = useQuery({
-    queryKey: [...DICT_TYPE_KEY, typePageParams],
-    queryFn: async () => {
-      const res = await getDictTypePage(typePageParams);
-      return res.data;
-    },
-  });
+  const createTypeMutation = useMutation({ mutationFn: createDictType });
+  const updateTypeMutation = useMutation({ mutationFn: updateDictType });
+  const deleteTypeMutation = useMutation({ mutationFn: deleteDictType });
+  const createDataMutation = useMutation({ mutationFn: createDictData });
+  const updateDataMutation = useMutation({ mutationFn: updateDictData });
+  const deleteDataMutation = useMutation({ mutationFn: deleteDictData });
 
-  const createTypeMutation = useMutation({
-    mutationFn: createDictType,
-    onSuccess: (res) => {
-      if (res.code === 0) {
-        message.success(t('dict.createSuccess'));
-        queryClient.invalidateQueries({ queryKey: DICT_TYPE_KEY });
-        handleCloseTypeModal();
-      }
-    },
-  });
-
-  const updateTypeMutation = useMutation({
-    mutationFn: updateDictType,
-    onSuccess: (res) => {
-      if (res.code === 0) {
-        message.success(t('dict.updateSuccess'));
-        queryClient.invalidateQueries({ queryKey: DICT_TYPE_KEY });
-        handleCloseTypeModal();
-      }
-    },
-  });
-
-  const deleteTypeMutation = useMutation({
-    mutationFn: deleteDictType,
-    onSuccess: (res) => {
-      if (res.code === 0) {
-        message.success(t('dict.deleteSuccess'));
-        queryClient.invalidateQueries({ queryKey: DICT_TYPE_KEY });
-      }
-    },
-  });
-
-  // ========== Dict Data Queries & Mutations ==========
-  const { data: dataData, isLoading: dataLoading } = useQuery({
-    queryKey: [...DICT_DATA_KEY, dataPageParams],
-    queryFn: async () => {
-      const res = await getDictDataPage(dataPageParams);
-      return res.data;
-    },
-    enabled: activeTab === 'data' && !!selectedDictType,
-  });
-
-  const createDataMutation = useMutation({
-    mutationFn: createDictData,
-    onSuccess: (res) => {
-      if (res.code === 0) {
-        message.success(t('dict.createSuccess'));
-        queryClient.invalidateQueries({ queryKey: DICT_DATA_KEY });
-        handleCloseDataModal();
-      }
-    },
-  });
-
-  const updateDataMutation = useMutation({
-    mutationFn: updateDictData,
-    onSuccess: (res) => {
-      if (res.code === 0) {
-        message.success(t('dict.updateSuccess'));
-        queryClient.invalidateQueries({ queryKey: DICT_DATA_KEY });
-        handleCloseDataModal();
-      }
-    },
-  });
-
-  const deleteDataMutation = useMutation({
-    mutationFn: deleteDictData,
-    onSuccess: (res) => {
-      if (res.code === 0) {
-        message.success(t('dict.deleteSuccess'));
-        queryClient.invalidateQueries({ queryKey: DICT_DATA_KEY });
-      }
-    },
-  });
-
-  // ========== Dict Type Handlers ==========
-  const handleOpenAddType = () => {
-    setTypeEditMode(false);
-    setEditingType(null);
-    typeForm.resetFields();
-    typeForm.setFieldsValue({ status: 1 });
-    setTypeModalOpen(true);
+  const statusEnum = {
+    1: { text: t('dict.enabled'), status: 'Success' },
+    0: { text: t('dict.disabled'), status: 'Error' },
   };
 
-  const handleOpenEditType = (record: DictTypeRecord) => {
-    setTypeEditMode(true);
-    setEditingType(record);
-    typeForm.resetFields();
-    typeForm.setFieldsValue({
-      type: record.type,
-      name: record.name,
-      description: record.description,
-      status: record.status,
-    });
-    setTypeModalOpen(true);
-  };
-
-  const handleCloseTypeModal = () => {
-    setTypeModalOpen(false);
-    typeForm.resetFields();
-    setEditingType(null);
-  };
-
-  const handleTypeSubmit = async () => {
-    try {
-      const values = await typeForm.validateFields();
-      if (typeEditMode && editingType) {
-        const data: DictTypeUpdateRequest = { id: editingType.id, ...values };
-        updateTypeMutation.mutate(data);
-      } else {
-        const data: DictTypeCreateRequest = { ...values };
-        createTypeMutation.mutate(data);
-      }
-    } catch {
-      // validation failed
-    }
-  };
-
-  const handleTypeSearch = () => {
-    const values = typeSearchForm.getFieldsValue();
-    const params: any = { current: 1, size: typePageParams.size };
-    if (values.name) params.name = values.name;
-    if (values.type) params.type = values.type;
-    if (values.status !== undefined && values.status !== null && values.status !== '')
-      params.status = values.status;
-    setTypePageParams(params);
-  };
-
-  const handleTypeReset = () => {
-    typeSearchForm.resetFields();
-    setTypePageParams({ current: 1, size: 10 });
-  };
-
-  const handleViewData = (record: DictTypeRecord) => {
-    setSelectedDictType(record);
-    setActiveTab('data');
-    setDataPageParams({ current: 1, size: 10, typeId: record.id });
-  };
-
-  // ========== Dict Data Handlers ==========
-  const handleBackToType = () => {
-    setActiveTab('type');
-    setSelectedDictType(null);
-  };
-
-  const handleOpenAddData = () => {
-    setDataEditMode(false);
-    setEditingData(null);
-    dataForm.resetFields();
-    dataForm.setFieldsValue({ status: 1, sort: 0, defaultFlag: 0 });
-    setDataModalOpen(true);
-  };
-
-  const handleOpenEditData = (record: DictDataRecord) => {
-    setDataEditMode(true);
-    setEditingData(record);
-    dataForm.resetFields();
-    dataForm.setFieldsValue({
-      label: record.label,
-      value: record.value,
-      cssClass: record.cssClass,
-      sort: record.sort,
-      status: record.status,
-      defaultFlag: record.defaultFlag,
-    });
-    setDataModalOpen(true);
-  };
-
-  const handleCloseDataModal = () => {
-    setDataModalOpen(false);
-    dataForm.resetFields();
-    setEditingData(null);
-  };
-
-  const handleDataSubmit = async () => {
-    try {
-      const values = await dataForm.validateFields();
-      if (dataEditMode && editingData) {
-        const data: DictDataUpdateRequest = { id: editingData.id, typeId: selectedDictType!.id, ...values };
-        updateDataMutation.mutate(data);
-      } else {
-        const data: DictDataCreateRequest = { typeId: selectedDictType!.id, ...values };
-        createDataMutation.mutate(data);
-      }
-    } catch {
-      // validation failed
-    }
-  };
-
-  const handleDataSearch = () => {
-    const values = dataSearchForm.getFieldsValue();
-    const params: any = { current: 1, size: dataPageParams.size, typeId: selectedDictType?.id };
-    if (values.label) params.label = values.label;
-    if (values.status !== undefined && values.status !== null && values.status !== '')
-      params.status = values.status;
-    setDataPageParams(params);
-  };
-
-  const handleDataReset = () => {
-    dataSearchForm.resetFields();
-    setDataPageParams({ current: 1, size: 10, typeId: selectedDictType?.id });
-  };
-
-  // ========== Columns ==========
-  const typeColumns = [
-    {
-      title: t('dict.typeName'),
-      dataIndex: 'name',
-      key: 'name',
-      width: 160,
-    },
-    {
-      title: t('dict.typeCode'),
-      dataIndex: 'type',
-      key: 'type',
-      width: 160,
-    },
+  const typeColumns: ProColumns<DictTypeRecord>[] = [
+    { title: t('dict.typeName'), dataIndex: 'name', width: 160, ellipsis: true },
+    { title: t('dict.typeCode'), dataIndex: 'type', width: 160, ellipsis: true },
     {
       title: t('dict.status'),
       dataIndex: 'status',
-      key: 'status',
       width: 100,
-      render: (v: number) =>
-        v === 1 ? (
+      valueType: 'select',
+      valueEnum: statusEnum,
+      render: (_, r) =>
+        r.status === 1 ? (
           <Tag color="green">{t('dict.enabled')}</Tag>
         ) : (
           <Tag color="red">{t('dict.disabled')}</Tag>
@@ -308,84 +77,72 @@ export default function DictPage() {
     {
       title: t('dict.description'),
       dataIndex: 'description',
-      key: 'description',
-      width: 200,
-      render: (v: string) => v || '-',
+      search: false,
+      ellipsis: true,
+      render: (v) => v || '-',
     },
     {
       title: t('dict.createTime'),
       dataIndex: 'createTime',
-      key: 'createTime',
       width: 180,
-      render: (v: string) => v || '-',
+      valueType: 'dateTime',
+      search: false,
+      render: (v) => v || '-',
     },
     {
       title: t('dict.action'),
-      key: 'action',
-      width: 220,
-      fixed: 'right' as const,
-      render: (_: unknown, record: DictTypeRecord) => (
-        <Space size="small">
-          <Button type="link" size="small" onClick={() => handleViewData(record)}>
-            {t('dict.viewData')}
+      valueType: 'option',
+      key: 'option',
+      width: 200,
+      fixed: 'right',
+      render: (_, record) => [
+        <Button key="data" type="link" size="small" onClick={() => { setSelectedDictType(record); setActiveTab('data'); }}>
+          {t('dict.viewData')}
+        </Button>,
+        <Button
+          key="edit"
+          type="link"
+          size="small"
+          icon={<EditOutlined />}
+          onClick={() => { setTypeEditMode(true); setEditingType(record); setTypeModalOpen(true); }}
+        >
+          {t('common.edit')}
+        </Button>,
+        <Popconfirm
+          key="del"
+          title={t('dict.deleteConfirm')}
+          onConfirm={() => deleteTypeMutation.mutate(record.id)}
+          okText={t('common.confirm')}
+          cancelText={t('common.cancel')}
+          okButtonProps={{ danger: true }}
+        >
+          <Button type="link" size="small" danger icon={<DeleteOutlined />}>
+            {t('common.delete')}
           </Button>
-          <Button
-            type="link"
-            size="small"
-            icon={<EditOutlined />}
-            onClick={() => handleOpenEditType(record)}
-          >
-            {t('common.edit')}
-          </Button>
-          <Popconfirm
-            title={t('dict.deleteConfirm')}
-            onConfirm={() => deleteTypeMutation.mutate(record.id)}
-            okText={t('common.confirm')}
-            cancelText={t('common.cancel')}
-            okButtonProps={{ danger: true }}
-          >
-            <Button type="link" size="small" danger icon={<DeleteOutlined />}>
-              {t('common.delete')}
-            </Button>
-          </Popconfirm>
-        </Space>
-      ),
+        </Popconfirm>,
+      ],
     },
   ];
 
-  const dataColumns = [
-    {
-      title: t('dict.dataLabel'),
-      dataIndex: 'label',
-      key: 'label',
-      width: 140,
-    },
-    {
-      title: t('dict.dataValue'),
-      dataIndex: 'value',
-      key: 'value',
-      width: 140,
-    },
+  const dataColumns: ProColumns<DictDataRecord>[] = [
+    { title: t('dict.dataLabel'), dataIndex: 'label', width: 160, ellipsis: true },
+    { title: t('dict.dataValue'), dataIndex: 'value', width: 140, search: false },
     {
       title: t('dict.cssClass'),
       dataIndex: 'cssClass',
-      key: 'cssClass',
-      width: 120,
-      render: (v: string) => v || '-',
+      width: 140,
+      search: false,
+      render: (_, r) => (r.cssClass ? <span className={r.cssClass}>{r.label}</span> : r.label),
     },
-    {
-      title: t('dict.sort'),
-      dataIndex: 'sort',
-      key: 'sort',
-      width: 80,
-    },
+    { title: t('dict.sort'), dataIndex: 'sort', width: 80, search: false },
     {
       title: t('dict.status'),
       dataIndex: 'status',
-      key: 'status',
       width: 100,
-      render: (v: number) =>
-        v === 1 ? (
+      valueType: 'select',
+      valueEnum: statusEnum,
+      render: (_, r) =>
+        r.status === 1 ? (
           <Tag color="green">{t('dict.enabled')}</Tag>
         ) : (
           <Tag color="red">{t('dict.disabled')}</Tag>
@@ -394,48 +151,54 @@ export default function DictPage() {
     {
       title: t('dict.defaultFlag'),
       dataIndex: 'defaultFlag',
-      key: 'defaultFlag',
-      width: 100,
-      render: (v: number) =>
-        v === 1 ? (
+      width: 90,
+      search: false,
+      render: (_, r) =>
+        r.defaultFlag === 1 ? (
           <Tag color="blue">{t('dict.yes')}</Tag>
         ) : (
-          <Tag color="default">{t('dict.no')}</Tag>
+          <Tag>{t('dict.no')}</Tag>
         ),
     },
     {
+      title: t('dict.createTime'),
+      dataIndex: 'createTime',
+      width: 180,
+      valueType: 'dateTime',
+      search: false,
+      render: (v) => v || '-',
+    },
+    {
       title: t('dict.action'),
-      key: 'action',
-      width: 160,
-      fixed: 'right' as const,
-      render: (_: unknown, record: DictDataRecord) => (
-        <Space size="small">
-          <Button
-            type="link"
-            size="small"
-            icon={<EditOutlined />}
-            onClick={() => handleOpenEditData(record)}
-          >
-            {t('common.edit')}
+      valueType: 'option',
+      key: 'option',
+      width: 140,
+      fixed: 'right',
+      render: (_, record) => [
+        <Button
+          key="edit"
+          type="link"
+          size="small"
+          icon={<EditOutlined />}
+          onClick={() => { setDataEditMode(true); setEditingData(record); setDataModalOpen(true); }}
+        >
+          {t('common.edit')}
+        </Button>,
+        <Popconfirm
+          key="del"
+          title={t('dict.deleteConfirm')}
+          onConfirm={() => deleteDataMutation.mutate(record.id)}
+          okText={t('common.confirm')}
+          cancelText={t('common.cancel')}
+          okButtonProps={{ danger: true }}
+        >
+          <Button type="link" size="small" danger icon={<DeleteOutlined />}>
+            {t('common.delete')}
           </Button>
-          <Popconfirm
-            title={t('dict.deleteConfirm')}
-            onConfirm={() => deleteDataMutation.mutate(record.id)}
-            okText={t('common.confirm')}
-            cancelText={t('common.cancel')}
-            okButtonProps={{ danger: true }}
-          >
-            <Button type="link" size="small" danger icon={<DeleteOutlined />}>
-              {t('common.delete')}
-            </Button>
-          </Popconfirm>
-        </Space>
-      ),
+        </Popconfirm>,
+      ],
     },
   ];
-
-  const typeSubmitting = createTypeMutation.isPending || updateTypeMutation.isPending;
-  const dataSubmitting = createDataMutation.isPending || updateDataMutation.isPending;
 
   return (
     <div className="flex flex-col h-full">
@@ -444,7 +207,8 @@ export default function DictPage() {
       <Tabs
         activeKey={activeTab}
         onChange={(key) => {
-          if (key === 'type') handleBackToType();
+          if (key === 'type') setSelectedDictType(null);
+          setActiveTab(key as 'type' | 'data');
         }}
         items={[
           {
@@ -452,62 +216,74 @@ export default function DictPage() {
             label: t('dict.typeTab'),
             children: (
               <>
-                {/* Dict Type Search */}
-                <Card className="mb-4" styles={{ body: { padding: '16px' } }}>
-                  <Form form={typeSearchForm} layout="inline" className="flex flex-wrap gap-2">
-                    <Form.Item name="name" label={t('dict.typeName')}>
-                      <Input placeholder={t('dict.typeName')} allowClear />
-                    </Form.Item>
-                    <Form.Item name="type" label={t('dict.typeCode')}>
-                      <Input placeholder={t('dict.typeCode')} allowClear />
-                    </Form.Item>
-                    <Form.Item name="status" label={t('dict.status')}>
-                      <Radio.Group>
-                        <Radio value={1}>{t('dict.enabled')}</Radio>
-                        <Radio value={0}>{t('dict.disabled')}</Radio>
-                      </Radio.Group>
-                    </Form.Item>
-                    <Form.Item>
-                      <Space>
-                        <Button type="primary" icon={<SearchOutlined />} onClick={handleTypeSearch}>
-                          {t('common.search')}
-                        </Button>
-                        <Button onClick={handleTypeReset}>{t('common.reset')}</Button>
-                      </Space>
-                    </Form.Item>
-                  </Form>
-                </Card>
-
-                {/* Dict Type Table */}
-                <Card className="flex-1">
-                  <div className="flex justify-between mb-4">
-                    <Button type="primary" icon={<PlusOutlined />} onClick={handleOpenAddType}>
-                      {t('dict.addType')}
-                    </Button>
+                <ProTable<DictTypeRecord>
+                  actionRef={typeActionRef}
+                  rowKey="id"
+                  columns={typeColumns}
+                  scroll={{ x: 900 }}
+                  request={async (params) => {
+                    const res = await getDictTypePage({
+                      current: params.current ?? 1,
+                      size: params.pageSize ?? 10,
+                      name: params.name,
+                      type: params.type,
+                      status: params.status,
+                    });
+                    if (res.code !== 0) return { data: [], success: false, total: 0 };
+                    return { data: res.data.records, success: true, total: res.data.total };
+                  }}
+                  pagination={{ pageSize: 10, showSizeChanger: true }}
+                  search={{ labelWidth: 'auto' }}
+                  toolBarRender={() => [
                     <Button
-                      icon={<ReloadOutlined />}
-                      onClick={() => queryClient.invalidateQueries({ queryKey: DICT_TYPE_KEY })}
+                      key="add"
+                      type="primary"
+                      icon={<PlusOutlined />}
+                      onClick={() => { setTypeEditMode(false); setEditingType(null); setTypeModalOpen(true); }}
                     >
-                      {t('common.reset')}
-                    </Button>
-                  </div>
-                  <Table
-                    rowKey="id"
-                    columns={typeColumns}
-                    dataSource={typeData?.records ?? []}
-                    loading={typeLoading}
-                    scroll={{ x: 1000 }}
-                    pagination={{
-                      current: typeData?.current ?? typePageParams.current,
-                      pageSize: typeData?.size ?? typePageParams.size,
-                      total: typeData?.total ?? 0,
-                      showSizeChanger: true,
-                      onChange: (page: number, pageSize: number) => {
-                        setTypePageParams((prev: any) => ({ ...prev, current: page, size: pageSize }));
-                      },
-                    }}
+                      {t('dict.addType')}
+                    </Button>,
+                  ]}
+                  options={{ reload: true, density: true, setting: true }}
+                />
+                <ModalForm
+                  title={typeEditMode ? t('dict.editType') : t('dict.addType')}
+                  open={typeModalOpen}
+                  onOpenChange={(open) => {
+                    setTypeModalOpen(open);
+                    if (!open) { setTypeEditMode(false); setEditingType(null); }
+                  }}
+                  width={520}
+                  layout="vertical"
+                  initialValues={
+                    typeEditMode && editingType
+                      ? { name: editingType.name, type: editingType.type, status: editingType.status, description: editingType.description }
+                      : { status: 1 }
+                  }
+                  onFinish={async (values) => {
+                    const res =
+                      typeEditMode && editingType
+                        ? await updateTypeMutation.mutateAsync({ id: editingType.id, ...values } as unknown as DictTypeUpdateRequest)
+                        : await createTypeMutation.mutateAsync(values as unknown as DictTypeCreateRequest);
+                    if (res.code !== 0) { message.error(res.msg || t('common.error')); return false; }
+                    message.success(typeEditMode ? t('dict.updateSuccess') : t('dict.createSuccess'));
+                    typeActionRef.current?.reload();
+                    return true;
+                  }}
+                >
+                  <ProFormText name="name" label={t('dict.typeName')} rules={[{ required: true, message: t('dict.typeNameRequired') }]} />
+                  <ProFormText name="type" label={t('dict.typeCode')} disabled={typeEditMode} rules={[{ required: true, message: t('dict.typeCodeRequired') }]} />
+                  <ProFormTextArea name="description" label={t('dict.description')} />
+                  <ProFormRadio.Group
+                    name="status"
+                    label={t('dict.status')}
+                    rules={[{ required: true }]}
+                    options={[
+                      { label: t('dict.enabled'), value: 1 },
+                      { label: t('dict.disabled'), value: 0 },
+                    ]}
                   />
-                </Card>
+                </ModalForm>
               </>
             ),
           },
@@ -517,161 +293,98 @@ export default function DictPage() {
             disabled: !selectedDictType,
             children: selectedDictType ? (
               <>
-                {/* Data Tab Header */}
-                <div className="mb-4 flex items-center gap-3">
-                  <Button icon={<ArrowLeftOutlined />} onClick={handleBackToType}>
+                <div className="flex items-center justify-between mb-3">
+                  <Button size="small" onClick={() => { setSelectedDictType(null); setActiveTab('type'); }}>
                     {t('common.back')}
                   </Button>
-                  <span className="text-base font-medium">
+                  <span className="text-gray-500">
                     {selectedDictType.name}（{selectedDictType.type}）
                   </span>
                 </div>
-
-                {/* Dict Data Search */}
-                <Card className="mb-4" styles={{ body: { padding: '16px' } }}>
-                  <Form form={dataSearchForm} layout="inline" className="flex flex-wrap gap-2">
-                    <Form.Item name="label" label={t('dict.dataLabel')}>
-                      <Input placeholder={t('dict.dataLabel')} allowClear />
-                    </Form.Item>
-                    <Form.Item name="status" label={t('dict.status')}>
-                      <Radio.Group>
-                        <Radio value={1}>{t('dict.enabled')}</Radio>
-                        <Radio value={0}>{t('dict.disabled')}</Radio>
-                      </Radio.Group>
-                    </Form.Item>
-                    <Form.Item>
-                      <Space>
-                        <Button type="primary" icon={<SearchOutlined />} onClick={handleDataSearch}>
-                          {t('common.search')}
-                        </Button>
-                        <Button onClick={handleDataReset}>{t('common.reset')}</Button>
-                      </Space>
-                    </Form.Item>
-                  </Form>
-                </Card>
-
-                {/* Dict Data Table */}
-                <Card className="flex-1">
-                  <div className="flex justify-between mb-4">
-                    <Button type="primary" icon={<PlusOutlined />} onClick={handleOpenAddData}>
-                      {t('dict.addData')}
-                    </Button>
+                <ProTable<DictDataRecord>
+                  actionRef={dataActionRef}
+                  rowKey="id"
+                  columns={dataColumns}
+                  scroll={{ x: 900 }}
+                  request={async (params) => {
+                    const res = await getDictDataPage({
+                      current: params.current ?? 1,
+                      size: params.pageSize ?? 10,
+                      typeId: selectedDictType.id,
+                      label: params.label,
+                      status: params.status,
+                    });
+                    if (res.code !== 0) return { data: [], success: false, total: 0 };
+                    return { data: res.data.records, success: true, total: res.data.total };
+                  }}
+                  pagination={{ pageSize: 10, showSizeChanger: true }}
+                  search={{ labelWidth: 'auto' }}
+                  toolBarRender={() => [
                     <Button
-                      icon={<ReloadOutlined />}
-                      onClick={() => queryClient.invalidateQueries({ queryKey: DICT_DATA_KEY })}
+                      key="add"
+                      type="primary"
+                      icon={<PlusOutlined />}
+                      onClick={() => { setDataEditMode(false); setEditingData(null); setDataModalOpen(true); }}
                     >
-                      {t('common.reset')}
-                    </Button>
-                  </div>
-                  <Table
-                    rowKey="id"
-                    columns={dataColumns}
-                    dataSource={dataData?.records ?? []}
-                    loading={dataLoading}
-                    scroll={{ x: 900 }}
-                    pagination={{
-                      current: dataData?.current ?? dataPageParams.current,
-                      pageSize: dataData?.size ?? dataPageParams.size,
-                      total: dataData?.total ?? 0,
-                      showSizeChanger: true,
-                      onChange: (page: number, pageSize: number) => {
-                        setDataPageParams((prev: any) => ({ ...prev, current: page, size: pageSize }));
-                      },
-                    }}
+                      {t('dict.addData')}
+                    </Button>,
+                  ]}
+                  options={{ reload: true, density: true, setting: true }}
+                />
+                <ModalForm
+                  title={dataEditMode ? t('dict.editData') : t('dict.addData')}
+                  open={dataModalOpen}
+                  onOpenChange={(open) => {
+                    setDataModalOpen(open);
+                    if (!open) { setDataEditMode(false); setEditingData(null); }
+                  }}
+                  width={520}
+                  layout="vertical"
+                  initialValues={
+                    dataEditMode && editingData
+                      ? { label: editingData.label, value: editingData.value, cssClass: editingData.cssClass, sort: editingData.sort, status: editingData.status, defaultFlag: editingData.defaultFlag }
+                      : { status: 1, defaultFlag: 0, sort: 0 }
+                  }
+                  onFinish={async (values) => {
+                    const payload = { ...values, typeId: selectedDictType.id };
+                    const res =
+                      dataEditMode && editingData
+                        ? await updateDataMutation.mutateAsync({ id: editingData.id, ...payload } as unknown as DictDataUpdateRequest)
+                        : await createDataMutation.mutateAsync(payload as unknown as DictDataCreateRequest);
+                    if (res.code !== 0) { message.error(res.msg || t('common.error')); return false; }
+                    message.success(dataEditMode ? t('dict.updateSuccess') : t('dict.createSuccess'));
+                    dataActionRef.current?.reload();
+                    return true;
+                  }}
+                >
+                  <ProFormText name="label" label={t('dict.dataLabel')} rules={[{ required: true, message: t('dict.dataLabelRequired') }]} />
+                  <ProFormText name="value" label={t('dict.dataValue')} rules={[{ required: true, message: t('dict.dataValueRequired') }]} />
+                  <ProFormText name="cssClass" label={t('dict.cssClass')} />
+                  <ProFormDigit name="sort" label={t('dict.sort')} min={0} />
+                  <ProFormRadio.Group
+                    name="status"
+                    label={t('dict.status')}
+                    rules={[{ required: true }]}
+                    options={[
+                      { label: t('dict.enabled'), value: 1 },
+                      { label: t('dict.disabled'), value: 0 },
+                    ]}
                   />
-                </Card>
+                  <ProFormRadio.Group
+                    name="defaultFlag"
+                    label={t('dict.defaultFlag')}
+                    rules={[{ required: true }]}
+                    options={[
+                      { label: t('dict.yes'), value: 1 },
+                      { label: t('dict.no'), value: 0 },
+                    ]}
+                  />
+                </ModalForm>
               </>
             ) : null,
           },
         ]}
       />
-
-      {/* Dict Type Modal */}
-      <Modal
-        title={typeEditMode ? t('dict.editType') : t('dict.addType')}
-        open={typeModalOpen}
-        onOk={handleTypeSubmit}
-        onCancel={handleCloseTypeModal}
-        confirmLoading={typeSubmitting}
-        okText={t('common.confirm')}
-        cancelText={t('common.cancel')}
-        destroyOnClose
-        width={520}
-      >
-        <Form form={typeForm} layout="vertical" className="mt-4">
-          <Form.Item
-            name="name"
-            label={t('dict.typeName')}
-            rules={[{ required: true, message: t('dict.typeNameRequired') }]}
-          >
-            <Input placeholder={t('dict.typeName')} />
-          </Form.Item>
-          <Form.Item
-            name="type"
-            label={t('dict.typeCode')}
-            rules={[{ required: true, message: t('dict.typeCodeRequired') }]}
-          >
-            <Input placeholder={t('dict.typeCode')} disabled={typeEditMode} />
-          </Form.Item>
-          <Form.Item name="description" label={t('dict.description')}>
-            <Input.TextArea rows={2} placeholder={t('dict.description')} />
-          </Form.Item>
-          <Form.Item name="status" label={t('dict.status')} rules={[{ required: true }]}>
-            <Radio.Group>
-              <Radio value={1}>{t('dict.enabled')}</Radio>
-              <Radio value={0}>{t('dict.disabled')}</Radio>
-            </Radio.Group>
-          </Form.Item>
-        </Form>
-      </Modal>
-
-      {/* Dict Data Modal */}
-      <Modal
-        title={dataEditMode ? t('dict.editData') : t('dict.addData')}
-        open={dataModalOpen}
-        onOk={handleDataSubmit}
-        onCancel={handleCloseDataModal}
-        confirmLoading={dataSubmitting}
-        okText={t('common.confirm')}
-        cancelText={t('common.cancel')}
-        destroyOnClose
-        width={520}
-      >
-        <Form form={dataForm} layout="vertical" className="mt-4">
-          <Form.Item
-            name="label"
-            label={t('dict.dataLabel')}
-            rules={[{ required: true, message: t('dict.dataLabelRequired') }]}
-          >
-            <Input placeholder={t('dict.dataLabel')} />
-          </Form.Item>
-          <Form.Item
-            name="value"
-            label={t('dict.dataValue')}
-            rules={[{ required: true, message: t('dict.dataValueRequired') }]}
-          >
-            <Input placeholder={t('dict.dataValue')} />
-          </Form.Item>
-          <Form.Item name="cssClass" label={t('dict.cssClass')}>
-            <Input placeholder={t('dict.cssClass')} />
-          </Form.Item>
-          <Form.Item name="sort" label={t('dict.sort')}>
-            <InputNumber min={0} className="w-full" />
-          </Form.Item>
-          <Form.Item name="status" label={t('dict.status')} rules={[{ required: true }]}>
-            <Radio.Group>
-              <Radio value={1}>{t('dict.enabled')}</Radio>
-              <Radio value={0}>{t('dict.disabled')}</Radio>
-            </Radio.Group>
-          </Form.Item>
-          <Form.Item name="defaultFlag" label={t('dict.defaultFlag')}>
-            <Radio.Group>
-              <Radio value={1}>{t('dict.yes')}</Radio>
-              <Radio value={0}>{t('dict.no')}</Radio>
-            </Radio.Group>
-          </Form.Item>
-        </Form>
-      </Modal>
     </div>
   );
 }

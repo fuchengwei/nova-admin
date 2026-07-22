@@ -1,5 +1,5 @@
-import request from '@/utils/request';
-import type { R } from '@/types/common';
+import { request } from '@/utils/request';
+import type { R } from '@/types/api';
 
 export interface ServerInfo {
   cpu: { cpuNum: number; sys: number; used: number; free: number };
@@ -25,13 +25,11 @@ export interface CacheInfo {
 }
 
 export function getServerInfo() {
-  return request.get<R<ServerInfo>>('/monitor/server');
+  return request<R<ServerInfo>>({ url: '/monitor/server', method: 'GET' });
 }
-
 export function getOnlineUsers() {
-  return request.get<R<OnlineUser[]>>('/monitor/online');
+  return request<R<OnlineUser[]>>({ url: '/monitor/online', method: 'GET' });
 }
-
 export function getCacheInfo() {
-  return request.get<R<CacheInfo>>('/monitor/cache');
+  return request<R<CacheInfo>>({ url: '/monitor/cache', method: 'GET' });
 }

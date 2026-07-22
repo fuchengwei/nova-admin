@@ -1,5 +1,5 @@
-import request from '@/utils/request';
-import type { R } from '@/types/common';
+import { request } from '@/utils/request';
+import type { R } from '@/types/api';
 
 export interface GenTable {
   tableName: string;
@@ -7,13 +7,13 @@ export interface GenTable {
 }
 
 export function listGenTables() {
-  return request.get<R<GenTable[]>>('/tool/gen/tables');
+  return request<R<GenTable[]>>({ url: '/tool/gen/tables', method: 'GET' });
 }
 
 export function previewGen(tableName: string) {
-  return request.get<R<Record<string, string>>>('/tool/gen/preview/' + tableName);
+  return request<R<Record<string, string>>>({ url: '/tool/gen/preview/' + tableName, method: 'GET' });
 }
 
 export function downloadGen(tableName: string) {
-  return request.get('/tool/gen/download/' + tableName, { responseType: 'blob' });
+  return request({ url: '/tool/gen/download/' + tableName, method: 'GET', responseType: 'blob' });
 }

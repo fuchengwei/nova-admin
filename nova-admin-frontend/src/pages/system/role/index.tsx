@@ -1,28 +1,19 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { Button, Tag, Tree, Popconfirm, message, Form } from 'antd';
+import type { DataNode } from 'antd/es/tree';
+import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
 import {
-  Card,
-  Table,
-  Button,
-  Space,
-  Tag,
-  Modal,
-  Form,
-  Input,
-  Radio,
-  Select,
-  InputNumber,
-  Tree,
-  Popconfirm,
-  message,
-} from 'antd';
-import {
-  PlusOutlined,
-  EditOutlined,
-  DeleteOutlined,
-  ReloadOutlined,
-  SearchOutlined,
-} from '@ant-design/icons';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+  ProTable,
+  ModalForm,
+  ProFormText,
+  ProFormTextArea,
+  ProFormSelect,
+  ProFormDigit,
+  ProFormRadio,
+  type ProColumns,
+  type ActionType,
+} from '@ant-design/pro-components';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import {
   getRolePage,
@@ -37,8 +28,6 @@ import {
 } from '@/api/role';
 import { getMenuTree } from '@/api/menu';
 
-const QUERY_KEY = ['rolePage'];
-
 const DATA_SCOPE_MAP: Record<number, string> = {
   1: 'dataScopeAll',
   2: 'dataScopeDeptAndChild',
@@ -49,26 +38,13 @@ const DATA_SCOPE_MAP: Record<number, string> = {
 
 export default function RolePage() {
   const { t } = useTranslation();
-  const queryClient = useQueryClient();
-  const [form] = Form.useForm();
-  const [searchForm] = Form.useForm();
+  const actionRef = useRef<ActionType>(null);
 
-  const [pageParams, setPageParams] = useState<RolePageParams>({ current: 1, size: 10 });
   const [modalOpen, setModalOpen] = useState(false);
   const [editMode, setEditMode] = useState(false);
   const [editingRecord, setEditingRecord] = useState<RoleRecord | null>(null);
   const [checkedKeys, setCheckedKeys] = useState<number[]>([]);
 
-  // 查询角色分页
-  const { data, isLoading } = useQuery({
-    queryKey: [...QUERY_KEY, pageParams],
-    queryFn: async () => {
-      const res = await getRolePage(pageParams);
-      return res.data;
-    },
-  });
-
-  // 菜单树
   const { data: menuTree } = useQuery({
     queryKey: ['menuTree'],
     queryFn: async () => {
@@ -77,7 +53,6 @@ export default function RolePage() {
     },
   });
 
-  // 编辑时获取角色详情（含 menuIds）
   const { data: roleDetail } = useQuery({
     queryKey: ['roleDetail', editMode && editingRecord?.id],
     queryFn: async () => {
@@ -87,156 +62,75 @@ export default function RolePage() {
     enabled: editMode && !!editingRecord,
   });
 
-  // 当角色详情加载后，设置 checkedKeys
   useEffect(() => {
-    if (roleDetail && editMode) {
-      setCheckedKeys(roleDetail.menuIds ?? []);
-    }
+    if (roleDetail && editMode) setCheckedKeys(roleDetail.menuIds ?? []);
   }, [roleDetail, editMode]);
 
-  // Mutations
-  const createMutation = useMutation({
-    mutationFn: createRole,
-    onSuccess: (res) => {
-      if (res.code === 0) {
-        message.success(t('role.createSuccess'));
-        queryClient.invalidateQueries({ queryKey: QUERY_KEY });
-        handleCloseModal();
-      }
-    },
-  });
-
-  const updateMutation = useMutation({
-    mutationFn: updateRole,
-    onSuccess: (res) => {
-      if (res.code === 0) {
-        message.success(t('role.updateSuccess'));
-        queryClient.invalidateQueries({ queryKey: QUERY_KEY });
-        handleCloseModal();
-      }
-    },
-  });
-
-  const deleteMutation = useMutation({
-    mutationFn: deleteRole,
-    onSuccess: (res) => {
-      if (res.code === 0) {
-        message.success(t('role.deleteSuccess'));
-        queryClient.invalidateQueries({ queryKey: QUERY_KEY });
-      }
-    },
-  });
+  const createMutation = useMutation({ mutationFn: createRole });
+  const updateMutation = useMutation({ mutationFn: updateRole });
+  const deleteMutation = useMutation({ mutationFn: deleteRole });
 
   const handleOpenAdd = () => {
     setEditMode(false);
     setEditingRecord(null);
-    form.resetFields();
     setCheckedKeys([]);
-    form.setFieldsValue({ dataScope: 1, sort: 0, status: 1 });
     setModalOpen(true);
   };
 
   const handleOpenEdit = (record: RoleRecord) => {
     setEditMode(true);
     setEditingRecord(record);
-    form.resetFields();
-    form.setFieldsValue({
-      name: record.name,
-      code: record.code,
-      description: record.description,
-      dataScope: record.dataScope,
-      sort: record.sort,
-      status: record.status,
-    });
-    // checkedKeys 会在 roleDetail 加载后设置
     setCheckedKeys([]);
     setModalOpen(true);
   };
 
-  const handleCloseModal = () => {
-    setModalOpen(false);
-    form.resetFields();
-    setEditingRecord(null);
-    setCheckedKeys([]);
-  };
-
-  const handleSubmit = async () => {
-    try {
-      const values = await form.validateFields();
-      const payload = { ...values, menuIds: checkedKeys };
-      if (editMode && editingRecord) {
-        const data: RoleUpdateRequest = { id: editingRecord.id, ...payload };
-        updateMutation.mutate(data);
-      } else {
-        const data: RoleCreateRequest = { ...payload };
-        createMutation.mutate(data);
-      }
-    } catch {
-      // validation failed
-    }
-  };
-
-  const handleSearch = () => {
-    const values = searchForm.getFieldsValue();
-    const params: RolePageParams = { current: 1, size: pageParams.size };
-    if (values.name) params.name = values.name;
-    if (values.code) params.code = values.code;
-    if (values.status !== undefined && values.status !== null && values.status !== '')
-      params.status = values.status;
-    setPageParams(params);
-  };
-
-  const handleReset = () => {
-    searchForm.resetFields();
-    setPageParams({ current: 1, size: 10 });
-  };
-
-  // 菜单树 onCheck
   const handleMenuCheck = (
-    checked:
-      | React.Key[]
-      | { checked: React.Key[]; halfChecked: React.Key[] },
+    checked: React.Key[] | { checked: React.Key[]; halfChecked: React.Key[] },
   ) => {
     const keys = Array.isArray(checked) ? checked : checked.checked;
     setCheckedKeys(keys as number[]);
   };
 
-  const columns = [
-    {
-      title: t('role.roleName'),
-      dataIndex: 'name',
-      key: 'name',
-      width: 160,
-    },
-    {
-      title: t('role.roleCode'),
-      dataIndex: 'code',
-      key: 'code',
-      width: 160,
-    },
+  const menuTreeNodes: DataNode[] = (menuTree ?? []).map((item) => ({
+    key: item.id,
+    title: item.name,
+    children: item.children
+      ? (item.children.map((c) => ({ key: c.id, title: c.name })) as DataNode[])
+      : undefined,
+  }));
+
+  const columns: ProColumns<RoleRecord>[] = [
+    { title: t('role.roleName'), dataIndex: 'name', width: 160, ellipsis: true },
+    { title: t('role.roleCode'), dataIndex: 'code', width: 160, ellipsis: true },
     {
       title: t('role.dataScope'),
       dataIndex: 'dataScope',
-      key: 'dataScope',
       width: 160,
-      render: (v: number) => {
-        const key = DATA_SCOPE_MAP[v];
+      valueType: 'select',
+      valueEnum: {
+        1: { text: t('role.dataScopeAll') },
+        2: { text: t('role.dataScopeDeptAndChild') },
+        3: { text: t('role.dataScopeDept') },
+        4: { text: t('role.dataScopeSelfAndChild') },
+        5: { text: t('role.dataScopeSelf') },
+      },
+      render: (_, record) => {
+        const key = DATA_SCOPE_MAP[record.dataScope];
         return key ? <Tag color="blue">{t(`role.${key}`)}</Tag> : '-';
       },
     },
-    {
-      title: t('role.sort'),
-      dataIndex: 'sort',
-      key: 'sort',
-      width: 80,
-    },
+    { title: t('role.sort'), dataIndex: 'sort', width: 80, search: false },
     {
       title: t('role.status'),
       dataIndex: 'status',
-      key: 'status',
       width: 100,
-      render: (v: number) =>
-        v === 1 ? (
+      valueType: 'select',
+      valueEnum: {
+        1: { text: t('role.enabled'), status: 'Success' },
+        0: { text: t('role.disabled'), status: 'Error' },
+      },
+      render: (_, record) =>
+        record.status === 1 ? (
           <Tag color="green">{t('role.enabled')}</Tag>
         ) : (
           <Tag color="red">{t('role.disabled')}</Tag>
@@ -245,185 +139,172 @@ export default function RolePage() {
     {
       title: t('role.createTime'),
       dataIndex: 'createTime',
-      key: 'createTime',
       width: 180,
-      render: (v: string) => v || '-',
+      valueType: 'dateTime',
+      search: false,
+      render: (v) => v || '-',
     },
     {
       title: t('role.action'),
-      key: 'action',
+      valueType: 'option',
+      key: 'option',
       width: 160,
-      fixed: 'right' as const,
-      render: (_: unknown, record: RoleRecord) => (
-        <Space size="small">
-          <Button
-            type="link"
-            size="small"
-            icon={<EditOutlined />}
-            onClick={() => handleOpenEdit(record)}
-          >
-            {t('common.edit')}
+      fixed: 'right',
+      render: (_, record) => [
+        <Button
+          key="edit"
+          type="link"
+          size="small"
+          icon={<EditOutlined />}
+          onClick={() => handleOpenEdit(record)}
+        >
+          {t('common.edit')}
+        </Button>,
+        <Popconfirm
+          key="del"
+          title={t('role.deleteConfirm')}
+          onConfirm={() => deleteMutation.mutate(record.id)}
+          okText={t('common.confirm')}
+          cancelText={t('common.cancel')}
+          okButtonProps={{ danger: true }}
+        >
+          <Button type="link" size="small" danger icon={<DeleteOutlined />}>
+            {t('common.delete')}
           </Button>
-          <Popconfirm
-            title={t('role.deleteConfirm')}
-            onConfirm={() => deleteMutation.mutate(record.id)}
-            okText={t('common.confirm')}
-            cancelText={t('common.cancel')}
-            okButtonProps={{ danger: true }}
-          >
-            <Button type="link" size="small" danger icon={<DeleteOutlined />}>
-              {t('common.delete')}
-            </Button>
-          </Popconfirm>
-        </Space>
-      ),
+        </Popconfirm>,
+      ],
     },
   ];
-
-  const submitting = createMutation.isPending || updateMutation.isPending;
 
   return (
     <div className="flex flex-col h-full">
       <h2 className="text-lg font-semibold mb-4">{t('menu.role')}</h2>
 
-      {/* 搜索栏 */}
-      <Card className="mb-4" styles={{ body: { padding: '16px' } }}>
-        <Form form={searchForm} layout="inline" className="flex flex-wrap gap-2">
-          <Form.Item name="name" label={t('role.roleName')}>
-            <Input placeholder={t('role.roleName')} allowClear />
-          </Form.Item>
-          <Form.Item name="code" label={t('role.roleCode')}>
-            <Input placeholder={t('role.roleCode')} allowClear />
-          </Form.Item>
-          <Form.Item name="status" label={t('role.status')}>
-            <Select placeholder={t('role.status')} allowClear style={{ width: 120 }}>
-              <Select.Option value={1}>{t('role.enabled')}</Select.Option>
-              <Select.Option value={0}>{t('role.disabled')}</Select.Option>
-            </Select>
-          </Form.Item>
-          <Form.Item>
-            <Space>
-              <Button type="primary" icon={<SearchOutlined />} onClick={handleSearch}>
-                {t('common.search')}
-              </Button>
-              <Button onClick={handleReset}>{t('common.reset')}</Button>
-            </Space>
-          </Form.Item>
-        </Form>
-      </Card>
-
-      {/* 表格区域 */}
-      <Card className="flex-1">
-        <div className="flex justify-between mb-4">
-          <Button type="primary" icon={<PlusOutlined />} onClick={handleOpenAdd}>
+      <ProTable<RoleRecord>
+        actionRef={actionRef}
+        rowKey="id"
+        headerTitle={t('menu.role')}
+        columns={columns}
+        scroll={{ x: 1000 }}
+        request={async (params) => {
+          const payload: RolePageParams = {
+            current: params.current ?? 1,
+            size: params.pageSize ?? 10,
+            name: params.name,
+            code: params.code,
+            status: params.status,
+          };
+          const res = await getRolePage(payload);
+          if (res.code !== 0) return { data: [], success: false, total: 0 };
+          return {
+            data: res.data.records,
+            success: true,
+            total: res.data.total,
+          };
+        }}
+        pagination={{ pageSize: 10, showSizeChanger: true }}
+        search={{ labelWidth: 'auto' }}
+        toolBarRender={() => [
+          <Button key="add" type="primary" icon={<PlusOutlined />} onClick={handleOpenAdd}>
             {t('role.addRole')}
-          </Button>
-          <Button
-            icon={<ReloadOutlined />}
-            onClick={() => queryClient.invalidateQueries({ queryKey: QUERY_KEY })}
-          >
-            {t('common.reset')}
-          </Button>
-        </div>
+          </Button>,
+        ]}
+        options={{ reload: true, density: true, setting: true }}
+      />
 
-        <Table
-          rowKey="id"
-          columns={columns}
-          dataSource={data?.records ?? []}
-          loading={isLoading}
-          scroll={{ x: 1000 }}
-          pagination={{
-            current: data?.current ?? pageParams.current,
-            pageSize: data?.size ?? pageParams.size,
-            total: data?.total ?? 0,
-            showSizeChanger: true,
-            showTotal: (total: number) => t('common.total', { total }),
-            onChange: (page: number, pageSize: number) => {
-              setPageParams((prev) => ({ ...prev, current: page, size: pageSize }));
-            },
-          }}
-        />
-      </Card>
-
-      {/* 新增/编辑弹窗 */}
-      <Modal
+      <ModalForm
         title={editMode ? t('role.editRole') : t('role.addRole')}
         open={modalOpen}
-        onOk={handleSubmit}
-        onCancel={handleCloseModal}
-        confirmLoading={submitting}
-        okText={t('common.confirm')}
-        cancelText={t('common.cancel')}
-        destroyOnClose
+        onOpenChange={(open) => {
+          setModalOpen(open);
+          if (!open) {
+            setEditMode(false);
+            setEditingRecord(null);
+            setCheckedKeys([]);
+          }
+        }}
         width={720}
+        layout="vertical"
+        initialValues={
+          editMode && editingRecord
+            ? {
+                name: editingRecord.name,
+                code: editingRecord.code,
+                description: editingRecord.description,
+                dataScope: editingRecord.dataScope,
+                sort: editingRecord.sort,
+                status: editingRecord.status,
+              }
+            : { dataScope: 1, sort: 0, status: 1 }
+        }
+        onFinish={async (values) => {
+          const payload = { ...values, menuIds: checkedKeys };
+          const res =
+            editMode && editingRecord
+              ? await updateMutation.mutateAsync({
+                  id: editingRecord.id,
+                  ...payload,
+                } as unknown as RoleUpdateRequest)
+              : await createMutation.mutateAsync(payload as unknown as RoleCreateRequest);
+          if (res.code !== 0) {
+            message.error(res.msg || t('common.error'));
+            return false;
+          }
+          message.success(editMode ? t('role.updateSuccess') : t('role.createSuccess'));
+          actionRef.current?.reload();
+          return true;
+        }}
       >
-        <Form form={form} layout="vertical" className="mt-4">
-          <div className="grid grid-cols-2 gap-x-4">
-            <Form.Item
-              name="name"
-              label={t('role.roleName')}
-              rules={[{ required: true, message: t('role.roleNameRequired') }]}
-            >
-              <Input placeholder={t('role.roleName')} />
-            </Form.Item>
+        <div className="grid grid-cols-2 gap-x-4">
+          <ProFormText
+            name="name"
+            label={t('role.roleName')}
+            disabled={editMode}
+            rules={[{ required: true, message: t('role.roleNameRequired') }]}
+          />
+          <ProFormText
+            name="code"
+            label={t('role.roleCode')}
+            disabled={editMode}
+            rules={[{ required: true, message: t('role.roleCodeRequired') }]}
+          />
+          <ProFormTextArea name="description" label={t('role.description')} className="col-span-2" />
+          <ProFormSelect
+            name="dataScope"
+            label={t('role.dataScope')}
+            rules={[{ required: true, message: t('role.dataScopeRequired') }]}
+            options={[
+              { label: t('role.dataScopeAll'), value: 1 },
+              { label: t('role.dataScopeDeptAndChild'), value: 2 },
+              { label: t('role.dataScopeDept'), value: 3 },
+              { label: t('role.dataScopeSelfAndChild'), value: 4 },
+              { label: t('role.dataScopeSelf'), value: 5 },
+            ]}
+          />
+          <ProFormDigit name="sort" label={t('role.sort')} min={0} />
+          <ProFormRadio.Group
+            name="status"
+            label={t('role.status')}
+            rules={[{ required: true }]}
+            options={[
+              { label: t('role.enabled'), value: 1 },
+              { label: t('role.disabled'), value: 0 },
+            ]}
+          />
+        </div>
 
-            <Form.Item
-              name="code"
-              label={t('role.roleCode')}
-              rules={[{ required: true, message: t('role.roleCodeRequired') }]}
-            >
-              <Input placeholder={t('role.roleCode')} disabled={editMode} />
-            </Form.Item>
-
-            <Form.Item name="description" label={t('role.description')} className="col-span-2">
-              <Input.TextArea rows={2} placeholder={t('role.description')} />
-            </Form.Item>
-
-            <Form.Item
-              name="dataScope"
-              label={t('role.dataScope')}
-              rules={[{ required: true, message: t('role.dataScopeRequired') }]}
-            >
-              <Select placeholder={t('role.dataScope')}>
-                <Select.Option value={1}>{t('role.dataScopeAll')}</Select.Option>
-                <Select.Option value={2}>{t('role.dataScopeDeptAndChild')}</Select.Option>
-                <Select.Option value={3}>{t('role.dataScopeDept')}</Select.Option>
-                <Select.Option value={4}>{t('role.dataScopeSelfAndChild')}</Select.Option>
-                <Select.Option value={5}>{t('role.dataScopeSelf')}</Select.Option>
-              </Select>
-            </Form.Item>
-
-            <Form.Item name="sort" label={t('role.sort')}>
-              <InputNumber min={0} className="w-full" />
-            </Form.Item>
-
-            <Form.Item
-              name="status"
-              label={t('role.status')}
-              rules={[{ required: true }]}
-            >
-              <Radio.Group>
-                <Radio value={1}>{t('role.enabled')}</Radio>
-                <Radio value={0}>{t('role.disabled')}</Radio>
-              </Radio.Group>
-            </Form.Item>
-          </div>
-
-          {/* 菜单权限 */}
-          <Form.Item label={t('role.assignMenus')}>
-            <Tree
-              checkable
-              checkedKeys={checkedKeys}
-              onCheck={handleMenuCheck}
-              treeData={menuTree}
-              fieldNames={{ key: 'id', title: 'name', children: 'children' }}
-              defaultExpandAll
-              height={280}
-              className="border rounded p-2"
-            />
-          </Form.Item>
-        </Form>
-      </Modal>
+        <Form.Item label={t('role.assignMenus')}>
+          <Tree
+            checkable
+            checkedKeys={checkedKeys}
+            onCheck={handleMenuCheck}
+            treeData={menuTreeNodes}
+            defaultExpandAll
+            height={280}
+            className="border rounded p-2"
+          />
+        </Form.Item>
+      </ModalForm>
     </div>
   );
 }

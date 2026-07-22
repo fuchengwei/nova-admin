@@ -1,10 +1,11 @@
-import { Card, Col, Row, Statistic, Tag, Typography } from 'antd';
+import { Tag, Typography } from 'antd';
 import {
   UserOutlined,
   TeamOutlined,
   SafetyCertificateOutlined,
   RocketOutlined,
 } from '@ant-design/icons';
+import { ProCard, StatisticCard } from '@ant-design/pro-components';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { ping } from '@/api/auth';
@@ -21,39 +22,31 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-4">
-      <Card>
+      <ProCard>
         <Title level={3} className="!mb-2">
           {t('menu.dashboard')}
         </Title>
         <Paragraph type="secondary" className="!mb-0">
           Nova Admin 初始化完成。后续 Phase 将逐步完善用户/角色/菜单/数据权限等模块。
         </Paragraph>
-      </Card>
+      </ProCard>
 
-      <Row gutter={16}>
-        <Col xs={24} sm={12} lg={6}>
-          <Card>
-            <Statistic title="用户" value={0} prefix={<UserOutlined />} />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <Card>
-            <Statistic title="角色" value={0} prefix={<TeamOutlined />} />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <Card>
-            <Statistic title="菜单" value={3} prefix={<SafetyCertificateOutlined />} />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <Card>
-            <Statistic title="当前 Phase" value={'Phase 0'} prefix={<RocketOutlined />} />
-          </Card>
-        </Col>
-      </Row>
+      <ProCard gutter={16} wrap>
+        <StatisticCard colSpan={6} title="用户" statistic={{ value: 0, prefix: <UserOutlined /> }} />
+        <StatisticCard colSpan={6} title="角色" statistic={{ value: 0, prefix: <TeamOutlined /> }} />
+        <StatisticCard
+          colSpan={6}
+          title="菜单"
+          statistic={{ value: 3, prefix: <SafetyCertificateOutlined /> }}
+        />
+        <StatisticCard
+          colSpan={6}
+          title="当前 Phase"
+          statistic={{ value: 'Phase 0', prefix: <RocketOutlined /> }}
+        />
+      </ProCard>
 
-      <Card title="后端连通性" loading={isLoading}>
+      <ProCard title="后端连通性" loading={isLoading}>
         {data && data.code === 0 ? (
           <div>
             <Tag color="success">ONLINE</Tag> {data.data.app} v{data.data.version}
@@ -62,7 +55,7 @@ export default function DashboardPage() {
         ) : (
           <Tag color="warning">OFFLINE</Tag>
         )}
-      </Card>
+      </ProCard>
     </div>
   );
 }

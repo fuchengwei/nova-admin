@@ -20,7 +20,7 @@
 | 项目组织 | Monorepo 单仓库（默认分支 `master`） |
 | 后端框架 | **Spring Boot 4.1.0** + **Java 25** |
 | 前端框架 | **Vite 8.0** + **React 19** + **TypeScript 7.0** |
-| UI 库 | **Ant Design 6.5.0** + **Tailwind CSS 4** |
+| UI 库 | **Ant Design 6.5.0** + **ProComponents 3.x (`@ant-design/pro-components@^3`)** + **Tailwind CSS 4** |
 | 状态管理 | Zustand 5 + TanStack Query 5 |
 | 认证 | **Spring Security 7.1.0** + JJWT 0.12.x + Redis 黑名单 |
 | ORM | **MyBatis-Plus** | 单表 CRUD/分页/动态条件/复杂 SQL |

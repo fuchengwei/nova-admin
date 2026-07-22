@@ -1,30 +1,23 @@
 import { useState, useMemo } from 'react';
-import {
-  Card,
-  Tree,
-  TreeSelect,
-  Button,
-  Space,
-  Tag,
-  Modal,
-  Form,
-  Input,
-  InputNumber,
-  Radio,
-  Switch,
-  Popconfirm,
-  Descriptions,
-  message,
-} from 'antd';
+import { Button, Tree, Space, Tag, Popconfirm, message } from 'antd';
+import type { DataNode } from 'antd/es/tree';
 import {
   PlusOutlined,
   EditOutlined,
   DeleteOutlined,
 } from '@ant-design/icons';
-import * as Icons from '@ant-design/icons';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import {
+  ProCard,
+  ProDescriptions,
+  ModalForm,
+  ProFormText,
+  ProFormRadio,
+  ProFormTreeSelect,
+  ProFormDigit,
+  ProFormDependency,
+} from '@ant-design/pro-components';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import type { MenuInfo } from '@/types/api';
 import {
   getMenuTree,
   createMenu,
@@ -33,209 +26,115 @@ import {
   type MenuCreateRequest,
   type MenuUpdateRequest,
 } from '@/api/menu';
+import type { MenuInfo } from '@/types/api';
 
-const QUERY_KEY = ['menuTree'];
+type TreeSelectNode = { value: number; title: string; children?: TreeSelectNode[] };
 
-/** 字符串图标名 → React 图标组件映射 */
 const iconMap: Record<string, React.ReactNode> = {
-  SettingOutlined: <Icons.SettingOutlined />,
-  ApartmentOutlined: <Icons.ApartmentOutlined />,
-  UserOutlined: <Icons.UserOutlined />,
-  TeamOutlined: <Icons.TeamOutlined />,
-  MenuOutlined: <Icons.MenuOutlined />,
-  BookOutlined: <Icons.BookOutlined />,
-  CodeOutlined: <Icons.CodeOutlined />,
-  FileOutlined: <Icons.FileOutlined />,
-  MonitorOutlined: <Icons.MonitorOutlined />,
-  CloudServerOutlined: <Icons.CloudServerOutlined />,
-  ScheduleOutlined: <Icons.ScheduleOutlined />,
-  DashboardOutlined: <Icons.DashboardOutlined />,
-  SafetyOutlined: <Icons.SafetyOutlined />,
-  TableOutlined: <Icons.TableOutlined />,
-  ToolOutlined: <Icons.ToolOutlined />,
+  DashboardOutlined: <span>📊</span>,
+  UserOutlined: <span>👤</span>,
+  SettingOutlined: <span>⚙️</span>,
+  BarsOutlined: <span>☰</span>,
+  ApartmentOutlined: <span>🏢</span>,
 };
 
-const getIcon = (iconName?: string): React.ReactNode =>
-  (iconName && iconMap[iconName]) || <Icons.AppstoreOutlined />;
+const getIcon = (iconName?: string) => {
+  if (!iconName) return null;
+  return iconMap[iconName] ?? <span>{iconName}</span>;
+};
+
+const getTypeTag = (t: (k: string) => string, type?: string) => {
+  if (type === 'M') return <Tag color="blue">{t('menu.typeDir')}</Tag>;
+  if (type === 'C') return <Tag color="green">{t('menu.typeMenu')}</Tag>;
+  if (type === 'F') return <Tag color="orange">{t('menu.typeButton')}</Tag>;
+  return <Tag>{type}</Tag>;
+};
 
 export default function MenuPage() {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
-  const [form] = Form.useForm();
 
   const [selectedMenu, setSelectedMenu] = useState<MenuInfo | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [editMode, setEditMode] = useState(false);
-  const [menuType, setMenuType] = useState<string>('M');
 
-  // 查询菜单树
-  const { data: treeData, isLoading } = useQuery({
-    queryKey: QUERY_KEY,
+  const { data: menuTree, isLoading } = useQuery({
+    queryKey: ['menuTree'],
     queryFn: async () => {
       const res = await getMenuTree();
       return res.data ?? [];
     },
   });
 
-  // Mutations
-  const createMutation = useMutation({
-    mutationFn: createMenu,
-    onSuccess: (res) => {
-      if (res.code === 0) {
-        message.success(t('menu.createSuccess'));
-        queryClient.invalidateQueries({ queryKey: QUERY_KEY });
-        handleCloseModal();
-      }
-    },
-  });
+  const createMutation = useMutation({ mutationFn: createMenu });
+  const updateMutation = useMutation({ mutationFn: updateMenu });
+  const deleteMutation = useMutation({ mutationFn: deleteMenu });
 
-  const updateMutation = useMutation({
-    mutationFn: updateMenu,
-    onSuccess: (res) => {
-      if (res.code === 0) {
-        message.success(t('menu.updateSuccess'));
-        queryClient.invalidateQueries({ queryKey: QUERY_KEY });
-        handleCloseModal();
-      }
-    },
-  });
-
-  const deleteMutation = useMutation({
-    mutationFn: deleteMenu,
-    onSuccess: (res) => {
-      if (res.code === 0) {
-        message.success(t('menu.deleteSuccess'));
-        setSelectedMenu(null);
-        queryClient.invalidateQueries({ queryKey: QUERY_KEY });
-      }
-    },
-  });
-
-  // 树选中
-  const handleSelect = (_: unknown, info: { node: MenuInfo }) => {
-    setSelectedMenu(info.node);
+  const findMenu = (nodes: MenuInfo[] | undefined, id: number): MenuInfo | null => {
+    if (!nodes) return null;
+    for (const n of nodes) {
+      if (n.id === id) return n;
+      const f = findMenu(n.children, id);
+      if (f) return f;
+    }
+    return null;
   };
 
-  // 打开新增
+  const handleSelect = (_: unknown, info: { node: DataNode }) => {
+    const key = info.node.key as number;
+    setSelectedMenu(findMenu(menuTree, key));
+  };
+
   const handleAdd = () => {
     setEditMode(false);
-    form.resetFields();
-    form.setFieldsValue({
-      parentId: selectedMenu?.id ?? 0,
-      type: 'M',
-      sort: 0,
-      status: 1,
-      visible: 1,
-      keepAlive: 0,
-      alwaysShow: 0,
-    });
-    setMenuType('M');
     setModalOpen(true);
   };
 
-  // 打开新增子菜单
   const handleAddChild = () => {
     if (!selectedMenu) return;
     setEditMode(false);
-    form.resetFields();
-    form.setFieldsValue({
-      parentId: selectedMenu.id,
-      type: 'M',
-      sort: 0,
-      status: 1,
-      visible: 1,
-      keepAlive: 0,
-      alwaysShow: 0,
-    });
-    setMenuType('M');
     setModalOpen(true);
   };
 
-  // 打开编辑
   const handleEdit = () => {
     if (!selectedMenu) return;
     setEditMode(true);
-    form.resetFields();
-    form.setFieldsValue({
-      parentId: selectedMenu.parentId,
-      name: selectedMenu.name,
-      type: selectedMenu.type,
-      perms: selectedMenu.perms,
-      path: selectedMenu.path,
-      component: selectedMenu.component,
-      redirect: selectedMenu.redirect,
-      icon: selectedMenu.icon,
-      sort: selectedMenu.sort,
-      visible: selectedMenu.visible,
-      status: selectedMenu.status,
-      keepAlive: selectedMenu.keepAlive ?? 0,
-      alwaysShow: selectedMenu.alwaysShow ?? 0,
-    });
-    setMenuType(selectedMenu.type);
     setModalOpen(true);
   };
 
-  // 关闭弹窗
-  const handleCloseModal = () => {
-    setModalOpen(false);
-    form.resetFields();
-  };
+  const menuNodes: DataNode[] = useMemo(
+    () =>
+      (menuTree ?? []).map((n) => ({
+        key: n.id,
+        title: (
+          <Space size={4}>
+            {getIcon(n.icon)}
+            <span>{n.name}</span>
+          </Space>
+        ),
+        children: n.children
+          ? (n.children.map((c) => ({
+              key: c.id,
+              title: (
+                <Space size={4}>
+                  {getIcon(c.icon)}
+                  <span>{c.name}</span>
+                </Space>
+              ),
+            })) as DataNode[])
+          : undefined,
+      })),
+    [menuTree],
+  );
 
-  // 提交表单
-  const handleSubmit = async () => {
-    try {
-      const values = await form.validateFields();
-      if (editMode && selectedMenu) {
-        const data: MenuUpdateRequest = { id: selectedMenu.id, ...values };
-        updateMutation.mutate(data);
-      } else {
-        const data: MenuCreateRequest = { ...values };
-        createMutation.mutate(data);
-      }
-    } catch {
-      // validation failed
-    }
-  };
-
-  // 将菜单树转为 TreeSelect 数据
-  const buildTreeSelectData = (
-    data: MenuInfo[],
-  ): { value: number; title: string; children?: ReturnType<typeof buildTreeSelectData> }[] =>
+  const buildTreeSelectData = (data: MenuInfo[]): TreeSelectNode[] =>
     data.map((item) => ({
       value: item.id,
       title: item.name,
       children: item.children ? buildTreeSelectData(item.children) : undefined,
     }));
 
-  const treeSelectData = useMemo(
-    () => buildTreeSelectData(treeData ?? []),
-    [treeData],
-  );
-
-  // 删除前检查子菜单
-  const hasChildren = useMemo(() => {
-    if (!selectedMenu) return false;
-    return !!(selectedMenu.children && selectedMenu.children.length > 0);
-  }, [selectedMenu]);
-
-  // 表单监听类型变化
-  const type = Form.useWatch('type', form);
-
-  const submitting = createMutation.isPending || updateMutation.isPending;
-
-  // 类型对应的 Tag 颜色和文字
-  const getTypeTag = (menuType: string) => {
-    switch (menuType) {
-      case 'M':
-        return <Tag color="blue">{t('menu.typeDir')}</Tag>;
-      case 'C':
-        return <Tag color="green">{t('menu.typeMenu')}</Tag>;
-      case 'F':
-        return <Tag color="orange">{t('menu.typeButton')}</Tag>;
-      default:
-        return '-';
-    }
-  };
+  const treeSelectData = useMemo(() => buildTreeSelectData(menuTree ?? []), [menuTree]);
 
   return (
     <div className="flex flex-col h-full">
@@ -247,107 +146,79 @@ export default function MenuPage() {
       </div>
 
       <div className="flex gap-4 flex-1 min-h-0">
-        {/* 左侧菜单树 */}
-        <Card
-          className="w-72 shrink-0 overflow-auto"
-          styles={{ body: { padding: '12px' } }}
-          loading={isLoading}
-        >
-          {treeData && treeData.length > 0 && (
+        <ProCard className="w-72 shrink-0 overflow-auto" loading={isLoading}>
+          {menuNodes.length > 0 && (
             <Tree
-              treeData={treeData}
-              fieldNames={{ key: 'id', title: 'name', children: 'children' }}
+              treeData={menuNodes}
               defaultExpandAll
               showLine={{ showLeafIcon: false }}
-              showIcon={false}
-              titleRender={(node: any) => (
-                <Space size={4}>
-                  {getIcon(node.icon)}
-                  <span>{node.name}</span>
-                </Space>
-              )}
+              showIcon
               onSelect={handleSelect}
               selectedKeys={selectedMenu ? [selectedMenu.id] : []}
             />
           )}
-        </Card>
+        </ProCard>
 
-        {/* 右侧详情 */}
-        <Card className="flex-1 overflow-auto">
+        <ProCard className="flex-1 overflow-auto">
           {selectedMenu ? (
             <>
-              <Descriptions
+              <ProDescriptions<MenuInfo>
+                title={selectedMenu.name}
+                dataSource={selectedMenu}
                 column={2}
-                bordered
-                size="small"
-                title={
-                  <Space>
-                    {selectedMenu.name}
-                    {getTypeTag(selectedMenu.type)}
-                  </Space>
-                }
-              >
-                <Descriptions.Item label={t('menu.menuName')}>
-                  {selectedMenu.name}
-                </Descriptions.Item>
-                <Descriptions.Item label={t('menu.menuType')}>
-                  {getTypeTag(selectedMenu.type)}
-                </Descriptions.Item>
-                <Descriptions.Item label={t('menu.perms')}>
-                  {selectedMenu.perms || '-'}
-                </Descriptions.Item>
-                <Descriptions.Item label={t('menu.path')}>
-                  {selectedMenu.path || '-'}
-                </Descriptions.Item>
-                <Descriptions.Item label={t('menu.component')}>
-                  {selectedMenu.component || '-'}
-                </Descriptions.Item>
-                <Descriptions.Item label={t('menu.redirect')}>
-                  {selectedMenu.redirect || '-'}
-                </Descriptions.Item>
-                <Descriptions.Item label={t('menu.icon')}>
-                  {selectedMenu.icon || '-'}
-                </Descriptions.Item>
-                <Descriptions.Item label={t('menu.sort')}>
-                  {selectedMenu.sort}
-                </Descriptions.Item>
-                <Descriptions.Item label={t('menu.visible')}>
-                  {selectedMenu.visible === 1 ? (
-                    <Tag color="green">{t('menu.yes')}</Tag>
-                  ) : (
-                    <Tag color="red">{t('menu.no')}</Tag>
-                  )}
-                </Descriptions.Item>
-                <Descriptions.Item label={t('menu.status')}>
-                  {selectedMenu.status === 1 ? (
-                    <Tag color="green">{t('menu.enabled')}</Tag>
-                  ) : (
-                    <Tag color="red">{t('menu.disabled')}</Tag>
-                  )}
-                </Descriptions.Item>
-                <Descriptions.Item label={t('menu.keepAlive')}>
-                  {(selectedMenu.keepAlive ?? 0) === 1 ? (
-                    <Tag color="green">{t('menu.yes')}</Tag>
-                  ) : (
-                    <Tag color="red">{t('menu.no')}</Tag>
-                  )}
-                </Descriptions.Item>
-                <Descriptions.Item label={t('menu.alwaysShow')}>
-                  {(selectedMenu.alwaysShow ?? 0) === 1 ? (
-                    <Tag color="green">{t('menu.yes')}</Tag>
-                  ) : (
-                    <Tag color="red">{t('menu.no')}</Tag>
-                  )}
-                </Descriptions.Item>
-              </Descriptions>
+                columns={[
+                  { title: t('menu.menuName'), dataIndex: 'name' },
+                  { title: t('menu.menuType'), dataIndex: 'type', render: (_, r) => getTypeTag(t, r.type) },
+                  { title: t('menu.perms'), dataIndex: 'perms', render: (v) => v || '-' },
+                  { title: t('menu.path'), dataIndex: 'path', render: (v) => v || '-' },
+                  { title: t('menu.component'), dataIndex: 'component', render: (v) => v || '-' },
+                  { title: t('menu.redirect'), dataIndex: 'redirect', render: (v) => v || '-' },
+                  { title: t('menu.icon'), dataIndex: 'icon', render: (v) => (v ? getIcon(v as string) : '-') },
+                  { title: t('menu.sort'), dataIndex: 'sort' },
+                  {
+                    title: t('menu.visible'),
+                    dataIndex: 'visible',
+                    render: (_, r) =>
+                      r.visible === 1 ? (
+                        <Tag color="green">{t('menu.yes')}</Tag>
+                      ) : (
+                        <Tag color="red">{t('menu.no')}</Tag>
+                      ),
+                  },
+                  {
+                    title: t('menu.status'),
+                    dataIndex: 'status',
+                    valueEnum: {
+                      1: { text: t('menu.enabled'), status: 'Success' },
+                      0: { text: t('menu.disabled'), status: 'Error' },
+                    },
+                  },
+                  {
+                    title: t('menu.keepAlive'),
+                    dataIndex: 'keepAlive',
+                    render: (_, r) =>
+                      r.keepAlive === 1 ? (
+                        <Tag color="green">{t('menu.yes')}</Tag>
+                      ) : (
+                        <Tag color="red">{t('menu.no')}</Tag>
+                      ),
+                  },
+                  {
+                    title: t('menu.alwaysShow'),
+                    dataIndex: 'alwaysShow',
+                    render: (_, r) =>
+                      r.alwaysShow === 1 ? (
+                        <Tag color="green">{t('menu.yes')}</Tag>
+                      ) : (
+                        <Tag color="red">{t('menu.no')}</Tag>
+                      ),
+                  },
+                ]}
+              />
 
               <div className="mt-4">
                 <Space>
-                  <Button
-                    type="primary"
-                    icon={<EditOutlined />}
-                    onClick={handleEdit}
-                  >
+                  <Button type="primary" icon={<EditOutlined />} onClick={handleEdit}>
                     {t('common.edit')}
                   </Button>
                   <Button icon={<PlusOutlined />} onClick={handleAddChild}>
@@ -355,17 +226,18 @@ export default function MenuPage() {
                   </Button>
                   <Popconfirm
                     title={t('menu.deleteConfirm')}
-                    description={hasChildren ? t('menu.hasChildren') : undefined}
-                    onConfirm={() => deleteMutation.mutate(selectedMenu.id)}
+                    description={selectedMenu.children && selectedMenu.children.length > 0 ? t('menu.hasChildren') : undefined}
+                    onConfirm={() => {
+                      if (!selectedMenu) return;
+                      deleteMutation.mutate(selectedMenu.id);
+                      setSelectedMenu(null);
+                      queryClient.invalidateQueries({ queryKey: ['menuTree'] });
+                    }}
                     okText={t('common.confirm')}
                     cancelText={t('common.cancel')}
                     okButtonProps={{ danger: true }}
                   >
-                    <Button
-                      danger
-                      icon={<DeleteOutlined />}
-                      loading={deleteMutation.isPending}
-                    >
+                    <Button danger icon={<DeleteOutlined />} loading={deleteMutation.isPending}>
                       {t('common.delete')}
                     </Button>
                   </Popconfirm>
@@ -373,150 +245,143 @@ export default function MenuPage() {
               </div>
             </>
           ) : (
-            <div className="flex items-center justify-center h-64 text-gray-400">
-              {t('menu.selectHint')}
-            </div>
+            <div className="flex items-center justify-center h-64 text-gray-400">{t('menu.selectHint')}</div>
           )}
-        </Card>
+        </ProCard>
       </div>
 
-      {/* 新增/编辑弹窗 */}
-      <Modal
+      <ModalForm
         title={editMode ? t('menu.editMenu') : t('menu.addMenu')}
         open={modalOpen}
-        onOk={handleSubmit}
-        onCancel={handleCloseModal}
-        confirmLoading={submitting}
-        okText={t('common.confirm')}
-        cancelText={t('common.cancel')}
-        destroyOnClose
+        onOpenChange={(open) => {
+          setModalOpen(open);
+          if (!open) setEditMode(false);
+        }}
         width={640}
+        layout="vertical"
+        initialValues={
+          editMode && selectedMenu
+            ? {
+                parentId: selectedMenu.parentId,
+                name: selectedMenu.name,
+                type: selectedMenu.type,
+                perms: selectedMenu.perms,
+                path: selectedMenu.path,
+                component: selectedMenu.component,
+                redirect: selectedMenu.redirect,
+                icon: selectedMenu.icon,
+                sort: selectedMenu.sort,
+                visible: selectedMenu.visible,
+                status: selectedMenu.status,
+                keepAlive: selectedMenu.keepAlive,
+                alwaysShow: selectedMenu.alwaysShow,
+              }
+            : {
+                parentId: selectedMenu?.id ?? 0,
+                type: 'M',
+                sort: 0,
+                visible: 1,
+                status: 1,
+                keepAlive: 1,
+                alwaysShow: 1,
+              }
+        }
+        onFinish={async (values) => {
+          const res =
+            editMode && selectedMenu
+              ? await updateMutation.mutateAsync({ id: selectedMenu.id, ...values } as unknown as MenuUpdateRequest)
+              : await createMutation.mutateAsync(values as unknown as MenuCreateRequest);
+          if (res.code !== 0) {
+            message.error(res.msg || t('common.error'));
+            return false;
+          }
+          message.success(editMode ? t('menu.updateSuccess') : t('menu.createSuccess'));
+          queryClient.invalidateQueries({ queryKey: ['menuTree'] });
+          return true;
+        }}
       >
-        <Form form={form} layout="vertical" className="mt-4">
-          <Form.Item
-            name="parentId"
-            label={t('menu.parentMenu')}
-            rules={[{ required: true, message: t('menu.parentMenuRequired') }]}
-          >
-            <TreeSelect
-              treeData={[{ value: 0, title: t('menu.rootMenu'), children: treeSelectData }]}
-              placeholder={t('menu.parentMenu')}
-              treeDefaultExpandAll
-              allowClear
-            />
-          </Form.Item>
+        <ProFormTreeSelect
+          name="parentId"
+          label={t('menu.parentMenu')}
+          rules={[{ required: true, message: t('menu.parentMenuRequired') }]}
+          fieldProps={{
+            treeData: [{ value: 0, title: t('menu.rootMenu'), children: treeSelectData }],
+            allowClear: true,
+            treeDefaultExpandAll: true,
+            placeholder: t('menu.parentMenu'),
+          }}
+        />
+        <ProFormRadio.Group
+          name="type"
+          label={t('menu.menuType')}
+          disabled={editMode}
+          rules={[{ required: true }]}
+          options={[
+            { label: t('menu.typeDir'), value: 'M' },
+            { label: t('menu.typeMenu'), value: 'C' },
+            { label: t('menu.typeButton'), value: 'F' },
+          ]}
+        />
+        <ProFormText
+          name="name"
+          label={t('menu.menuName')}
+          rules={[{ required: true, message: t('menu.menuNameRequired') }]}
+        />
 
-          <Form.Item
-            name="type"
-            label={t('menu.menuType')}
-            rules={[{ required: true }]}
-          >
-            <Radio.Group
-              onChange={(e) => setMenuType(e.target.value)}
-              disabled={editMode}
-            >
-              <Radio value="M">{t('menu.typeDir')}</Radio>
-              <Radio value="C">{t('menu.typeMenu')}</Radio>
-              <Radio value="F">{t('menu.typeButton')}</Radio>
-            </Radio.Group>
-          </Form.Item>
+        <ProFormDependency name={['type']}>
+          {({ type }) => {
+            const mt = (type as string) || selectedMenu?.type || 'M';
+            return (
+              <>
+                {mt !== 'F' && <ProFormText name="icon" label={t('menu.icon')} />}
+                {mt !== 'F' && <ProFormText name="path" label={t('menu.path')} />}
+                {mt === 'C' && <ProFormText name="component" label={t('menu.component')} />}
+                {mt === 'M' && <ProFormText name="redirect" label={t('menu.redirect')} />}
+                {mt !== 'M' && <ProFormText name="perms" label={t('menu.perms')} />}
+                {mt !== 'F' && (
+                  <div className="grid grid-cols-3 gap-x-4">
+                    <ProFormRadio.Group
+                      name="visible"
+                      label={t('menu.visible')}
+                      options={[
+                        { label: t('menu.yes'), value: 1 },
+                        { label: t('menu.no'), value: 0 },
+                      ]}
+                    />
+                    <ProFormRadio.Group
+                      name="keepAlive"
+                      label={t('menu.keepAlive')}
+                      options={[
+                        { label: t('menu.yes'), value: 1 },
+                        { label: t('menu.no'), value: 0 },
+                      ]}
+                    />
+                    <ProFormRadio.Group
+                      name="alwaysShow"
+                      label={t('menu.alwaysShow')}
+                      options={[
+                        { label: t('menu.yes'), value: 1 },
+                        { label: t('menu.no'), value: 0 },
+                      ]}
+                    />
+                  </div>
+                )}
+              </>
+            );
+          }}
+        </ProFormDependency>
 
-          <Form.Item
-            name="name"
-            label={t('menu.menuName')}
-            rules={[{ required: true, message: t('menu.menuNameRequired') }]}
-          >
-            <Input placeholder={t('menu.menuName')} />
-          </Form.Item>
-
-          {/* M/C 显示图标 */}
-          {(type ?? menuType) !== 'F' && (
-            <Form.Item name="icon" label={t('menu.icon')}>
-              <Input placeholder={t('menu.icon')} />
-            </Form.Item>
-          )}
-
-          {/* M/C 显示路由路径 */}
-          {(type ?? menuType) !== 'F' && (
-            <Form.Item name="path" label={t('menu.path')}>
-              <Input placeholder={t('menu.path')} />
-            </Form.Item>
-          )}
-
-          {/* C 显示组件路径 */}
-          {(type ?? menuType) === 'C' && (
-            <Form.Item name="component" label={t('menu.component')}>
-              <Input placeholder={t('menu.component')} />
-            </Form.Item>
-          )}
-
-          {/* M 显示重定向 */}
-          {(type ?? menuType) === 'M' && (
-            <Form.Item name="redirect" label={t('menu.redirect')}>
-              <Input placeholder={t('menu.redirect')} />
-            </Form.Item>
-          )}
-
-          {/* C/F 显示权限标识 */}
-          {(type ?? menuType) !== 'M' && (
-            <Form.Item name="perms" label={t('menu.perms')}>
-              <Input placeholder={t('menu.perms')} />
-            </Form.Item>
-          )}
-
-          <div className="grid grid-cols-2 gap-x-4">
-            <Form.Item name="sort" label={t('menu.sort')}>
-              <InputNumber min={0} className="w-full" />
-            </Form.Item>
-
-            <Form.Item
-              name="status"
-              label={t('menu.status')}
-              rules={[{ required: true }]}
-            >
-              <Radio.Group>
-                <Radio value={1}>{t('menu.enabled')}</Radio>
-                <Radio value={0}>{t('menu.disabled')}</Radio>
-              </Radio.Group>
-            </Form.Item>
-          </div>
-
-          {/* M/C 显示可见性 */}
-          {(type ?? menuType) !== 'F' && (
-            <div className="grid grid-cols-3 gap-x-4">
-              <Form.Item
-                name="visible"
-                label={t('menu.visible')}
-                valuePropName="checked"
-                getValueFromEvent={(checked: boolean) => (checked ? 1 : 0)}
-                getValueProps={(value: number) => ({ checked: value === 1 })}
-              >
-                <Switch />
-              </Form.Item>
-
-              <Form.Item
-                name="keepAlive"
-                label={t('menu.keepAlive')}
-                valuePropName="checked"
-                getValueFromEvent={(checked: boolean) => (checked ? 1 : 0)}
-                getValueProps={(value: number) => ({ checked: value === 1 })}
-              >
-                <Switch />
-              </Form.Item>
-
-              <Form.Item
-                name="alwaysShow"
-                label={t('menu.alwaysShow')}
-                valuePropName="checked"
-                getValueFromEvent={(checked: boolean) => (checked ? 1 : 0)}
-                getValueProps={(value: number) => ({ checked: value === 1 })}
-              >
-                <Switch />
-              </Form.Item>
-            </div>
-          )}
-        </Form>
-      </Modal>
+        <ProFormDigit name="sort" label={t('menu.sort')} min={0} />
+        <ProFormRadio.Group
+          name="status"
+          label={t('menu.status')}
+          rules={[{ required: true }]}
+          options={[
+            { label: t('menu.enabled'), value: 1 },
+            { label: t('menu.disabled'), value: 0 },
+          ]}
+        />
+      </ModalForm>
     </div>
   );
 }

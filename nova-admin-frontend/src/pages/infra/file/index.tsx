@@ -1,73 +1,55 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
+import { Button, Tag, Modal, Popconfirm, message, Image, Upload, type UploadProps } from 'antd';
 import {
-  Card,
-  Table,
-  Button,
-  Space,
-  Tag,
-  Modal,
-  Form,
-  Input,
-  Select,
-  Upload,
-  Popconfirm,
-  message,
-  Image,
-} from 'antd';
-import {
-  PlusOutlined,
   DeleteOutlined,
   ReloadOutlined,
-  SearchOutlined,
-  DownloadOutlined,
   EyeOutlined,
   UploadOutlined,
 } from '@ant-design/icons';
-import type { UploadProps } from 'antd';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import {
+  ProTable,
+  type ProColumns,
+  type ActionType,
+} from '@ant-design/pro-components';
+import { useMutation } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { getFilePage, uploadFile, deleteFile, type FileRecord } from '@/api/file';
 
-const FILE_PAGE_KEY = ['filePage'];
-
-/** 文件大小格式化 */
 function formatFileSize(size?: number): string {
   if (size === undefined || size === null) return '-';
-  if (size > 1024 * 1024) {
-    return `${(size / (1024 * 1024)).toFixed(2)} MB`;
-  }
+  if (size > 1024 * 1024) return `${(size / (1024 * 1024)).toFixed(2)} MB`;
   return `${(size / 1024).toFixed(2)} KB`;
 }
 
-/** 判断是否为图片类型 */
 function isImage(contentType?: string): boolean {
   return contentType ? contentType.startsWith('image/') : false;
 }
 
+const contentTypeEnum = {
+  'image/png': { text: 'image/png' },
+  'image/jpeg': { text: 'image/jpeg' },
+  'image/gif': { text: 'image/gif' },
+  'image/webp': { text: 'image/webp' },
+  'application/pdf': { text: 'application/pdf' },
+  'text/plain': { text: 'text/plain' },
+  'application/json': { text: 'application/json' },
+};
+
 export default function FilePage() {
   const { t } = useTranslation();
-  const queryClient = useQueryClient();
-  const [searchForm] = Form.useForm();
+  const actionRef = useRef<ActionType>(null);
 
-  const [pageParams, setPageParams] = useState<any>({ current: 1, size: 10 });
   const [previewOpen, setPreviewOpen] = useState(false);
   const [previewFile, setPreviewFile] = useState<FileRecord | null>(null);
-
-  // ========== Queries & Mutations ==========
-  const { data, isLoading } = useQuery({
-    queryKey: [...FILE_PAGE_KEY, pageParams],
-    queryFn: async () => {
-      const res = await getFilePage(pageParams);
-      return res.data;
-    },
-  });
 
   const uploadMutation = useMutation({
     mutationFn: uploadFile,
     onSuccess: (res) => {
       if (res.code === 0) {
         message.success(t('file.uploadSuccess'));
-        queryClient.invalidateQueries({ queryKey: FILE_PAGE_KEY });
+        actionRef.current?.reload();
+      } else {
+        message.error(res.msg || t('common.error'));
       }
     },
   });
@@ -77,24 +59,12 @@ export default function FilePage() {
     onSuccess: (res) => {
       if (res.code === 0) {
         message.success(t('file.deleteSuccess'));
-        queryClient.invalidateQueries({ queryKey: FILE_PAGE_KEY });
+        actionRef.current?.reload();
+      } else {
+        message.error(res.msg || t('common.error'));
       }
     },
   });
-
-  // ========== Handlers ==========
-  const handleSearch = () => {
-    const values = searchForm.getFieldsValue();
-    const params: any = { current: 1, size: pageParams.size };
-    if (values.name) params.name = values.name;
-    if (values.contentType) params.contentType = values.contentType;
-    setPageParams(params);
-  };
-
-  const handleReset = () => {
-    searchForm.resetFields();
-    setPageParams({ current: 1, size: 10 });
-  };
 
   const handlePreview = (record: FileRecord) => {
     setPreviewFile(record);
@@ -116,8 +86,7 @@ export default function FilePage() {
     multiple: false,
     showUploadList: false,
     customRequest: (options) => {
-      const file = options.file as File;
-      uploadMutation.mutate(file);
+      uploadMutation.mutate(options.file as File);
     },
   };
 
@@ -126,23 +95,22 @@ export default function FilePage() {
     minio: t('file.minio'),
   };
 
-  // ========== Columns ==========
-  const columns = [
+  const columns: ProColumns<FileRecord>[] = [
     {
       title: t('file.fileName'),
       dataIndex: 'originalName',
-      key: 'originalName',
       width: 200,
-      render: (v: string, record: FileRecord) => v || record.name || '-',
+      ellipsis: true,
+      render: (v, record) => (v as string) || record.name || '-',
     },
     {
       title: 'URL',
       dataIndex: 'url',
-      key: 'url',
       width: 260,
-      render: (v: string) =>
+      ellipsis: true,
+      render: (v) =>
         v ? (
-          <a href={v} target="_blank" rel="noopener noreferrer" className="break-all">
+          <a href={v as string} target="_blank" rel="noopener noreferrer" className="break-all">
             {v}
           </a>
         ) : (
@@ -152,136 +120,92 @@ export default function FilePage() {
     {
       title: t('file.fileSize'),
       dataIndex: 'size',
-      key: 'size',
       width: 100,
-      render: (v: number) => formatFileSize(v),
+      search: false,
+      render: (v) => formatFileSize(v as number),
     },
     {
       title: t('file.fileType'),
       dataIndex: 'contentType',
-      key: 'contentType',
       width: 140,
-      render: (v: string) => v || '-',
+      valueType: 'select',
+      valueEnum: contentTypeEnum,
+      render: (v) => (v as string) || '-',
     },
     {
       title: t('file.storageType'),
       dataIndex: 'storageType',
-      key: 'storageType',
       width: 100,
-      render: (v: string) => {
-        const label = storageTypeMap[v] || v;
-        return v ? <Tag color="blue">{label}</Tag> : '-';
+      search: false,
+      render: (_, r) => {
+        const label = storageTypeMap[r.storageType ?? ''] || r.storageType;
+        return r.storageType ? <Tag color="blue">{label}</Tag> : '-';
       },
     },
     {
       title: t('file.uploadTime'),
       dataIndex: 'createTime',
-      key: 'createTime',
       width: 180,
-      render: (v: string) => v || '-',
+      search: false,
+      render: (v) => (v as string) || '-',
     },
     {
       title: t('common.delete'),
-      key: 'action',
+      valueType: 'option',
+      key: 'option',
       width: 150,
-      fixed: 'right' as const,
-      render: (_: unknown, record: FileRecord) => (
-        <Space size="small">
-          <Button
-            type="link"
-            size="small"
-            icon={<EyeOutlined />}
-            onClick={() => handlePreview(record)}
-          >
-            {t('file.preview')}
+      fixed: 'right',
+      render: (_, record) => [
+        <Button key="preview" type="link" size="small" icon={<EyeOutlined />} onClick={() => handlePreview(record)}>
+          {t('file.preview')}
+        </Button>,
+        <Popconfirm
+          key="del"
+          title={t('file.deleteConfirm')}
+          onConfirm={() => deleteMutation.mutate(record.id)}
+          okText={t('common.confirm')}
+          cancelText={t('common.cancel')}
+          okButtonProps={{ danger: true }}
+        >
+          <Button type="link" size="small" danger icon={<DeleteOutlined />}>
+            {t('common.delete')}
           </Button>
-          <Popconfirm
-            title={t('file.deleteConfirm')}
-            onConfirm={() => deleteMutation.mutate(record.id)}
-            okText={t('common.confirm')}
-            cancelText={t('common.cancel')}
-            okButtonProps={{ danger: true }}
-          >
-            <Button type="link" size="small" danger icon={<DeleteOutlined />}>
-              {t('common.delete')}
-            </Button>
-          </Popconfirm>
-        </Space>
-      ),
+        </Popconfirm>,
+      ],
     },
   ];
 
   return (
     <div className="flex flex-col h-full">
-      <h2 className="text-lg font-semibold mb-4">{t('menu.file')}</h2>
-
-      {/* Search Bar */}
-      <Card className="mb-4" styles={{ body: { padding: '16px' } }}>
-        <Form form={searchForm} layout="inline" className="flex flex-wrap gap-2">
-          <Form.Item name="name" label={t('file.fileName')}>
-            <Input placeholder={t('file.fileName')} allowClear />
-          </Form.Item>
-          <Form.Item name="contentType" label={t('file.fileType')}>
-            <Select
-              placeholder={t('file.fileType')}
-              allowClear
-              style={{ width: 160 }}
-              options={[
-                { label: 'image/png', value: 'image/png' },
-                { label: 'image/jpeg', value: 'image/jpeg' },
-                { label: 'image/gif', value: 'image/gif' },
-                { label: 'image/webp', value: 'image/webp' },
-                { label: 'application/pdf', value: 'application/pdf' },
-                { label: 'text/plain', value: 'text/plain' },
-                { label: 'application/json', value: 'application/json' },
-              ]}
-            />
-          </Form.Item>
-          <Form.Item>
-            <Space>
-              <Button type="primary" icon={<SearchOutlined />} onClick={handleSearch}>
-                {t('common.search')}
-              </Button>
-              <Button onClick={handleReset}>{t('common.reset')}</Button>
-            </Space>
-          </Form.Item>
-        </Form>
-      </Card>
-
-      {/* Table */}
-      <Card className="flex-1">
-        <div className="flex justify-between mb-4">
-          <Upload {...uploadProps}>
-            <Button type="primary" icon={<UploadOutlined />} loading={uploadMutation.isPending}>
-              {t('file.upload')}
-            </Button>
-          </Upload>
-          <Button
-            icon={<ReloadOutlined />}
-            onClick={() => queryClient.invalidateQueries({ queryKey: FILE_PAGE_KEY })}
-          >
-            {t('common.reset')}
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-lg font-semibold m-0">{t('menu.file')}</h2>
+        <Upload {...uploadProps}>
+          <Button type="primary" icon={<UploadOutlined />} loading={uploadMutation.isPending}>
+            {t('file.upload')}
           </Button>
-        </div>
-        <Table
-          rowKey="id"
-          columns={columns}
-          dataSource={data?.records ?? []}
-          loading={isLoading}
-          scroll={{ x: 1100 }}
-          pagination={{
-            current: data?.current ?? pageParams.current,
-            pageSize: data?.size ?? pageParams.size,
-            total: data?.total ?? 0,
-            showSizeChanger: true,
-            onChange: (page: number, pageSize: number) => {
-              setPageParams((prev: any) => ({ ...prev, current: page, size: pageSize }));
-            },
-          }}
-        />
-      </Card>
+        </Upload>
+      </div>
 
-      {/* Preview Modal */}
+      <ProTable<FileRecord>
+        actionRef={actionRef}
+        rowKey="id"
+        columns={columns}
+        scroll={{ x: 1100 }}
+        request={async (params) => {
+          const res = await getFilePage({
+            current: params.current ?? 1,
+            size: params.pageSize ?? 10,
+            name: params.name,
+            contentType: params.contentType,
+          });
+          if (res.code !== 0) return { data: [], success: false, total: 0 };
+          return { data: res.data.records, success: true, total: res.data.total };
+        }}
+        pagination={{ pageSize: 10, showSizeChanger: true }}
+        search={{ labelWidth: 'auto' }}
+        options={{ reload: true, density: true, setting: true }}
+      />
+
       <Modal
         title={previewFile?.originalName || previewFile?.name || t('file.preview')}
         open={previewOpen}
@@ -297,11 +221,7 @@ export default function FilePage() {
         ) : (
           <div className="flex flex-col items-center gap-4 py-8">
             <p className="text-gray-500">{t('file.download')}</p>
-            <Button
-              type="primary"
-              icon={<DownloadOutlined />}
-              onClick={() => previewFile && handleDownload(previewFile)}
-            >
+            <Button type="primary" icon={<ReloadOutlined />} onClick={() => previewFile && handleDownload(previewFile)}>
               {t('file.download')}
             </Button>
           </div>

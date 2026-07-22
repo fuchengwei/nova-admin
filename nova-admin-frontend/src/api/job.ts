@@ -1,6 +1,5 @@
-import request from '@/utils/request';
-import type { PageResult } from '@/types/common';
-import type { R } from '@/types/common';
+import { request } from '@/utils/request';
+import type { R, PageResult } from '@/types/api';
 
 export interface SysJob {
   id?: number;
@@ -24,33 +23,33 @@ export interface JobPageQuery {
 }
 
 export function getJobPage(params: JobPageQuery) {
-  return request.get<R<PageResult<SysJob>>>('/monitor/job/page', { params });
+  return request<R<PageResult<SysJob>>>({ url: '/monitor/job/page', method: 'GET', params });
 }
 
 export function getJob(id: number) {
-  return request.get<R<SysJob>>(`/monitor/job/${id}`);
+  return request<R<SysJob>>({ url: `/monitor/job/${id}`, method: 'GET' });
 }
 
 export function createJob(data: SysJob) {
-  return request.post<R<number>>('/monitor/job', data);
+  return request<R<number>>({ url: '/monitor/job', method: 'POST', data });
 }
 
 export function updateJob(data: SysJob) {
-  return request.put<R<void>>('/monitor/job', data);
+  return request<R<void>>({ url: '/monitor/job', method: 'PUT', data });
 }
 
 export function deleteJob(id: number) {
-  return request.delete<R<void>>(`/monitor/job/${id}`);
+  return request<R<void>>({ url: `/monitor/job/${id}`, method: 'DELETE' });
 }
 
 export function pauseJob(id: number) {
-  return request.put<R<void>>(`/monitor/job/pause/${id}`);
+  return request<R<void>>({ url: `/monitor/job/pause/${id}`, method: 'PUT' });
 }
 
 export function resumeJob(id: number) {
-  return request.put<R<void>>(`/monitor/job/resume/${id}`);
+  return request<R<void>>({ url: `/monitor/job/resume/${id}`, method: 'PUT' });
 }
 
 export function runJob(id: number) {
-  return request.put<R<void>>(`/monitor/job/run/${id}`);
+  return request<R<void>>({ url: `/monitor/job/run/${id}`, method: 'PUT' });
 }

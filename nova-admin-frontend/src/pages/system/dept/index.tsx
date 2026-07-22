@@ -1,27 +1,22 @@
 import { useState, useMemo } from 'react';
-import {
-  Card,
-  Tree,
-  TreeSelect,
-  Button,
-  Space,
-  Tag,
-  Modal,
-  Form,
-  Input,
-  InputNumber,
-  Radio,
-  Popconfirm,
-  Descriptions,
-  message,
-} from 'antd';
+import { Button, Tree, Space, Popconfirm, message } from 'antd';
+import type { DataNode } from 'antd/es/tree';
 import {
   PlusOutlined,
   EditOutlined,
   DeleteOutlined,
   ApartmentOutlined,
 } from '@ant-design/icons';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import {
+  ProCard,
+  ProDescriptions,
+  ModalForm,
+  ProFormText,
+  ProFormDigit,
+  ProFormRadio,
+  ProFormTreeSelect,
+} from '@ant-design/pro-components';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import {
   getDeptTree,
@@ -36,10 +31,11 @@ import {
 
 const QUERY_KEY = ['deptTree'];
 
+type TreeSelectNode = { value: number; title: string; children?: TreeSelectNode[] };
+
 export default function DeptPage() {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
-  const [form] = Form.useForm();
 
   const [selectedDept, setSelectedDept] = useState<DeptTreeNode | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
@@ -64,114 +60,47 @@ export default function DeptPage() {
     enabled: editMode && !!selectedDept,
   });
 
-  // 创建部门
-  const createMutation = useMutation({
-    mutationFn: createDept,
-    onSuccess: (res) => {
-      if (res.code === 0) {
-        message.success(t('dept.createSuccess'));
-        queryClient.invalidateQueries({ queryKey: QUERY_KEY });
-        handleCloseModal();
-      }
-    },
-  });
+  const createMutation = useMutation({ mutationFn: createDept });
+  const updateMutation = useMutation({ mutationFn: updateDept });
+  const deleteMutation = useMutation({ mutationFn: deleteDept });
 
-  // 更新部门
-  const updateMutation = useMutation({
-    mutationFn: updateDept,
-    onSuccess: (res) => {
-      if (res.code === 0) {
-        message.success(t('dept.updateSuccess'));
-        queryClient.invalidateQueries({ queryKey: QUERY_KEY });
-        handleCloseModal();
+  const handleSelect = (_: unknown, info: { node: DataNode }) => {
+    const key = info.node.key as number;
+    const find = (nodes?: DeptTreeNode[]): DeptTreeNode | null => {
+      if (!nodes) return null;
+      for (const n of nodes) {
+        if (n.id === key) return n;
+        const f = find(n.children);
+        if (f) return f;
       }
-    },
-  });
-
-  // 删除部门
-  const deleteMutation = useMutation({
-    mutationFn: deleteDept,
-    onSuccess: (res) => {
-      if (res.code === 0) {
-        message.success(t('dept.deleteSuccess'));
-        setSelectedDept(null);
-        queryClient.invalidateQueries({ queryKey: QUERY_KEY });
-      }
-    },
-  });
-
-  // 树选中
-  const handleSelect = (_: unknown, info: { node: DeptTreeNode }) => {
-    setSelectedDept(info.node);
+      return null;
+    };
+    setSelectedDept(find(treeData));
   };
 
-  // 打开新增根部门
   const handleAddRoot = () => {
     setEditMode(false);
-    form.resetFields();
-    form.setFieldsValue({ parentId: 0, sort: 0, status: 1 });
     setModalOpen(true);
   };
 
-  // 打开新增子部门
   const handleAddChild = () => {
     if (!selectedDept) return;
     setEditMode(false);
-    form.resetFields();
-    form.setFieldsValue({ parentId: selectedDept.id, sort: 0, status: 1 });
     setModalOpen(true);
   };
 
-  // 打开编辑
   const handleEdit = () => {
     if (!selectedDept) return;
     setEditMode(true);
-    form.resetFields();
-    form.setFieldsValue({
-      parentId: selectedDept.parentId,
-      name: selectedDept.name,
-      code: selectedDept.code,
-      leader: selectedDept.leader,
-      phone: selectedDept.phone,
-      email: selectedDept.email,
-      sort: selectedDept.sort,
-      status: selectedDept.status,
-    });
     setModalOpen(true);
   };
 
-  // 关闭弹窗
-  const handleCloseModal = () => {
-    setModalOpen(false);
-    form.resetFields();
-  };
+  const hasChildren = useMemo(
+    () => !!(selectedDept?.children && selectedDept.children.length > 0),
+    [selectedDept],
+  );
 
-  // 提交表单
-  const handleSubmit = async () => {
-    try {
-      const values = await form.validateFields();
-      if (editMode && selectedDept) {
-        const data: DeptUpdateRequest = { id: selectedDept.id, ...values };
-        updateMutation.mutate(data);
-      } else {
-        const data: DeptCreateRequest = { ...values };
-        createMutation.mutate(data);
-      }
-    } catch {
-      // validation failed, ignore
-    }
-  };
-
-  // 删除前检查
-  const hasChildren = useMemo(() => {
-    if (!selectedDept) return false;
-    return !!(selectedDept.children && selectedDept.children.length > 0);
-  }, [selectedDept]);
-
-  // 将树数据转为 TreeSelect 数据
-  const buildTreeSelectData = (
-    data: DeptTreeNode[],
-  ): { value: number; title: string; children?: ReturnType<typeof buildTreeSelectData> }[] =>
+  const buildTreeSelectData = (data: DeptTreeNode[]): TreeSelectNode[] =>
     data.map((item) => ({
       value: item.id,
       title: item.name,
@@ -179,11 +108,21 @@ export default function DeptPage() {
     }));
 
   const treeSelectData = useMemo(() => {
-    const source = editMode ? excludeTreeData ?? [] : treeData ?? [];
+    const source = editMode && excludeTreeData ? excludeTreeData : (treeData ?? []);
     return buildTreeSelectData(source);
   }, [editMode, excludeTreeData, treeData]);
 
-  const submitting = createMutation.isPending || updateMutation.isPending;
+  const treeNodes: DataNode[] = useMemo(
+    () =>
+      (treeData ?? []).map((item) => ({
+        key: item.id,
+        title: item.name,
+        children: item.children
+          ? (item.children.map((c) => ({ key: c.id, title: c.name })) as DataNode[])
+          : undefined,
+      })),
+    [treeData],
+  );
 
   return (
     <div className="flex flex-col h-full">
@@ -195,16 +134,10 @@ export default function DeptPage() {
       </div>
 
       <div className="flex gap-4 flex-1 min-h-0">
-        {/* 左侧部门树 */}
-        <Card
-          className="w-72 shrink-0 overflow-auto"
-          styles={{ body: { padding: '12px' } }}
-          loading={isLoading}
-        >
-          {treeData && treeData.length > 0 && (
+        <ProCard className="w-72 shrink-0 overflow-auto" loading={isLoading}>
+          {treeNodes.length > 0 && (
             <Tree
-              treeData={treeData}
-              fieldNames={{ key: 'id', title: 'name', children: 'children' }}
+              treeData={treeNodes}
               defaultExpandAll
               showLine={{ showLeafIcon: false }}
               showIcon
@@ -213,55 +146,37 @@ export default function DeptPage() {
               selectedKeys={selectedDept ? [selectedDept.id] : []}
             />
           )}
-        </Card>
+        </ProCard>
 
-        {/* 右侧详情 */}
-        <Card className="flex-1 overflow-auto">
+        <ProCard className="flex-1 overflow-auto">
           {selectedDept ? (
             <>
-              <Descriptions
-                column={2}
-                bordered
-                size="small"
+              <ProDescriptions<DeptTreeNode>
                 title={selectedDept.name}
-              >
-                <Descriptions.Item label={t('dept.name')}>
-                  {selectedDept.name}
-                </Descriptions.Item>
-                <Descriptions.Item label={t('dept.code')}>
-                  {selectedDept.code || '-'}
-                </Descriptions.Item>
-                <Descriptions.Item label={t('dept.leader')}>
-                  {selectedDept.leader || '-'}
-                </Descriptions.Item>
-                <Descriptions.Item label={t('dept.phone')}>
-                  {selectedDept.phone || '-'}
-                </Descriptions.Item>
-                <Descriptions.Item label={t('dept.email')}>
-                  {selectedDept.email || '-'}
-                </Descriptions.Item>
-                <Descriptions.Item label={t('dept.sort')}>
-                  {selectedDept.sort}
-                </Descriptions.Item>
-                <Descriptions.Item label={t('dept.status')}>
-                  {selectedDept.status === 1 ? (
-                    <Tag color="green">{t('dept.enabled')}</Tag>
-                  ) : (
-                    <Tag color="red">{t('dept.disabled')}</Tag>
-                  )}
-                </Descriptions.Item>
-                <Descriptions.Item label={t('dept.createTime')}>
-                  {selectedDept.createTime || '-'}
-                </Descriptions.Item>
-              </Descriptions>
+                dataSource={selectedDept}
+                column={2}
+                columns={[
+                  { title: t('dept.name'), dataIndex: 'name' },
+                  { title: t('dept.code'), dataIndex: 'code', render: (v) => v || '-' },
+                  { title: t('dept.leader'), dataIndex: 'leader', render: (v) => v || '-' },
+                  { title: t('dept.phone'), dataIndex: 'phone', render: (v) => v || '-' },
+                  { title: t('dept.email'), dataIndex: 'email', render: (v) => v || '-' },
+                  { title: t('dept.sort'), dataIndex: 'sort' },
+                  {
+                    title: t('dept.status'),
+                    dataIndex: 'status',
+                    valueEnum: {
+                      1: { text: t('dept.enabled'), status: 'Success' },
+                      0: { text: t('dept.disabled'), status: 'Error' },
+                    },
+                  },
+                  { title: t('dept.createTime'), dataIndex: 'createTime', render: (v) => v || '-' },
+                ]}
+              />
 
               <div className="mt-4">
                 <Space>
-                  <Button
-                    type="primary"
-                    icon={<EditOutlined />}
-                    onClick={handleEdit}
-                  >
+                  <Button type="primary" icon={<EditOutlined />} onClick={handleEdit}>
                     {t('common.edit')}
                   </Button>
                   <Button icon={<PlusOutlined />} onClick={handleAddChild}>
@@ -270,16 +185,17 @@ export default function DeptPage() {
                   <Popconfirm
                     title={t('dept.deleteConfirm')}
                     description={hasChildren ? t('dept.hasChildren') : undefined}
-                    onConfirm={() => deleteMutation.mutate(selectedDept.id)}
+                    onConfirm={() => {
+                      if (!selectedDept) return;
+                      deleteMutation.mutate(selectedDept.id);
+                      setSelectedDept(null);
+                      queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+                    }}
                     okText={t('common.confirm')}
                     cancelText={t('common.cancel')}
                     okButtonProps={{ danger: true }}
                   >
-                    <Button
-                      danger
-                      icon={<DeleteOutlined />}
-                      loading={deleteMutation.isPending}
-                    >
+                    <Button danger icon={<DeleteOutlined />} loading={deleteMutation.isPending}>
                       {t('common.delete')}
                     </Button>
                   </Popconfirm>
@@ -291,79 +207,88 @@ export default function DeptPage() {
               {t('dept.selectHint')}
             </div>
           )}
-        </Card>
+        </ProCard>
       </div>
 
-      {/* 新增/编辑弹窗 */}
-      <Modal
+      <ModalForm
         title={editMode ? t('dept.editTitle') : t('dept.addTitle')}
         open={modalOpen}
-        onOk={handleSubmit}
-        onCancel={handleCloseModal}
-        confirmLoading={submitting}
-        okText={t('common.confirm')}
-        cancelText={t('common.cancel')}
-        destroyOnClose
+        onOpenChange={(open) => {
+          setModalOpen(open);
+          if (!open) setEditMode(false);
+        }}
         width={560}
+        layout="vertical"
+        initialValues={
+          editMode && selectedDept
+            ? {
+                parentId: selectedDept.parentId,
+                name: selectedDept.name,
+                code: selectedDept.code,
+                leader: selectedDept.leader,
+                phone: selectedDept.phone,
+                email: selectedDept.email,
+                sort: selectedDept.sort,
+                status: selectedDept.status,
+              }
+            : {
+                parentId: selectedDept?.id ?? 0,
+                sort: 0,
+                status: 1,
+              }
+        }
+        onFinish={async (values) => {
+          const res =
+            editMode && selectedDept
+              ? await updateMutation.mutateAsync({
+                  id: selectedDept.id,
+                  ...values,
+                } as unknown as DeptUpdateRequest)
+              : await createMutation.mutateAsync({ ...values } as unknown as DeptCreateRequest);
+          if (res.code !== 0) {
+            message.error(res.msg || t('common.error'));
+            return false;
+          }
+          message.success(editMode ? t('dept.updateSuccess') : t('dept.createSuccess'));
+          queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+          return true;
+        }}
       >
-        <Form form={form} layout="vertical" className="mt-4">
-          <Form.Item
-            name="parentId"
-            label={t('dept.parent')}
-            rules={[{ required: true, message: t('dept.selectParent') }]}
-          >
-            <TreeSelect
-              treeData={treeSelectData}
-              placeholder={t('dept.selectParent')}
-              treeDefaultExpandAll
-              allowClear
-            />
-          </Form.Item>
-
-          <Form.Item
-            name="name"
-            label={t('dept.name')}
-            rules={[{ required: true, message: t('dept.nameRequired') }]}
-          >
-            <Input />
-          </Form.Item>
-
-          <Form.Item name="code" label={t('dept.code')}>
-            <Input />
-          </Form.Item>
-
-          <Form.Item name="leader" label={t('dept.leader')}>
-            <Input />
-          </Form.Item>
-
-          <Form.Item name="phone" label={t('dept.phone')}>
-            <Input />
-          </Form.Item>
-
-          <Form.Item
-            name="email"
-            label={t('dept.email')}
-            rules={[{ type: 'email', message: t('dept.emailInvalid') }]}
-          >
-            <Input />
-          </Form.Item>
-
-          <Form.Item name="sort" label={t('dept.sort')}>
-            <InputNumber min={0} className="w-full" />
-          </Form.Item>
-
-          <Form.Item
-            name="status"
-            label={t('dept.status')}
-            rules={[{ required: true }]}
-          >
-            <Radio.Group>
-              <Radio value={1}>{t('dept.enabled')}</Radio>
-              <Radio value={0}>{t('dept.disabled')}</Radio>
-            </Radio.Group>
-          </Form.Item>
-        </Form>
-      </Modal>
+        <ProFormTreeSelect
+          name="parentId"
+          label={t('dept.parent')}
+          rules={[{ required: true, message: t('dept.selectParent') }]}
+          fieldProps={{
+            treeData: treeSelectData,
+            allowClear: true,
+            treeDefaultExpandAll: true,
+            placeholder: t('dept.selectParent'),
+          }}
+        />
+        <ProFormText
+          name="name"
+          label={t('dept.name')}
+          rules={[{ required: true, message: t('dept.nameRequired') }]}
+        />
+        <ProFormText name="code" label={t('dept.code')} />
+        <ProFormText name="leader" label={t('dept.leader')} />
+        <ProFormText name="phone" label={t('dept.phone')} />
+        <ProFormText
+          name="email"
+          label={t('dept.email')}
+          rules={[{ type: 'email', message: t('dept.emailInvalid') }]}
+        />
+        <ProFormDigit name="sort" label={t('dept.sort')} min={0} />
+        <ProFormRadio.Group
+          name="status"
+          label={t('dept.status')}
+          rules={[{ required: true }]}
+          options={[
+            { label: t('dept.enabled'), value: 1 },
+            { label: t('dept.disabled'), value: 0 },
+          ]}
+        />
+      </ModalForm>
     </div>
   );
 }

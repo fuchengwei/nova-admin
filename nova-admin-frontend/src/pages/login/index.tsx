@@ -1,11 +1,12 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { Card, Form, Input, Button, Typography, message, theme as antdTheme } from 'antd';
+import { Card, Button, Typography, message, theme as antdTheme, Form } from 'antd';
 import {
   UserOutlined,
   LockOutlined,
   SafetyOutlined,
   ReloadOutlined,
 } from '@ant-design/icons';
+import { ProForm, ProFormText } from '@ant-design/pro-components';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { getCaptcha, login } from '@/api/auth';
@@ -31,14 +32,12 @@ export default function LoginPage() {
   const { token } = antdTheme.useToken();
   const loadingRef = useRef(false);
 
-  // 已登录直接跳转
   useEffect(() => {
     if (getToken()) {
       navigate(params.get('redirect') || '/dashboard', { replace: true });
     }
   }, [navigate, params]);
 
-  // 加载验证码
   const loadCaptcha = useCallback(async () => {
     if (loadingRef.current) return;
     loadingRef.current = true;
@@ -107,46 +106,54 @@ export default function LoginPage() {
           </Title>
           <Text type="secondary">{t('login.subtitle')}</Text>
         </div>
-        <Form<LoginForm>
+        <ProForm<LoginForm>
           form={form}
           layout="vertical"
           initialValues={{ username: 'admin', password: 'admin123' }}
           onFinish={onSubmit}
+          submitter={{
+            render: () => (
+              <Button type="primary" htmlType="submit" size="large" block loading={loading}>
+                {t('login.submit')}
+              </Button>
+            ),
+          }}
         >
-          <Form.Item
+          <ProFormText
             name="username"
             label={t('login.username')}
             rules={[{ required: true, message: `${t('login.username')} 不能为空` }]}
-          >
-            <Input prefix={<UserOutlined />} size="large" placeholder="admin" autoComplete="username" />
-          </Form.Item>
-          <Form.Item
+            fieldProps={{
+              prefix: <UserOutlined />,
+              size: 'large',
+              placeholder: 'admin',
+              autoComplete: 'username',
+            }}
+          />
+          <ProFormText.Password
             name="password"
             label={t('login.password')}
             rules={[{ required: true, message: `${t('login.password')} 不能为空` }]}
-          >
-            <Input.Password
-              prefix={<LockOutlined />}
-              size="large"
-              placeholder="admin123"
-              autoComplete="current-password"
-            />
-          </Form.Item>
-          <Form.Item
+            fieldProps={{
+              prefix: <LockOutlined />,
+              size: 'large',
+              placeholder: 'admin123',
+              autoComplete: 'current-password',
+            }}
+          />
+          <ProFormText
             name="captchaCode"
             label={t('login.captcha')}
             rules={[
               { required: true, message: `${t('login.captcha')} 不能为空` },
               { len: 4, message: '请输入 4 位验证码' },
             ]}
-          >
-            <Input
-              prefix={<SafetyOutlined />}
-              size="large"
-              placeholder="请输入验证码"
-              maxLength={4}
-              autoComplete="off"
-              suffix={
+            fieldProps={{
+              prefix: <SafetyOutlined />,
+              size: 'large',
+              maxLength: 4,
+              autoComplete: 'off',
+              suffix: (
                 <div
                   className="cursor-pointer flex items-center"
                   onClick={loadCaptcha}
@@ -163,16 +170,11 @@ export default function LoginPage() {
                     <ReloadOutlined className="text-lg" />
                   )}
                 </div>
-              }
-            />
-          </Form.Item>
-          <Button type="primary" htmlType="submit" size="large" block loading={loading}>
-            {t('login.submit')}
-          </Button>
-        </Form>
-        <div className="mt-4 text-center text-xs text-gray-400">
-          Default: admin / admin123
-        </div>
+              ),
+            }}
+          />
+        </ProForm>
+        <div className="mt-4 text-center text-xs text-gray-400">Default: admin / admin123</div>
       </Card>
     </div>
   );

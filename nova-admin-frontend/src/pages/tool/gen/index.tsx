@@ -1,29 +1,21 @@
-import { useState } from 'react';
-import {
-  Card,
-  Table,
-  Button,
-  Space,
-  Modal,
-  Tabs,
-  message,
-  Typography,
-} from 'antd';
+import { useRef, useState } from 'react';
+import { Button, Modal, Tabs, message, Typography } from 'antd';
 import { DownloadOutlined, CodeOutlined } from '@ant-design/icons';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import {
+  ProTable,
+  type ProColumns,
+  type ActionType,
+} from '@ant-design/pro-components';
+import { useMutation } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { listGenTables, previewGen, downloadGen, type GenTable } from '@/api/gen';
 
 export default function GenPage() {
   const { t } = useTranslation();
-  const queryClient = useQueryClient();
+  const actionRef = useRef<ActionType>(null);
+
   const [previewOpen, setPreviewOpen] = useState(false);
   const [files, setFiles] = useState<Record<string, string>>({});
-
-  const { data, isLoading } = useQuery({
-    queryKey: ['genTables'],
-    queryFn: async () => (await listGenTables()).data,
-  });
 
   const previewMutation = useMutation({
     mutationFn: previewGen,
@@ -31,6 +23,8 @@ export default function GenPage() {
       if (res.code === 0 && res.data) {
         setFiles(res.data);
         setPreviewOpen(true);
+      } else {
+        message.error(res.msg || t('common.error'));
       }
     },
   });
@@ -38,7 +32,8 @@ export default function GenPage() {
   const downloadMutation = useMutation({
     mutationFn: downloadGen,
     onSuccess: (res) => {
-      const blob = new Blob([res.data as ArrayBuffer], { type: 'application/zip' });
+      // downloadGen 返回经拦截器解包的 Blob
+      const blob = new Blob([res as Blob], { type: 'application/zip' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
@@ -48,51 +43,57 @@ export default function GenPage() {
     },
   });
 
-  const columns = [
-    { title: t('gen.tableName'), dataIndex: 'tableName', key: 'tableName' },
+  const columns: ProColumns<GenTable>[] = [
+    { title: t('gen.tableName'), dataIndex: 'tableName', ellipsis: true },
     {
       title: t('gen.tableComment'),
       dataIndex: 'tableComment',
-      key: 'tableComment',
-      render: (v: string) => v || '-',
+      render: (v) => (v as string) || '-',
     },
     {
       title: t('common.action'),
-      key: 'action',
+      valueType: 'option',
+      key: 'option',
       width: 220,
-      render: (_: unknown, record: GenTable) => (
-        <Space>
-          <Button
-            type="link"
-            icon={<CodeOutlined />}
-            onClick={() => previewMutation.mutate(record.tableName)}
-          >
-            {t('gen.preview')}
-          </Button>
-          <Button
-            type="link"
-            icon={<DownloadOutlined />}
-            onClick={() => downloadMutation.mutate(record.tableName)}
-          >
-            {t('gen.download')}
-          </Button>
-        </Space>
-      ),
+      fixed: 'right',
+      render: (_, record) => [
+        <Button
+          key="preview"
+          type="link"
+          icon={<CodeOutlined />}
+          onClick={() => previewMutation.mutate(record.tableName)}
+        >
+          {t('gen.preview')}
+        </Button>,
+        <Button
+          key="download"
+          type="link"
+          icon={<DownloadOutlined />}
+          onClick={() => downloadMutation.mutate(record.tableName)}
+        >
+          {t('gen.download')}
+        </Button>,
+      ],
     },
   ];
 
   return (
     <div className="flex flex-col h-full">
       <h2 className="text-lg font-semibold mb-4">{t('menu.gen')}</h2>
-      <Card className="flex-1">
-        <Table
-          rowKey="tableName"
-          columns={columns}
-          dataSource={data ?? []}
-          loading={isLoading}
-          pagination={false}
-        />
-      </Card>
+
+      <ProTable<GenTable>
+        actionRef={actionRef}
+        rowKey="tableName"
+        columns={columns}
+        search={false}
+        pagination={false}
+        options={{ reload: true }}
+        request={async () => {
+          const res = await listGenTables();
+          if (res.code !== 0) return { data: [], success: false, total: 0 };
+          return { data: res.data, success: true, total: res.data.length };
+        }}
+      />
 
       <Modal
         title={t('gen.preview')}

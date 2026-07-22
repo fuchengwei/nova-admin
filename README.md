@@ -13,7 +13,7 @@
 
 ### 前端 (`nova-admin-frontend`)
 - Vite 8 + React 19 + TypeScript 7.0
-- Ant Design 6.5 + Tailwind CSS 4
+- Ant Design 6.5 + **ProComponents 3.x**（`@ant-design/pro-components`）+ Tailwind CSS 4
 - Zustand 5 + TanStack Query 5
 
 ## 项目结构
@@ -80,6 +80,7 @@ docker compose -f docker-compose.prod.yml up -d
 ## 文档
 
 - 设计文档：[`docs/plans/2026-07-22-nova-admin-design.md`](docs/plans/2026-07-22-nova-admin-design.md)
+- 前端开发规范（优先使用 ProComponents）：[`docs/development-guidelines.md`](docs/development-guidelines.md)
 - 部署文档：[`docs/deployment.md`](docs/deployment.md)
 - 更新日志：[`CHANGELOG.md`](CHANGELOG.md)
 
