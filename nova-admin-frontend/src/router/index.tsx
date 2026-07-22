@@ -20,6 +20,9 @@ import FilePage from '@/pages/infra/file';
 // 监控管理
 import JobPage from '@/pages/monitor/job';
 
+// 系统工具
+import GenPage from '@/pages/tool/gen';
+
 /** 路由路径 → 组件映射 */
 const componentMap: Record<string, () => React.JSX.Element> = {
   '/dashboard': DashboardPage,
@@ -31,6 +34,7 @@ const componentMap: Record<string, () => React.JSX.Element> = {
   '/system/log': LogPage,
   '/infra/file': FilePage,
   '/monitor/job': JobPage,
+  '/tool/gen': GenPage,
 };
 
 /** 根据菜单数据动态生成路由 */
@@ -75,6 +79,7 @@ export const router = createBrowserRouter([
       { path: 'system/log', element: <LogPage /> },
       { path: 'infra/file', element: <FilePage /> },
       { path: 'monitor/job', element: <JobPage /> },
+      { path: 'tool/gen', element: <GenPage /> },
     ],
   },
   { path: '*', element: <NotFoundPage /> },

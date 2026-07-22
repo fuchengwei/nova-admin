@@ -38,6 +38,7 @@ export default {
     log: '日志管理',
     file: '文件管理',
     job: '定时任务',
+    gen: '代码生成器',
   },
   header: {
     profile: '个人中心',
@@ -215,5 +216,12 @@ export default {
     saveSuccess: '保存成功',
     deleteSuccess: '删除成功',
     deleteConfirm: '确认删除该任务吗？',
+  },
+  gen: {
+    tableName: '表名称',
+    tableComment: '表描述',
+    preview: '预览',
+    download: '下载',
+    downloadSuccess: '下载成功',
   },
 };

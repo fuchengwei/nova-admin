@@ -150,6 +150,9 @@ export default function AdminLayout() {
           { key: '/system/user', icon: <UserOutlined />, label: t('menu.user') },
           { key: '/system/role', icon: <Icons.TeamOutlined />, label: t('menu.role') },
           { key: '/system/menu', icon: <Icons.MenuOutlined />, label: t('menu.menu') },
+          { key: '/system/dict', icon: <Icons.BookOutlined />, label: t('menu.dict') },
+          { key: '/system/log', icon: <Icons.FileOutlined />, label: t('menu.log') },
+          { key: '/tool/gen', icon: <Icons.CodeOutlined />, label: t('menu.gen') },
         ],
       },
       {

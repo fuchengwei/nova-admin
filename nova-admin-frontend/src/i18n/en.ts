@@ -36,6 +36,7 @@ export default {
     infra: 'Infrastructure',
     file: 'File Management',
     job: 'Scheduled Tasks',
+    gen: 'Code Generator',
   },
   header: {
     profile: 'Profile',
@@ -213,5 +214,12 @@ export default {
     saveSuccess: 'Saved successfully',
     deleteSuccess: 'Deleted successfully',
     deleteConfirm: 'Are you sure to delete this job?',
+  },
+  gen: {
+    tableName: 'Table Name',
+    tableComment: 'Table Comment',
+    preview: 'Preview',
+    download: 'Download',
+    downloadSuccess: 'Downloaded',
   },
 };

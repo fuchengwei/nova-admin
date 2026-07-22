@@ -400,6 +400,11 @@ VALUES
     (46, 41, '恢复任务', 'F', 'monitor:job:resume', '', '', '', 4, 0, 1, NOW()),
     (47, 41, '执行任务', 'F', 'monitor:job:run',    '', '', '', 5, 0, 1, NOW());
 
+-- 系统工具-代码生成器菜单与权限
+INSERT INTO sys_menu (id, parent_id, name, type, perms, path, component, icon, sort, visible, status, create_time)
+VALUES
+    (51, 1,  '代码生成器', 'C', 'tool:gen:list', '/tool/gen', 'tool/gen/index', 'CodeOutlined', 6, 1, 1, NOW());
+
 -- 超级管理员用户 (密码 admin123 的 BCrypt 哈希)
 -- 替换为你生成的实际哈希
 INSERT INTO sys_user (id, username, password, nickname, dept_id, super_admin, status, create_time)
