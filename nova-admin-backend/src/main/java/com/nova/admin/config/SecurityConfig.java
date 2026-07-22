@@ -1,0 +1,102 @@
+package com.nova.admin.config;
+
+import com.nova.admin.common.api.R;
+import com.nova.admin.common.api.ResultCode;
+import com.nova.admin.security.JwtAuthFilter;
+import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.http.MediaType;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
+import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
+
+/**
+ * Spring Security 配置
+ */
+@Configuration
+@EnableMethodSecurity(prePostEnabled = true)
+@RequiredArgsConstructor
+public class SecurityConfig {
+
+    private final NovaProperties novaProperties;
+    private final JwtAuthFilter jwtAuthFilter;
+
+    /** 白名单（无需认证） */
+    public static final String[] WHITELIST = {
+            "/public/**",
+            "/auth/login",
+            "/auth/captcha",
+            "/auth/refresh",
+            "/v3/api-docs/**",
+            "/swagger-ui/**",
+            "/swagger-ui.html",
+            "/doc.html",
+            "/actuator/health",
+            "/favicon.ico",
+            "/error"
+    };
+
+    @Bean
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        http
+                .csrf(AbstractHttpConfigurer::disable)
+                .cors(c -> c.configurationSource(corsConfigurationSource()))
+                .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers(WHITELIST).permitAll()
+                        .anyRequest().authenticated())
+                .exceptionHandling(e -> e
+                        .authenticationEntryPoint((req, resp, ex) -> writeJson(resp,
+                                R.fail(ResultCode.UNAUTHORIZED, ex.getMessage())))
+                        .accessDeniedHandler((req, resp, ex) -> writeJson(resp,
+                                R.fail(ResultCode.FORBIDDEN, ex.getMessage()))))
+                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
+        return http.build();
+    }
+
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration cfg = new CorsConfiguration();
+        cfg.setAllowedOriginPatterns(novaProperties.getCors().getAllowedOrigins());
+        cfg.setAllowedMethods(Arrays.asList(novaProperties.getCors().getAllowedMethods().split(",")));
+        cfg.setAllowedHeaders(Arrays.asList(novaProperties.getCors().getAllowedHeaders().split(",")));
+        cfg.setAllowCredentials(novaProperties.getCors().isAllowCredentials());
+        cfg.setMaxAge(novaProperties.getCors().getMaxAge());
+        UrlBasedCorsConfigurationSource src = new UrlBasedCorsConfigurationSource();
+        src.registerCorsConfiguration("/**", cfg);
+        return src;
+    }
+
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder(10);
+    }
+
+    @Bean
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration cfg) throws Exception {
+        return cfg.getAuthenticationManager();
+    }
+
+    private void writeJson(HttpServletResponse resp, R<?> body) throws java.io.IOException {
+        resp.setStatus(HttpServletResponse.SC_OK);
+        resp.setContentType(MediaType.APPLICATION_JSON_VALUE);
+        resp.setCharacterEncoding(StandardCharsets.UTF_8.name());
+        resp.getWriter().write(com.fasterxml.jackson.databind.json.JsonMapper.builder().build()
+                .writeValueAsString(body));
+    }
+}

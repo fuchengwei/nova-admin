@@ -1,0 +1,31 @@
+spring:
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    url: ${NOVA_DB_URL}
+    username: ${NOVA_DB_USER}
+    password: ${NOVA_DB_PASSWORD}
+    hikari:
+      minimum-idle: 10
+      maximum-pool-size: 50
+      max-lifetime: 1800000
+      connection-timeout: 30000
+
+  data:
+    redis:
+      host: ${NOVA_REDIS_HOST}
+      port: ${NOVA_REDIS_PORT:6379}
+      password: ${NOVA_REDIS_PASSWORD}
+      database: 0
+      timeout: 5s
+      lettuce:
+        pool:
+          max-active: 50
+          max-idle: 20
+          min-idle: 5
+
+logging:
+  level:
+    root: WARN
+    com.nova.admin: INFO
+  file:
+    name: /var/log/nova-admin/app.log

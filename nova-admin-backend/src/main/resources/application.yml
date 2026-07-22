@@ -1,0 +1,93 @@
+spring:
+  profiles:
+    active: dev
+  application:
+    name: nova-admin
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss
+    time-zone: GMT+8
+    default-property-inclusion: non_null
+  servlet:
+    multipart:
+      max-file-size: 100MB
+      max-request-size: 100MB
+
+server:
+  port: 8080
+  servlet:
+    context-path: /api
+  compression:
+    enabled: true
+    mime-types: application/json,text/html,text/xml,text/css,application/javascript
+
+# MyBatis-Plus
+mybatis-plus:
+  mapper-locations: classpath*:/mapper/**/*.xml
+  type-aliases-package: com.nova.admin.modules.*.entity
+  configuration:
+    map-underscore-to-camel-case: true
+    cache-enabled: false
+    log-impl: org.apache.ibatis.logging.nologging.NoLoggingImpl
+  global-config:
+    db-config:
+      id-type: ASSIGN_ID
+      logic-delete-field: deleted
+      logic-delete-value: 1
+      logic-not-delete-value: 0
+      insert-strategy: not_null
+      update-strategy: not_null
+
+# OpenAPI / springdoc
+springdoc:
+  api-docs:
+    enabled: true
+    path: /v3/api-docs
+  swagger-ui:
+    enabled: true
+    path: /swagger-ui.html
+    tags-sorter: alpha
+    operations-sorter: method
+
+# Actuator
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: when-authorized
+
+# Nova Admin 自定义配置
+nova:
+  security:
+    jwt:
+      secret: ${NOVA_JWT_SECRET:Y2hhbmdlLW1lLXRoaXMtaXMtYS1zZWNyZXQta2V5LWZvci1ub3ZhLWFkbWluLWp3dC0yMDI2}
+      access-token-expire-minutes: 120
+      refresh-token-expire-minutes: 10080
+      header: Authorization
+      prefix: "Bearer "
+    captcha:
+      enabled: true
+      expire-minutes: 5
+    login:
+      max-retry-count: 5
+      lock-minutes: 10
+  cors:
+    allowed-origins:
+      - http://localhost:5173
+      - http://localhost:5174
+    allowed-methods: "*"
+    allowed-headers: "*"
+    allow-credentials: true
+    max-age: 3600
+  file:
+    storage-type: local
+    local:
+      base-path: ${user.home}/nova-admin/upload
+      url-prefix: http://localhost:8080/api/file/preview/
+    minio:
+      endpoint: http://localhost:9000
+      access-key: nova_minio
+      secret-key: nova_minio_2026
+      bucket: nova-admin

@@ -1,0 +1,23 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary: #1677ff;
+  --color-bg-layout: #f0f2f5;
+  --font-family-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI",
+    "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+}
+
+html, body, #root {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  font-family: var(--font-family-sans);
+  background-color: var(--color-bg-layout);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* 让 AntD 组件与 Tailwind reset 协调 */
+.ant-layout, .ant-layout-content {
+  background: transparent !important;
+}

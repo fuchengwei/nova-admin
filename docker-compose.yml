@@ -1,0 +1,70 @@
+name: nova-admin
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: nova-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: nova_admin
+      POSTGRES_USER: nova
+      POSTGRES_PASSWORD: nova_pass_2026
+      TZ: Asia/Shanghai
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./.docker-data/postgres:/var/lib/postgresql/data
+      - ./nova-admin-backend/sql/init.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U nova -d nova_admin"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:8-alpine
+    container_name: nova-redis
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes", "--requirepass", "nova_redis_2026"]
+    ports:
+      - "6379:6379"
+    volumes:
+      - ./.docker-data/redis:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "nova_redis_2026", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  minio:
+    image: minio/minio:latest
+    container_name: nova-minio
+    restart: unless-stopped
+    environment:
+      MINIO_ROOT_USER: nova_minio
+      MINIO_ROOT_PASSWORD: nova_minio_2026
+    command: server /data --console-address ":9001"
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - ./.docker-data/minio:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  minio-init:
+    image: minio/mc:latest
+    container_name: nova-minio-init
+    depends_on:
+      minio:
+        condition: service_healthy
+    entrypoint: >
+      /bin/sh -c "
+      mc alias set local http://minio:9000 nova_minio nova_minio_2026 &&
+      mc mb -p local/nova-admin || true &&
+      mc anonymous set download local/nova-admin || true
+      "
+    restart: "no"
