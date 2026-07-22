@@ -16,9 +16,8 @@ spring:
     redis:
       host: localhost
       port: 6379
-      # 留空表示不启用密码认证（适合本地无密码 Redis）
-      # 启动 docker compose 后可设置: nova_redis_2026
-      password:
+      # docker compose 启动的 nova-redis 密码
+      password: nova_redis_2026
       database: 0
       timeout: 5s
       lettuce:
