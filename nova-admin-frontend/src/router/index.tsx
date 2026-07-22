@@ -17,6 +17,9 @@ import LogPage from '@/pages/system/log';
 // 基础设施
 import FilePage from '@/pages/infra/file';
 
+// 监控管理
+import JobPage from '@/pages/monitor/job';
+
 /** 路由路径 → 组件映射 */
 const componentMap: Record<string, () => React.JSX.Element> = {
   '/dashboard': DashboardPage,
@@ -27,6 +30,7 @@ const componentMap: Record<string, () => React.JSX.Element> = {
   '/system/dict': DictPage,
   '/system/log': LogPage,
   '/infra/file': FilePage,
+  '/monitor/job': JobPage,
 };
 
 /** 根据菜单数据动态生成路由 */
@@ -70,6 +74,7 @@ export const router = createBrowserRouter([
       { path: 'system/dict', element: <DictPage /> },
       { path: 'system/log', element: <LogPage /> },
       { path: 'infra/file', element: <FilePage /> },
+      { path: 'monitor/job', element: <JobPage /> },
     ],
   },
   { path: '*', element: <NotFoundPage /> },

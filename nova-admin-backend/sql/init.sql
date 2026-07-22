@@ -247,13 +247,14 @@ CREATE INDEX idx_file_uploader ON sys_file(uploader_id);
 DROP TABLE IF EXISTS sys_job CASCADE;
 CREATE TABLE sys_job (
     id              BIGINT PRIMARY KEY,
-    name            VARCHAR(64) NOT NULL,
-    handler         VARCHAR(255) NOT NULL,
-    cron            VARCHAR(64) NOT NULL,
-    param           VARCHAR(255),
-    status          SMALLINT NOT NULL DEFAULT 1,
+    job_name        VARCHAR(64) NOT NULL,
+    job_group       VARCHAR(64) NOT NULL DEFAULT 'DEFAULT',
+    invoke_target   VARCHAR(255) NOT NULL,
+    cron_expression VARCHAR(64) NOT NULL,
+    status          SMALLINT NOT NULL DEFAULT 0,
+    misfire_policy  VARCHAR(32) NOT NULL DEFAULT 'DO_NOTHING',
+    concurrent      SMALLINT NOT NULL DEFAULT 1,
     remark          VARCHAR(255),
-    next_time       TIMESTAMP,
     create_by       BIGINT,
     create_time     TIMESTAMP,
     update_by       BIGINT,
@@ -261,6 +262,7 @@ CREATE TABLE sys_job (
     deleted         SMALLINT NOT NULL DEFAULT 0
 );
 COMMENT ON TABLE sys_job IS '定时任务';
+CREATE INDEX idx_job_status ON sys_job(status);
 
 DROP TABLE IF EXISTS sys_job_log CASCADE;
 CREATE TABLE sys_job_log (
@@ -382,6 +384,21 @@ VALUES
     -- 日志管理
     (35, 1, '日志管理', 'C', 'system:log:list',    '/system/log', 'system/log/index', 'FileOutlined', 5, 1, 1, NOW()),
     (36, 35, '删除日志', 'F', 'system:log:remove', '', '', '', 0, 0, 1, NOW());
+
+-- 定时任务示例数据（默认暂停，可在界面启动）
+INSERT INTO sys_job (id, job_name, job_group, invoke_target, cron_expression, status, misfire_policy, concurrent, remark, create_time)
+VALUES (10001, '演示任务', 'DEFAULT', 'demoJob.execute', '0 0/1 * * * ?', 0, 'DO_NOTHING', 1, '每分钟执行一次的示例任务（默认暂停）', NOW());
+
+-- 监控管理-定时任务菜单与权限
+INSERT INTO sys_menu (id, parent_id, name, type, perms, path, component, icon, sort, visible, status, create_time)
+VALUES
+    (41, 2,  '定时任务', 'C', 'monitor:job:list',   '/monitor/job', 'monitor/job/index', 'ScheduleOutlined', 0, 1, 1, NOW()),
+    (42, 41, '新增任务', 'F', 'monitor:job:add',    '', '', '', 0, 0, 1, NOW()),
+    (43, 41, '修改任务', 'F', 'monitor:job:edit',   '', '', '', 1, 0, 1, NOW()),
+    (44, 41, '删除任务', 'F', 'monitor:job:remove', '', '', '', 2, 0, 1, NOW()),
+    (45, 41, '暂停任务', 'F', 'monitor:job:pause',  '', '', '', 3, 0, 1, NOW()),
+    (46, 41, '恢复任务', 'F', 'monitor:job:resume', '', '', '', 4, 0, 1, NOW()),
+    (47, 41, '执行任务', 'F', 'monitor:job:run',    '', '', '', 5, 0, 1, NOW());
 
 -- 超级管理员用户 (密码 admin123 的 BCrypt 哈希)
 -- 替换为你生成的实际哈希

@@ -160,6 +160,14 @@ export default function AdminLayout() {
           { key: '/infra/file', icon: <Icons.FileOutlined />, label: t('menu.file') },
         ],
       },
+      {
+        key: '/monitor',
+        icon: <Icons.MonitorOutlined />,
+        label: t('menu.monitor'),
+        children: [
+          { key: '/monitor/job', icon: <Icons.ScheduleOutlined />, label: t('menu.job') },
+        ],
+      },
     ];
   }, [menus, t]);
 
