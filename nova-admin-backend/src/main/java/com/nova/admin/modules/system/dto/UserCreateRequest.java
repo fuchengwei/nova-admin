@@ -1,9 +1,10 @@
 package com.nova.admin.modules.system.dto;
 
+import com.nova.admin.common.constant.Constants;
 import io.swagger.v3.oas.annotations.media.Schema;
-import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
 
@@ -40,11 +41,12 @@ public class UserCreateRequest implements Serializable {
     private String realName;
 
     @Size(max = 128, message = "邮箱长度不能超过128")
-    @Email(message = "邮箱格式不正确")
+    @Pattern(regexp = Constants.EMAIL_PATTERN, message = "邮箱格式不正确")
     @Schema(description = "邮箱")
     private String email;
 
     @Size(max = 20, message = "手机号长度不能超过20")
+    @Pattern(regexp = Constants.PHONE_PATTERN, message = "手机号格式不正确")
     @Schema(description = "手机号")
     private String phone;
 

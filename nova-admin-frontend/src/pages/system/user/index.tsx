@@ -31,6 +31,7 @@ import {
 } from '@/api/user';
 import { getDeptTree } from '@/api/dept';
 import { getAllRoles } from '@/api/role';
+import { phoneRule, emailRule } from '@/utils/validators';
 
 export default function UserPage() {
   const { t } = useTranslation();
@@ -70,6 +71,13 @@ export default function UserPage() {
   const toggleStatusMutation = useMutation({
     mutationFn: ({ id, status }: { id: number; status: number }) =>
       updateUserStatus(id, status),
+    onSuccess: () => {
+      message.success(t('user.statusSuccess'));
+      actionRef.current?.reload();
+    },
+    onError: () => {
+      message.error(t('common.fail'));
+    },
   });
 
   const buildTreeSelectData = useCallback(
@@ -152,7 +160,7 @@ export default function UserPage() {
       render: (v) => v || '-',
     },
     {
-      title: t('common.action'),
+      title: t('user.action'),
       valueType: 'option',
       key: 'option',
       width: 220,
@@ -245,7 +253,10 @@ export default function UserPage() {
         }
         onFinish={async (values) => {
           const res = editMode && editingRecord
-            ? await updateMutation.mutateAsync({ ...values } as unknown as UserUpdateRequest)
+            ? await updateMutation.mutateAsync({
+                ...values,
+                id: editingRecord.id,
+              } as unknown as UserUpdateRequest)
             : await createMutation.mutateAsync({ ...values } as unknown as UserCreateRequest);
           if (res.code !== 0) {
             message.error(res.msg || t('common.error'));
@@ -277,9 +288,13 @@ export default function UserPage() {
           <ProFormText
             name="email"
             label={t('user.email')}
-            rules={[{ type: 'email', message: t('user.emailInvalid') }]}
+            rules={[emailRule(t('user.emailInvalid'))]}
           />
-          <ProFormText name="phone" label={t('user.phone')} />
+          <ProFormText
+            name="phone"
+            label={t('user.phone')}
+            rules={[phoneRule(t('user.phoneInvalid'))]}
+          />
           <ProFormRadio.Group
             name="gender"
             label={t('user.gender')}

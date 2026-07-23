@@ -140,6 +140,7 @@ export default {
     editUser: '编辑用户',
     usernameRequired: '请输入用户名',
     emailInvalid: '请输入有效的邮箱地址',
+    phoneInvalid: '请输入有效的手机号',
     resetPwd: '重置密码',
     resetPwdSuccess: '密码重置成功',
     newPassword: '新密码',

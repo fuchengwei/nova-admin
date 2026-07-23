@@ -138,6 +138,7 @@ export default {
     editUser: 'Edit User',
     usernameRequired: 'Please enter username',
     emailInvalid: 'Please enter a valid email address',
+    phoneInvalid: 'Please enter a valid phone number',
     resetPwd: 'Reset Password',
     resetPwdSuccess: 'Password reset successfully',
     newPassword: 'New Password',

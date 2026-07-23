@@ -36,4 +36,8 @@ public final class Constants {
     public static final char MENU_TYPE_DIR = 'M';
     public static final char MENU_TYPE_MENU = 'C';
     public static final char MENU_TYPE_BUTTON = 'F';
+
+    /** 校验正则（与前端保持一致） */
+    public static final String PHONE_PATTERN = "^(1[3-9]\\d{9})?$";
+    public static final String EMAIL_PATTERN = "^([A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,})?$";
 }
