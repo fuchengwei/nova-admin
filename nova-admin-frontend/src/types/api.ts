@@ -4,6 +4,8 @@ export interface R<T> {
   msg: string;
   data: T;
   ts: number;
+  /** 是否成功（后端 R.isSuccess() 由 Jackson 序列化为 success 字段；缺失时按 code === 0 推断） */
+  success?: boolean;
 }
 
 /** 分页响应 */

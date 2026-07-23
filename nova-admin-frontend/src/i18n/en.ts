@@ -14,6 +14,12 @@ export default {
     success: 'Success',
     fail: 'Failed',
   },
+  request: {
+    authExpired: 'Session expired, please log in again',
+    refreshFailed: 'Session invalid, please log in again',
+    forbidden: 'Access denied',
+    serverError: 'Service error, please try again later',
+  },
   login: {
     title: 'Nova Admin',
     subtitle: 'Universal RBAC Admin Platform',

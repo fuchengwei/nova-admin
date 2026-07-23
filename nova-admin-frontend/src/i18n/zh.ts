@@ -14,6 +14,12 @@ export default {
     success: '操作成功',
     fail: '操作失败',
   },
+  request: {
+    authExpired: '登录已过期，请重新登录',
+    refreshFailed: '登录状态已失效，请重新登录',
+    forbidden: '没有访问权限',
+    serverError: '服务异常，请稍后重试',
+  },
   login: {
     title: 'Nova Admin',
     subtitle: '通用 RBAC 后台权限管理系统',
