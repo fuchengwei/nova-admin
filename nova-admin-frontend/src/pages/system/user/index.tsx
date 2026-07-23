@@ -1,20 +1,7 @@
-import { useCallback, useRef, useState } from 'react';
-import { Button, Switch, Popconfirm, message } from 'antd';
-import {
-  PlusOutlined,
-  EditOutlined,
-  DeleteOutlined,
-} from '@ant-design/icons';
-import {
-  ProTable,
-  ModalForm,
-  ProFormText,
-  ProFormRadio,
-  ProFormTreeSelect,
-  ProFormCheckbox,
-  type ProColumns,
-  type ActionType,
-} from '@ant-design/pro-components';
+import { useRef, useState } from 'react';
+import { Button, message } from 'antd';
+import { PlusOutlined } from '@ant-design/icons';
+import { PageContainer, ProTable, type ActionType } from '@ant-design/pro-components';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import {
@@ -31,7 +18,10 @@ import {
 } from '@/api/user';
 import { getDeptTree } from '@/api/dept';
 import { getAllRoles } from '@/api/role';
-import { phoneRule, emailRule } from '@/utils/validators';
+import { toTreeSelectData, type TreeSelectNode } from '@/utils/tree';
+import UserFormModal from './components/UserFormModal';
+import ResetPwdModal from './components/ResetPwdModal';
+import { useUserColumns } from './components/columns';
 
 export default function UserPage() {
   const { t } = useTranslation();
@@ -43,7 +33,6 @@ export default function UserPage() {
   const [pwdModalOpen, setPwdModalOpen] = useState(false);
   const [pwdRecord, setPwdRecord] = useState<UserRecord | null>(null);
 
-  // 部门树（TreeSelect 用）
   const { data: deptTree } = useQuery({
     queryKey: ['deptTree'],
     queryFn: async () => {
@@ -52,7 +41,6 @@ export default function UserPage() {
     },
   });
 
-  // 角色列表
   const { data: roles } = useQuery({
     queryKey: ['allRoles'],
     queryFn: async () => {
@@ -65,12 +53,10 @@ export default function UserPage() {
   const updateMutation = useMutation({ mutationFn: updateUser });
   const deleteMutation = useMutation({ mutationFn: deleteUser });
   const resetPwdMutation = useMutation({
-    mutationFn: ({ id, password }: { id: number; password: string }) =>
-      resetPassword(id, password),
+    mutationFn: ({ id, password }: { id: number; password: string }) => resetPassword(id, password),
   });
   const toggleStatusMutation = useMutation({
-    mutationFn: ({ id, status }: { id: number; status: number }) =>
-      updateUserStatus(id, status),
+    mutationFn: ({ id, status }: { id: number; status: number }) => updateUserStatus(id, status),
     onSuccess: () => {
       message.success(t('user.statusSuccess'));
       actionRef.current?.reload();
@@ -80,21 +66,8 @@ export default function UserPage() {
     },
   });
 
-  const buildTreeSelectData = useCallback(
-    (
-      data: typeof deptTree,
-    ): { value: number; title: string; children?: ReturnType<typeof buildTreeSelectData> }[] => {
-      if (!data) return [];
-      return data.map((item) => ({
-        value: item.id,
-        title: item.name,
-        children: item.children ? buildTreeSelectData(item.children) : undefined,
-      }));
-    },
-    [deptTree],
-  );
-
-  const treeSelectData = buildTreeSelectData(deptTree);
+  const deptTreeData: TreeSelectNode[] = toTreeSelectData(deptTree);
+  const roleOptions = (roles ?? []).map((r) => ({ label: r.name, value: r.id }));
 
   const handleOpenAdd = () => {
     setEditMode(false);
@@ -113,91 +86,55 @@ export default function UserPage() {
     setPwdModalOpen(true);
   };
 
-  const columns: ProColumns<UserRecord>[] = [
-    { title: t('user.username'), dataIndex: 'username', width: 120, ellipsis: true },
-    { title: t('user.nickname'), dataIndex: 'nickname', width: 120, ellipsis: true },
-    {
-      title: t('user.dept'),
-      dataIndex: 'deptName',
-      width: 140,
-      search: false,
-      render: (v) => v || '-',
-    },
-    {
-      title: t('user.phone'),
-      dataIndex: 'phone',
-      width: 130,
-      ellipsis: true,
-      render: (v) => v || '-',
-    },
-    {
-      title: t('user.status'),
-      dataIndex: 'status',
-      width: 110,
-      valueType: 'select',
-      valueEnum: {
-        1: { text: t('user.enabled'), status: 'Success' },
-        0: { text: t('user.disabled'), status: 'Error' },
-      },
-      render: (_, record) => (
-        <Switch
-          checked={record.status === 1}
-          checkedChildren={t('user.enabled')}
-          unCheckedChildren={t('user.disabled')}
-          loading={toggleStatusMutation.isPending}
-          onChange={(checked) =>
-            toggleStatusMutation.mutate({ id: record.id, status: checked ? 1 : 0 })
-          }
-        />
-      ),
-    },
-    {
-      title: t('user.createTime'),
-      dataIndex: 'createTime',
-      width: 180,
-      valueType: 'dateTime',
-      search: false,
-      render: (v) => v || '-',
-    },
-    {
-      title: t('user.action'),
-      valueType: 'option',
-      key: 'option',
-      width: 220,
-      fixed: 'right',
-      render: (_, record) => [
-        <Button
-          key="edit"
-          type="link"
-          size="small"
-          icon={<EditOutlined />}
-          onClick={() => handleOpenEdit(record)}
-        >
-          {t('common.edit')}
-        </Button>,
-        <Button key="pwd" type="link" size="small" onClick={() => handleOpenPwdModal(record)}>
-          {t('user.resetPwd')}
-        </Button>,
-        <Popconfirm
-          key="del"
-          title={t('user.deleteConfirm')}
-          onConfirm={() => deleteMutation.mutate(record.id)}
-          okText={t('common.confirm')}
-          cancelText={t('common.cancel')}
-          okButtonProps={{ danger: true }}
-        >
-          <Button type="link" size="small" danger icon={<DeleteOutlined />}>
-            {t('common.delete')}
-          </Button>
-        </Popconfirm>,
-      ],
-    },
-  ];
+  const closeUserModal = () => {
+    setModalOpen(false);
+    setEditingRecord(null);
+    setEditMode(false);
+  };
+
+  const closePwdModal = () => {
+    setPwdModalOpen(false);
+    setPwdRecord(null);
+  };
+
+  const handleSubmitUser = async (
+    values: UserRecord,
+    isEdit: boolean,
+    record: UserRecord | null,
+  ): Promise<boolean> => {
+    const res = isEdit && record
+      ? await updateMutation.mutateAsync({ ...values, id: record.id } as unknown as UserUpdateRequest)
+      : await createMutation.mutateAsync({ ...values } as unknown as UserCreateRequest);
+    if (res.code !== 0) {
+      message.error(res.msg || t('common.error'));
+      return false;
+    }
+    message.success(isEdit ? t('user.updateSuccess') : t('user.createSuccess'));
+    actionRef.current?.reload();
+    return true;
+  };
+
+  const handleResetPwd = async (password: string, record: UserRecord | null): Promise<boolean> => {
+    if (!record) return false;
+    const res = await resetPwdMutation.mutateAsync({ id: record.id, password });
+    if (res.code !== 0) {
+      message.error(res.msg || t('common.error'));
+      return false;
+    }
+    message.success(t('user.resetPwdSuccess'));
+    return true;
+  };
+
+  const columns = useUserColumns({
+    onEdit: handleOpenEdit,
+    onResetPwd: handleOpenPwdModal,
+    onDelete: (id) => deleteMutation.mutate(id),
+    toggleStatus: (id, status) => toggleStatusMutation.mutate({ id, status }),
+    toggleLoading: toggleStatusMutation.isPending,
+  });
 
   return (
-    <div className="flex flex-col h-full">
-      <h2 className="text-lg font-semibold mb-4">{t('menu.user')}</h2>
-
+    <PageContainer title={t('menu.user')}>
       <ProTable<UserRecord>
         actionRef={actionRef}
         rowKey="id"
@@ -236,134 +173,17 @@ export default function UserPage() {
         }}
       />
 
-      {/* 新增/编辑弹窗 */}
-      <ModalForm<UserRecord>
-        title={editMode ? t('user.editUser') : t('user.addUser')}
+      <UserFormModal
         open={modalOpen}
-        onOpenChange={(open) => {
-          setModalOpen(open);
-          if (!open) setEditingRecord(null);
-        }}
-        width={640}
-        layout="vertical"
-        initialValues={
-          editMode && editingRecord
-            ? { ...editingRecord, password: undefined }
-            : { status: 1, gender: 0 }
-        }
-        onFinish={async (values) => {
-          const res = editMode && editingRecord
-            ? await updateMutation.mutateAsync({
-                ...values,
-                id: editingRecord.id,
-              } as unknown as UserUpdateRequest)
-            : await createMutation.mutateAsync({ ...values } as unknown as UserCreateRequest);
-          if (res.code !== 0) {
-            message.error(res.msg || t('common.error'));
-            return false;
-          }
-          message.success(editMode ? t('user.updateSuccess') : t('user.createSuccess'));
-          actionRef.current?.reload();
-          return true;
-        }}
-      >
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4">
-          <ProFormText
-            name="username"
-            label={t('user.username')}
-            disabled={editMode}
-            rules={[{ required: true, message: t('user.usernameRequired') }]}
-          />
-          <ProFormText.Password
-            name="password"
-            label={t('user.password')}
-            placeholder={editMode ? t('user.passwordHint') : t('user.password')}
-            rules={[
-              { required: !editMode, message: t('user.passwordRequired') },
-              { min: 6, message: t('user.passwordMinLen') },
-            ]}
-          />
-          <ProFormText name="nickname" label={t('user.nickname')} />
-          <ProFormText name="realName" label={t('user.realName')} />
-          <ProFormText
-            name="email"
-            label={t('user.email')}
-            rules={[emailRule(t('user.emailInvalid'))]}
-          />
-          <ProFormText
-            name="phone"
-            label={t('user.phone')}
-            rules={[phoneRule(t('user.phoneInvalid'))]}
-          />
-          <ProFormRadio.Group
-            name="gender"
-            label={t('user.gender')}
-            options={[
-              { label: t('user.genderUnknown'), value: 0 },
-              { label: t('user.genderMale'), value: 1 },
-              { label: t('user.genderFemale'), value: 2 },
-            ]}
-          />
-          <ProFormTreeSelect
-            name="deptId"
-            label={t('user.dept')}
-            fieldProps={{
-              treeData: treeSelectData,
-              allowClear: true,
-              treeDefaultExpandAll: true,
-              placeholder: t('user.deptSelect'),
-            }}
-          />
-          <ProFormRadio.Group
-            name="status"
-            label={t('user.status')}
-            rules={[{ required: true }]}
-            options={[
-              { label: t('user.enabled'), value: 1 },
-              { label: t('user.disabled'), value: 0 },
-            ]}
-          />
-          <ProFormCheckbox.Group
-            name="roleIds"
-            label={t('user.role')}
-            options={roles?.map((r) => ({ label: r.name, value: r.id })) ?? []}
-          />
-        </div>
-      </ModalForm>
+        editMode={editMode}
+        record={editingRecord}
+        roleOptions={roleOptions}
+        deptTreeData={deptTreeData}
+        onSubmit={handleSubmitUser}
+        onClose={closeUserModal}
+      />
 
-      {/* 重置密码弹窗 */}
-      <ModalForm
-        title={t('user.resetPwd')}
-        open={pwdModalOpen}
-        onOpenChange={(open) => {
-          setPwdModalOpen(open);
-          if (!open) setPwdRecord(null);
-        }}
-        width={400}
-        layout="vertical"
-        onFinish={async (values) => {
-          if (!pwdRecord) return false;
-          const res = await resetPwdMutation.mutateAsync({
-            id: pwdRecord.id,
-            password: values.password as string,
-          });
-          if (res.code !== 0) {
-            message.error(res.msg || t('common.error'));
-            return false;
-          }
-          message.success(t('user.resetPwdSuccess'));
-          return true;
-        }}
-      >
-        <ProFormText.Password
-          name="password"
-          label={t('user.newPassword')}
-          rules={[
-            { required: true, message: t('user.passwordRequired') },
-            { min: 6, message: t('user.passwordMinLen') },
-          ]}
-        />
-      </ModalForm>
-    </div>
+      <ResetPwdModal open={pwdModalOpen} record={pwdRecord} onSubmit={handleResetPwd} onClose={closePwdModal} />
+    </PageContainer>
   );
 }

@@ -28,10 +28,9 @@ import {
   type DeptCreateRequest,
   type DeptUpdateRequest,
 } from '@/api/dept';
+import { toTreeSelectData } from '@/utils/tree';
 
 const QUERY_KEY = ['deptTree'];
-
-type TreeSelectNode = { value: number; title: string; children?: TreeSelectNode[] };
 
 export default function DeptPage() {
   const { t } = useTranslation();
@@ -100,17 +99,10 @@ export default function DeptPage() {
     [selectedDept],
   );
 
-  const buildTreeSelectData = (data: DeptTreeNode[]): TreeSelectNode[] =>
-    data.map((item) => ({
-      value: item.id,
-      title: item.name,
-      children: item.children ? buildTreeSelectData(item.children) : undefined,
-    }));
-
-  const treeSelectData = useMemo(() => {
-    const source = editMode && excludeTreeData ? excludeTreeData : (treeData ?? []);
-    return buildTreeSelectData(source);
-  }, [editMode, excludeTreeData, treeData]);
+  const treeSelectData = useMemo(
+    () => toTreeSelectData(editMode && excludeTreeData ? excludeTreeData : (treeData ?? [])),
+    [editMode, excludeTreeData, treeData],
+  );
 
   const treeNodes: DataNode[] = useMemo(
     () =>

@@ -10,6 +10,7 @@ import {
   ProFormSelect,
   ProFormDigit,
   ProFormRadio,
+  PageContainer,
   type ProColumns,
   type ActionType,
 } from '@ant-design/pro-components';
@@ -177,9 +178,7 @@ export default function RolePage() {
   ];
 
   return (
-    <div className="flex flex-col h-full">
-      <h2 className="text-lg font-semibold mb-4">{t('menu.role')}</h2>
-
+    <PageContainer title={t('menu.role')}>
       <ProTable<RoleRecord>
         actionRef={actionRef}
         rowKey="id"
@@ -305,6 +304,6 @@ export default function RolePage() {
           />
         </Form.Item>
       </ModalForm>
-    </div>
+    </PageContainer>
   );
 }

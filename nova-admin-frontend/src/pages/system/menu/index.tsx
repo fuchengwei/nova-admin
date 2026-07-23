@@ -26,8 +26,7 @@ import {
   type MenuUpdateRequest,
 } from '@/api/menu';
 import type { MenuInfo } from '@/types/api';
-
-type TreeSelectNode = { value: number; title: string; children?: TreeSelectNode[] };
+import { toTreeSelectData } from '@/utils/tree';
 
 const iconMap: Record<string, React.ReactNode> = {
   SettingOutlined: <Icons.SettingOutlined />,
@@ -114,14 +113,7 @@ export default function MenuPage() {
     setModalOpen(true);
   };
 
-  const buildTreeSelectData = (data: MenuInfo[]): TreeSelectNode[] =>
-    data.map((item) => ({
-      value: item.id,
-      title: item.name,
-      children: item.children ? buildTreeSelectData(item.children) : undefined,
-    }));
-
-  const treeSelectData = useMemo(() => buildTreeSelectData(menuTree ?? []), [menuTree]);
+  const treeSelectData = useMemo(() => toTreeSelectData(menuTree ?? []), [menuTree]);
 
   return (
     <div className="flex flex-col h-full">

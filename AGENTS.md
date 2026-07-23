@@ -37,9 +37,26 @@
 - React 19 函数组件 + hooks，禁用 class 组件；组件 `PascalCase.tsx`；hook `useXxx`；类型 `XxxRecord`/`XxxReq`/`XxxResp`
 - 页面优先 ProComponents 3.x（兼容 antd v6，禁止 2.x）：列表 `ProTable`、表单 `ProForm` 系列（`ModalForm`/`DrawerForm`/`QueryFilter`/`StepsForm`）、轻量列表 `ProList`、只读详情 `ProDescriptions`、布局 `ProLayout`/`ProCard`；仅无法覆盖时用 antd 基础组件
 - 禁止使用 `any`；禁止硬编码字符串/魔法值（提取为常量或枚举）
+- 组件「单文件单组件」：每个组件独立 `PascalCase.tsx`；页面局部组件放 `pages/<module>/components`，公共组件放 `src/components`
 
 **通用**
 - 用户可见文案必须走 i18n：后端 `MessageSource`，前端 `react-i18next` 的 `t()`；禁止硬编码本应可翻译的界面文案
+
+## 前端组件与目录规范
+
+- **单文件单组件**：每个组件独立一个 `PascalCase.tsx`，禁止在同一文件中定义多个组件
+- **目录归属**：
+  - 仅服务某页面的局部组件 → `src/pages/<module>/components/`（如用户页 `src/pages/system/user/components/UserFormModal.tsx`）
+  - 跨页面复用的公共组件 → `src/components/`
+  - 禁止为仅做属性透传的薄封装单独提取公共组件（如对 `antd` `Switch` 的 1:1 包装），应直接使用 ProComponents / antd 原组件；页面容器优先使用 ProComponents 的 `PageContainer`，不得自建薄封装
+  - 严禁把局部组件误放入公共目录，亦不得把多个组件塞进同一文件
+- **文件规模红线（error 级）**：
+  - 单文件建议 ≤ 200 行；超过 250 行必须拆分（提取局部组件 / 公共组件 / hooks / utils）
+  - 控制复杂度：避免巨型 `render`，将表格列定义、表单、弹窗、行内渲染抽取为独立组件或函数
+- **公共逻辑与样式提取**：
+  - 跨页面复用的工具函数 / 数据转换收敛到 `src/utils/`（如树形转换 `src/utils/tree.ts` 的 `toTreeSelectData`）
+  - 重复布局与样式（标题栏等）可提取为公共组件，禁止在多处复制 Tailwind 类名组合；页面容器直接使用 ProComponents 的 `PageContainer`，无需自建
+  - 重复出现的树形数据转换统一使用 `toTreeSelectData`，不得各页面自行实现
 
 ## Behavior Rules
 
