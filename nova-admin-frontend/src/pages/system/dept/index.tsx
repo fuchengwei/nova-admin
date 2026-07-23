@@ -7,15 +7,7 @@ import {
   DeleteOutlined,
   ApartmentOutlined,
 } from '@ant-design/icons';
-import {
-  ProCard,
-  ProDescriptions,
-  ModalForm,
-  ProFormText,
-  ProFormDigit,
-  ProFormRadio,
-  ProFormTreeSelect,
-} from '@ant-design/pro-components';
+import { ProCard, ProDescriptions } from '@ant-design/pro-components';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import {
@@ -29,6 +21,7 @@ import {
   type DeptUpdateRequest,
 } from '@/api/dept';
 import { toTreeSelectData } from '@/utils/tree';
+import DeptFormModal, { type DeptFormValues } from './components/DeptFormModal';
 
 const QUERY_KEY = ['deptTree'];
 
@@ -39,6 +32,8 @@ export default function DeptPage() {
   const [selectedDept, setSelectedDept] = useState<DeptTreeNode | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [editMode, setEditMode] = useState(false);
+  /** 新增模式下的上级部门 ID（undefined 表示新增根部门） */
+  const [addParentId, setAddParentId] = useState<number | undefined>(undefined);
 
   // 查询部门树
   const { data: treeData, isLoading } = useQuery({
@@ -79,12 +74,14 @@ export default function DeptPage() {
 
   const handleAddRoot = () => {
     setEditMode(false);
+    setAddParentId(undefined);
     setModalOpen(true);
   };
 
   const handleAddChild = () => {
     if (!selectedDept) return;
     setEditMode(false);
+    setAddParentId(selectedDept.id);
     setModalOpen(true);
   };
 
@@ -116,6 +113,34 @@ export default function DeptPage() {
     [treeData],
   );
 
+  const handleSubmitDept = async (
+    values: DeptFormValues,
+    isEdit: boolean,
+    record: DeptTreeNode | null,
+  ): Promise<boolean> => {
+    // 根部门 parentId 为空时转为 0（后端 parentId 为 @NotNull，0 表示根节点）
+    const payload = { ...values, parentId: values.parentId ?? 0 };
+    const res =
+      isEdit && record
+        ? await updateMutation.mutateAsync({
+            ...payload,
+            id: record.id,
+          } as unknown as DeptUpdateRequest)
+        : await createMutation.mutateAsync(payload as unknown as DeptCreateRequest);
+    if (res.code !== 0) {
+      message.error(res.msg || t('common.fail'));
+      return false;
+    }
+    message.success(isEdit ? t('dept.updateSuccess') : t('dept.createSuccess'));
+    queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+    return true;
+  };
+
+  const closeDeptModal = () => {
+    setModalOpen(false);
+    setEditMode(false);
+  };
+
   return (
     <div className="flex flex-col h-full">
       <div className="flex items-center justify-between mb-4">
@@ -126,7 +151,7 @@ export default function DeptPage() {
       </div>
 
       <div className="flex gap-4 flex-1 min-h-0">
-        <ProCard className="w-72 shrink-0 overflow-auto" loading={isLoading}>
+        <ProCard className="flex-1 shrink-0 overflow-auto" loading={isLoading}>
           {treeNodes.length > 0 && (
             <Tree
               treeData={treeNodes}
@@ -140,13 +165,15 @@ export default function DeptPage() {
           )}
         </ProCard>
 
-        <ProCard className="flex-1 overflow-auto">
+        <ProCard className="flex-2 overflow-auto">
           {selectedDept ? (
             <>
               <ProDescriptions<DeptTreeNode>
                 title={selectedDept.name}
                 dataSource={selectedDept}
                 column={2}
+                bordered
+                size='small'
                 columns={[
                   { title: t('dept.name'), dataIndex: 'name' },
                   { title: t('dept.code'), dataIndex: 'code', render: (v) => v || '-' },
@@ -202,85 +229,15 @@ export default function DeptPage() {
         </ProCard>
       </div>
 
-      <ModalForm
-        title={editMode ? t('dept.editTitle') : t('dept.addTitle')}
+      <DeptFormModal
         open={modalOpen}
-        onOpenChange={(open) => {
-          setModalOpen(open);
-          if (!open) setEditMode(false);
-        }}
-        width={560}
-        layout="vertical"
-        initialValues={
-          editMode && selectedDept
-            ? {
-                parentId: selectedDept.parentId,
-                name: selectedDept.name,
-                code: selectedDept.code,
-                leader: selectedDept.leader,
-                phone: selectedDept.phone,
-                email: selectedDept.email,
-                sort: selectedDept.sort,
-                status: selectedDept.status,
-              }
-            : {
-                parentId: selectedDept?.id ?? 0,
-                sort: 0,
-                status: 1,
-              }
-        }
-        onFinish={async (values) => {
-          const res =
-            editMode && selectedDept
-              ? await updateMutation.mutateAsync({
-                  id: selectedDept.id,
-                  ...values,
-                } as unknown as DeptUpdateRequest)
-              : await createMutation.mutateAsync({ ...values } as unknown as DeptCreateRequest);
-          if (res.code !== 0) {
-            message.error(res.msg || t('common.error'));
-            return false;
-          }
-          message.success(editMode ? t('dept.updateSuccess') : t('dept.createSuccess'));
-          queryClient.invalidateQueries({ queryKey: QUERY_KEY });
-          return true;
-        }}
-      >
-        <ProFormTreeSelect
-          name="parentId"
-          label={t('dept.parent')}
-          rules={[{ required: true, message: t('dept.selectParent') }]}
-          fieldProps={{
-            treeData: treeSelectData,
-            allowClear: true,
-            treeDefaultExpandAll: true,
-            placeholder: t('dept.selectParent'),
-          }}
-        />
-        <ProFormText
-          name="name"
-          label={t('dept.name')}
-          rules={[{ required: true, message: t('dept.nameRequired') }]}
-        />
-        <ProFormText name="code" label={t('dept.code')} />
-        <ProFormText name="leader" label={t('dept.leader')} />
-        <ProFormText name="phone" label={t('dept.phone')} />
-        <ProFormText
-          name="email"
-          label={t('dept.email')}
-          rules={[{ type: 'email', message: t('dept.emailInvalid') }]}
-        />
-        <ProFormDigit name="sort" label={t('dept.sort')} min={0} />
-        <ProFormRadio.Group
-          name="status"
-          label={t('dept.status')}
-          rules={[{ required: true }]}
-          options={[
-            { label: t('dept.enabled'), value: 1 },
-            { label: t('dept.disabled'), value: 0 },
-          ]}
-        />
-      </ModalForm>
+        editMode={editMode}
+        record={editMode ? selectedDept : null}
+        addParentId={addParentId}
+        parentOptions={treeSelectData}
+        onSubmit={handleSubmitDept}
+        onClose={closeDeptModal}
+      />
     </div>
   );
 }
