@@ -21,3 +21,57 @@ html, body, #root {
 .ant-layout, .ant-layout-content {
   background: transparent !important;
 }
+
+/* 页面内容撑满剩余高度：PageContainer 作为全高 flex 列，内容区独立滚动 */
+.page-fill.ant-pro-page-container {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+.page-fill.ant-pro-page-container > .ant-pro-page-container-children-content {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: auto;
+}
+
+/* Tabs 占满父容器高度，活动标签面板内表格可撑满并内部滚动 */
+.tabs-fill {
+  display: flex;
+  flex-direction: column;
+}
+.tabs-fill > .ant-tabs-content-holder {
+  flex: 1;
+  min-height: 0;
+}
+.tabs-fill > .ant-tabs-content-holder > .ant-tabs-content {
+  height: 100%;
+}
+.tabs-fill > .ant-tabs-content-holder > .ant-tabs-content > .ant-tabs-tabpane {
+  height: 100%;
+}
+.tabs-fill .ant-tabs-tabpane-active {
+  display: flex;
+  flex-direction: column;
+}
+
+/* 合并 ProTable 的筛选卡片与表格卡片为同一张视觉卡片 */
+.ant-pro-table {
+  display: flex;
+  flex-direction: column;
+  row-gap: 0 !important;
+}
+.ant-pro-table > .ant-pro-card {
+  margin: 0 !important;
+}
+.ant-pro-table > .ant-pro-card:has(.ant-pro-table-search) {
+  border-bottom: none !important;
+  border-bottom-left-radius: 0 !important;
+  border-bottom-right-radius: 0 !important;
+}
+.ant-pro-table > .ant-pro-card:has(.ant-pro-table-search) + .ant-pro-card {
+  border-top: none !important;
+  border-top-left-radius: 0 !important;
+  border-top-right-radius: 0 !important;
+}

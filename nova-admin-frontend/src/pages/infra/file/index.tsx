@@ -14,6 +14,7 @@ import {
 import { useMutation } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { getFilePage, uploadFile, deleteFile, type FileRecord } from '@/api/file';
+import { useTableScrollY } from '@/hooks/useTableScrollY';
 
 function formatFileSize(size?: number): string {
   if (size === undefined || size === null) return '-';
@@ -175,8 +176,10 @@ export default function FilePage() {
     },
   ];
 
+  const { wrapperRef, scrollY } = useTableScrollY();
+
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex min-h-0 h-full flex-col">
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-lg font-semibold m-0">{t('menu.file')}</h2>
         <Upload {...uploadProps}>
@@ -186,11 +189,13 @@ export default function FilePage() {
         </Upload>
       </div>
 
-      <ProTable<FileRecord>
-        actionRef={actionRef}
-        rowKey="id"
-        columns={columns}
-        scroll={{ x: 1100 }}
+      <div ref={wrapperRef} className="min-h-0 flex-1">
+        <ProTable<FileRecord>
+          actionRef={actionRef}
+          rowKey="id"
+          columns={columns}
+          style={{ height: '100%' }}
+          scroll={{ x: 1100, y: scrollY }}
         request={async (params) => {
           const res = await getFilePage({
             current: params.current ?? 1,
@@ -205,6 +210,7 @@ export default function FilePage() {
         search={{ labelWidth: 'auto' }}
         options={{ reload: true, density: true, setting: true }}
       />
+      </div>
 
       <Modal
         title={previewFile?.originalName || previewFile?.name || t('file.preview')}

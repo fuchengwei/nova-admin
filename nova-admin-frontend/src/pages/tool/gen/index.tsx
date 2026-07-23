@@ -9,6 +9,7 @@ import {
 import { useMutation } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { listGenTables, previewGen, downloadGen, type GenTable } from '@/api/gen';
+import { useTableScrollY } from '@/hooks/useTableScrollY';
 
 export default function GenPage() {
   const { t } = useTranslation();
@@ -77,23 +78,29 @@ export default function GenPage() {
     },
   ];
 
+  const { wrapperRef, scrollY } = useTableScrollY();
+
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex min-h-0 h-full flex-col">
       <h2 className="text-lg font-semibold mb-4">{t('menu.gen')}</h2>
 
-      <ProTable<GenTable>
-        actionRef={actionRef}
-        rowKey="tableName"
-        columns={columns}
-        search={false}
-        pagination={false}
-        options={{ reload: true }}
-        request={async () => {
-          const res = await listGenTables();
-          if (res.code !== 0) return { data: [], success: false, total: 0 };
-          return { data: res.data, success: true, total: res.data.length };
-        }}
-      />
+      <div ref={wrapperRef} className="min-h-0 flex-1">
+        <ProTable<GenTable>
+          actionRef={actionRef}
+          rowKey="tableName"
+          columns={columns}
+          style={{ height: '100%' }}
+          scroll={{ x: 800, y: scrollY }}
+          search={false}
+          pagination={false}
+          options={{ reload: true }}
+          request={async () => {
+            const res = await listGenTables();
+            if (res.code !== 0) return { data: [], success: false, total: 0 };
+            return { data: res.data, success: true, total: res.data.length };
+          }}
+        />
+      </div>
 
       <Modal
         title={t('gen.preview')}

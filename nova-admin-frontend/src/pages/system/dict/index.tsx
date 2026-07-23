@@ -29,6 +29,7 @@ import {
   type DictDataCreateRequest,
   type DictDataUpdateRequest,
 } from '@/api/dict';
+import { useTableScrollY } from '@/hooks/useTableScrollY';
 
 export default function DictPage() {
   const { t } = useTranslation();
@@ -200,12 +201,16 @@ export default function DictPage() {
     },
   ];
 
+  const { wrapperRef, scrollY } = useTableScrollY();
+
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex min-h-0 h-full flex-col">
       <h2 className="text-lg font-semibold mb-4">{t('menu.dict')}</h2>
 
+      <div ref={wrapperRef} className="min-h-0 flex-1">
       <Tabs
         activeKey={activeTab}
+        className="tabs-fill h-full"
         onChange={(key) => {
           if (key === 'type') setSelectedDictType(null);
           setActiveTab(key as 'type' | 'data');
@@ -216,11 +221,13 @@ export default function DictPage() {
             label: t('dict.typeTab'),
             children: (
               <>
+                <div className="min-h-0 flex-1">
                 <ProTable<DictTypeRecord>
                   actionRef={typeActionRef}
                   rowKey="id"
                   columns={typeColumns}
-                  scroll={{ x: 900 }}
+                  style={{ height: '100%' }}
+                  scroll={{ x: 900, y: scrollY }}
                   request={async (params) => {
                     const res = await getDictTypePage({
                       current: params.current ?? 1,
@@ -246,6 +253,7 @@ export default function DictPage() {
                   ]}
                   options={{ reload: true, density: true, setting: true }}
                 />
+                </div>
                 <ModalForm
                   title={typeEditMode ? t('dict.editType') : t('dict.addType')}
                   open={typeModalOpen}
@@ -301,11 +309,13 @@ export default function DictPage() {
                     {selectedDictType.name}（{selectedDictType.type}）
                   </span>
                 </div>
+                <div className="min-h-0 flex-1">
                 <ProTable<DictDataRecord>
                   actionRef={dataActionRef}
                   rowKey="id"
                   columns={dataColumns}
-                  scroll={{ x: 900 }}
+                  style={{ height: '100%' }}
+                  scroll={{ x: 900, y: scrollY }}
                   request={async (params) => {
                     const res = await getDictDataPage({
                       current: params.current ?? 1,
@@ -331,6 +341,7 @@ export default function DictPage() {
                   ]}
                   options={{ reload: true, density: true, setting: true }}
                 />
+                </div>
                 <ModalForm
                   title={dataEditMode ? t('dict.editData') : t('dict.addData')}
                   open={dataModalOpen}
@@ -385,6 +396,7 @@ export default function DictPage() {
           },
         ]}
       />
+      </div>
     </div>
   );
 }

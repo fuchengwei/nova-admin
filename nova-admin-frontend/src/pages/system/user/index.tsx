@@ -22,6 +22,7 @@ import { toTreeSelectData, type TreeSelectNode } from '@/utils/tree';
 import UserFormModal from './components/UserFormModal';
 import ResetPwdModal from './components/ResetPwdModal';
 import { useUserColumns } from './components/columns';
+import { useTableScrollY } from '@/hooks/useTableScrollY';
 
 export default function UserPage() {
   const { t } = useTranslation();
@@ -133,14 +134,18 @@ export default function UserPage() {
     toggleLoading: toggleStatusMutation.isPending,
   });
 
+  const { wrapperRef, scrollY } = useTableScrollY();
+
   return (
-    <PageContainer title={t('menu.user')}>
-      <ProTable<UserRecord>
-        actionRef={actionRef}
-        rowKey="id"
-        headerTitle={t('menu.user')}
-        columns={columns}
-        scroll={{ x: 1100 }}
+    <PageContainer title={t('menu.user')} className="page-fill">
+      <div ref={wrapperRef} className="flex min-h-0 flex-1 flex-col">
+        <ProTable<UserRecord>
+          actionRef={actionRef}
+          rowKey="id"
+          headerTitle={t('menu.user')}
+          columns={columns}
+          style={{ height: '100%' }}
+          scroll={{ x: 1100, y: scrollY }}
         request={async (params) => {
           const payload: UserPageParams = {
             current: params.current ?? 1,
@@ -172,6 +177,7 @@ export default function UserPage() {
           persistenceType: 'localStorage',
         }}
       />
+      </div>
 
       <UserFormModal
         open={modalOpen}

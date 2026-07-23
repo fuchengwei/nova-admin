@@ -31,6 +31,7 @@ import {
   type SysJob,
   type JobPageQuery,
 } from '@/api/job';
+import { useTableScrollY } from '@/hooks/useTableScrollY';
 
 const statusEnum = {
   1: { text: '运行中', status: 'Success' },
@@ -151,8 +152,10 @@ export default function JobPage() {
     },
   ];
 
+  const { wrapperRef, scrollY } = useTableScrollY();
+
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex min-h-0 h-full flex-col">
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-lg font-semibold m-0">{t('menu.job')}</h2>
         <Space>
@@ -169,11 +172,13 @@ export default function JobPage() {
         </Space>
       </div>
 
-      <ProTable<SysJob>
-        actionRef={actionRef}
-        rowKey="id"
-        columns={columns}
-        scroll={{ x: 1300 }}
+      <div ref={wrapperRef} className="min-h-0 flex-1">
+        <ProTable<SysJob>
+          actionRef={actionRef}
+          rowKey="id"
+          columns={columns}
+          style={{ height: '100%' }}
+          scroll={{ x: 1300, y: scrollY }}
         request={async (params) => {
           const payload: JobPageQuery = {
             current: params.current ?? 1,
@@ -189,6 +194,7 @@ export default function JobPage() {
         search={{ labelWidth: 'auto' }}
         options={{ reload: true, density: true, setting: true }}
       />
+      </div>
 
       <ModalForm<SysJob>
         title={editing ? t('job.edit') : t('job.add')}

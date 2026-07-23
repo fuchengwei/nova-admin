@@ -16,6 +16,7 @@ import {
   type OperationLogRecord,
   type LoginLogRecord,
 } from '@/api/log';
+import { useTableScrollY } from '@/hooks/useTableScrollY';
 
 const statusEnum = {
   1: { text: '成功', status: 'Success' },
@@ -87,22 +88,28 @@ export default function LogPage() {
     },
   ];
 
+  const { wrapperRef, scrollY } = useTableScrollY();
+
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex min-h-0 h-full flex-col">
       <h2 className="text-lg font-semibold mb-4">{t('menu.log')}</h2>
 
+      <div ref={wrapperRef} className="min-h-0 flex-1">
       <Tabs
         defaultActiveKey="operation"
+        className="tabs-fill h-full"
         items={[
           {
             key: 'operation',
             label: t('log.operationTab'),
             children: (
+              <div className="min-h-0 flex-1">
               <ProTable<OperationLogRecord>
                 actionRef={opActionRef}
                 rowKey="id"
                 columns={opColumns}
-                scroll={{ x: 1200 }}
+                style={{ height: '100%' }}
+                scroll={{ x: 1200, y: scrollY }}
                 request={async (params) => {
                   const res = await getOperationLogPage({
                     current: params.current ?? 1,
@@ -141,17 +148,20 @@ export default function LogPage() {
                 ]}
                 options={{ reload: true, density: true, setting: true }}
               />
+              </div>
             ),
           },
           {
             key: 'login',
             label: t('log.loginTab'),
-            children: (
-              <ProTable<LoginLogRecord>
-                actionRef={loginActionRef}
-                rowKey="id"
-                columns={loginColumns}
-                scroll={{ x: 900 }}
+              children: (
+                <div className="min-h-0 flex-1">
+                <ProTable<LoginLogRecord>
+                  actionRef={loginActionRef}
+                  rowKey="id"
+                  columns={loginColumns}
+                  style={{ height: '100%' }}
+                  scroll={{ x: 900, y: scrollY }}
                 request={async (params) => {
                   const res = await getLoginLogPage({
                     current: params.current ?? 1,
@@ -189,10 +199,12 @@ export default function LogPage() {
                 ]}
                 options={{ reload: true, density: true, setting: true }}
               />
+              </div>
             ),
           },
         ]}
       />
+      </div>
     </div>
   );
 }

@@ -109,6 +109,8 @@ export default function AdminLayout() {
       // mix 布局下顶部 Header 正常渲染，actionsRender 生效（side 布局会被库强制 return null）
       // 不启用 splitMenus：完整菜单常驻侧栏，顶部仅放品牌 + 操作区
       layout="mix"
+      style={{ height: '100vh', overflow: 'hidden' }}
+      contentStyle={{ height: 'calc(100vh - 56px)', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}
       navTheme={theme === 'dark' ? 'realDark' : 'light'}
       fixSiderbar
       siderWidth={220}
@@ -141,7 +143,9 @@ export default function AdminLayout() {
             ]
       }
     >
-      <Outlet />
+      <div className="flex h-full flex-col overflow-hidden">
+        <Outlet />
+      </div>
     </ProLayout>
   );
 }

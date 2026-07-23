@@ -28,6 +28,7 @@ import {
   type RoleUpdateRequest,
 } from '@/api/role';
 import { getMenuTree } from '@/api/menu';
+import { useTableScrollY } from '@/hooks/useTableScrollY';
 
 const DATA_SCOPE_MAP: Record<number, string> = {
   1: 'dataScopeAll',
@@ -177,14 +178,18 @@ export default function RolePage() {
     },
   ];
 
+  const { wrapperRef, scrollY } = useTableScrollY();
+
   return (
-    <PageContainer title={t('menu.role')}>
-      <ProTable<RoleRecord>
-        actionRef={actionRef}
-        rowKey="id"
-        headerTitle={t('menu.role')}
-        columns={columns}
-        scroll={{ x: 1000 }}
+    <PageContainer title={t('menu.role')} className="page-fill">
+      <div ref={wrapperRef} className="flex min-h-0 flex-1 flex-col">
+        <ProTable<RoleRecord>
+          actionRef={actionRef}
+          rowKey="id"
+          headerTitle={t('menu.role')}
+          columns={columns}
+          style={{ height: '100%' }}
+          scroll={{ x: 1000, y: scrollY }}
         request={async (params) => {
           const payload: RolePageParams = {
             current: params.current ?? 1,
@@ -210,6 +215,7 @@ export default function RolePage() {
         ]}
         options={{ reload: true, density: true, setting: true }}
       />
+      </div>
 
       <ModalForm
         title={editMode ? t('role.editRole') : t('role.addRole')}

@@ -62,7 +62,7 @@ export default function ServerMonitorPage() {
   ];
 
   return (
-    <div className="p-4">
+    <div className="h-full overflow-auto p-4">
       <Tabs
         defaultActiveKey="server"
         items={[

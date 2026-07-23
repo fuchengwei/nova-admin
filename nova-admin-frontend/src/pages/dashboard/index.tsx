@@ -21,7 +21,7 @@ export default function DashboardPage() {
   });
 
   return (
-    <div className="space-y-4">
+    <div className="h-full overflow-auto space-y-4 p-6">
       <ProCard>
         <Title level={3} className="!mb-2">
           {t('menu.dashboard')}
