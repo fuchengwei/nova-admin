@@ -1,5 +1,5 @@
 import { useEffect, useState, useMemo } from 'react';
-import { Dropdown, Avatar, Space, Button, theme as antdTheme } from 'antd';
+import { Dropdown, Avatar, Space, Button, theme as antdTheme, Spin } from 'antd';
 import { DashboardOutlined, UserOutlined, LogoutOutlined, GlobalOutlined } from '@ant-design/icons';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -8,53 +8,38 @@ import { useAppStore, type Locale } from '@/stores/appStore';
 import { useUserStore } from '@/stores/userStore';
 import { clearTokens, getToken } from '@/utils/request';
 import { getUserInfo, getUserMenus, logout as apiLogout } from '@/api/auth';
-import { toLayoutRoutes, fallbackRoutes, findRouteNode } from '@/utils/layout';
+import { toLayoutRoutes, findRouteNode } from '@/utils/layout';
 
 export default function AdminLayout() {
   const navigate = useNavigate();
   const location = useLocation();
   const { t, i18n } = useTranslation();
   const { locale, sidebarCollapsed, setLocale, theme } = useAppStore();
-  const { userInfo, setUserInfo, menus, setMenus, permissions, reset } = useUserStore();
+  const { setUserInfo, menus, setMenus, permissions, reset } = useUserStore();
+  const userInfo = useUserStore((s) => s.userInfo);
   const { token } = antdTheme.useToken();
-  const [menuLoading, setMenuLoading] = useState(false);
+  const [menusLoaded, setMenusLoaded] = useState(false);
 
-  // 加载用户信息 + 菜单（无 token 时跳过，避免退出后触发 401）
+  // 挂载时并行拉取用户信息 + 菜单，保证 permissions 始终是服务端最新值
   useEffect(() => {
-    if (!userInfo) {
-      if (!getToken()) return;
-      setMenuLoading(true);
-      getUserInfo()
-        .then((res) => {
-          if (res.code === 0 && res.data) {
-            setUserInfo(res.data);
-            return getUserMenus();
-          }
-          return undefined;
-        })
-        .then((res) => {
-          if (res && res.code === 0 && res.data) {
-            setMenus(res.data);
-          }
-        })
-        .catch(() => undefined)
-        .finally(() => setMenuLoading(false));
-    } else if (menus.length === 0) {
-      getUserMenus()
-        .then((res) => {
-          if (res.code === 0 && res.data) setMenus(res.data);
-        })
-        .catch(() => undefined);
-    }
-  }, [userInfo, setUserInfo, menus, setMenus]);
+    if (!getToken()) return;
+    Promise.all([getUserInfo(), getUserMenus()])
+      .then(([infoRes, menuRes]) => {
+        if (infoRes.code === 0 && infoRes.data) setUserInfo(infoRes.data);
+        if (menuRes.code === 0 && menuRes.data) setMenus(menuRes.data);
+      })
+      .catch(() => undefined)
+      .finally(() => setMenusLoaded(true));
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // 构建 ProLayout 路由树：Dashboard 根 + 后端菜单（或静态兜底）
+  // 构建 ProLayout 路由树：Dashboard 根 + 后端菜单
+  // menus 初始为 []，加载完成后由 setMenus 触发重渲染，严格按后端排序展示
   const route = useMemo(
     () => ({
       path: '/',
       routes: [
         { path: '/dashboard', name: t('menu.dashboard'), icon: <DashboardOutlined /> },
-        ...(menus.length > 0 ? toLayoutRoutes(menus, permissions) : fallbackRoutes(t)),
+        ...toLayoutRoutes(menus, permissions),
       ],
     }),
     [menus, permissions, t],
@@ -99,6 +84,15 @@ export default function AdminLayout() {
     },
   };
 
+  // 菜单未加载时显示加载器，避免 ProLayout 缓存空菜单树
+  if (!menusLoaded) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <Spin size="large" tip={t('common.loading') ?? '加载中...'} />
+      </div>
+    );
+  }
+
   return (
     <ProLayout
       title={false}
@@ -120,7 +114,6 @@ export default function AdminLayout() {
       onCollapse={(collapsed) => useAppStore.setState({ sidebarCollapsed: collapsed })}
       route={route}
       location={{ pathname: location.pathname }}
-      loading={menuLoading}
       menuItemRender={(item, dom) => {
         const hasChildren = Array.isArray((item as { routes?: unknown[] }).routes);
         if (hasChildren) return dom;

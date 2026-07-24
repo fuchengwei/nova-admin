@@ -28,6 +28,10 @@ export const useUserStore = create<UserState>()(
       setMenus: (menus) => set({ menus }),
       reset: () => set({ userInfo: null, menus: [], permissions: [], roles: [] }),
     }),
-    { name: 'nova-user' },
+    {
+      name: 'nova-user',
+      // 只持久化 userInfo，menus/permissions/roles 每次挂载时从服务端拉取
+      partialize: (state) => ({ userInfo: state.userInfo }),
+    },
   ),
 );

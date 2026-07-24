@@ -43,6 +43,7 @@ export default function UserFormModal({
       onOpenChange={(visible) => {
         if (!visible) onClose();
       }}
+      modalProps={{ destroyOnClose: true }}
       width={640}
       layout="vertical"
       initialValues={
