@@ -136,7 +136,7 @@ public class FileServiceImpl extends ServiceImpl<SysFileMapper, SysFile> impleme
         return novaProperties.getFile().getLocal().getUrlPrefix() + objectKey;
     }
 
-    private String uploadToMinio(MultipartFile file, String objectKey) {
+    private String uploadToMinio(MultipartFile ignoredFile, String ignoredObjectKey) {
         // MinIO 上传需要 minio-sdk 依赖，此处抛出提示
         throw new BizException(ResultCode.DATA_OPERATION_FAILED, "MinIO 存储暂未实现，请使用 local 存储类型");
     }

@@ -1,6 +1,5 @@
 package com.nova.admin.modules.system.controller;
 
-import com.nova.admin.common.api.PageQuery;
 import com.nova.admin.common.api.PageResult;
 import com.nova.admin.common.api.R;
 import com.nova.admin.common.base.BaseController;

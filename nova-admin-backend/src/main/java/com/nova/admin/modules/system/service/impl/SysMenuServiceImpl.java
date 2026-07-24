@@ -44,19 +44,9 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu> impl
     @Transactional(rollbackFor = Exception.class)
     public Long createMenu(MenuCreateRequest req) {
         SysMenu menu = new SysMenu();
-        menu.setParentId(req.getParentId());
-        menu.setName(req.getName());
-        menu.setType(req.getType());
-        menu.setPerms(req.getPerms());
-        menu.setPath(req.getPath());
-        menu.setComponent(req.getComponent());
-        menu.setRedirect(req.getRedirect());
-        menu.setIcon(req.getIcon());
-        menu.setSort(req.getSort() != null ? req.getSort() : 0);
-        menu.setVisible(req.getVisible() != null ? req.getVisible() : 1);
-        menu.setStatus(req.getStatus() != null ? req.getStatus() : 1);
-        menu.setKeepAlive(req.getKeepAlive() != null ? req.getKeepAlive() : 0);
-        menu.setAlwaysShow(req.getAlwaysShow() != null ? req.getAlwaysShow() : 0);
+        populateMenuFields(menu, req.getParentId(), req.getName(), req.getType(), req.getPerms(),
+                req.getPath(), req.getComponent(), req.getRedirect(), req.getIcon(),
+                req.getSort(), req.getVisible(), req.getStatus(), req.getKeepAlive(), req.getAlwaysShow());
 
         Long userId = SecurityUtils.requireUserId();
         menu.setCreateBy(userId);
@@ -78,19 +68,9 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu> impl
 
         SysMenu menu = new SysMenu();
         menu.setId(req.getId());
-        menu.setParentId(req.getParentId());
-        menu.setName(req.getName());
-        menu.setType(req.getType());
-        menu.setPerms(req.getPerms());
-        menu.setPath(req.getPath());
-        menu.setComponent(req.getComponent());
-        menu.setRedirect(req.getRedirect());
-        menu.setIcon(req.getIcon());
-        menu.setSort(req.getSort() != null ? req.getSort() : 0);
-        menu.setVisible(req.getVisible() != null ? req.getVisible() : 1);
-        menu.setStatus(req.getStatus() != null ? req.getStatus() : 1);
-        menu.setKeepAlive(req.getKeepAlive() != null ? req.getKeepAlive() : 0);
-        menu.setAlwaysShow(req.getAlwaysShow() != null ? req.getAlwaysShow() : 0);
+        populateMenuFields(menu, req.getParentId(), req.getName(), req.getType(), req.getPerms(),
+                req.getPath(), req.getComponent(), req.getRedirect(), req.getIcon(),
+                req.getSort(), req.getVisible(), req.getStatus(), req.getKeepAlive(), req.getAlwaysShow());
 
         Long operatorId = SecurityUtils.requireUserId();
         menu.setUpdateBy(operatorId);
@@ -132,13 +112,34 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu> impl
     // ==================== 私有方法 ====================
 
     /**
+     * 填充菜单字段
+     */
+    private void populateMenuFields(SysMenu menu, Long parentId, String name, String type, String perms,
+                                    String path, String component, String redirect, String icon,
+                                    Integer sort, Integer visible, Integer status, Integer keepAlive, Integer alwaysShow) {
+        menu.setParentId(parentId);
+        menu.setName(name);
+        menu.setType(type);
+        menu.setPerms(perms);
+        menu.setPath(path);
+        menu.setComponent(component);
+        menu.setRedirect(redirect);
+        menu.setIcon(icon);
+        menu.setSort(sort != null ? sort : 0);
+        menu.setVisible(visible != null ? visible : 1);
+        menu.setStatus(status != null ? status : 1);
+        menu.setKeepAlive(keepAlive != null ? keepAlive : 0);
+        menu.setAlwaysShow(alwaysShow != null ? alwaysShow : 0);
+    }
+
+    /**
      * 组装树形结构
      */
     private List<MenuTreeDTO> buildTree(List<SysMenu> allMenus) {
         // 转换为 DTO
         List<MenuTreeDTO> dtoList = allMenus.stream()
                 .map(this::toDTO)
-                .collect(Collectors.toList());
+                .toList();
 
         // 按 parentId 分组
         Map<Long, List<MenuTreeDTO>> parentMap = dtoList.stream()
@@ -164,6 +165,10 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu> impl
      * SysMenu 转 MenuTreeDTO
      */
     private MenuTreeDTO toDTO(SysMenu menu) {
+        return getMenuTreeDTO(menu);
+    }
+
+    public static MenuTreeDTO getMenuTreeDTO(SysMenu menu) {
         return MenuTreeDTO.builder()
                 .id(menu.getId())
                 .parentId(menu.getParentId())

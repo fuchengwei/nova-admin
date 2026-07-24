@@ -6,7 +6,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
-import java.util.concurrent.TimeUnit;
+import java.time.Duration;
 
 /**
  * 登录失败计数 & 账号锁定
@@ -27,9 +27,8 @@ public class LoginAttemptService {
         String k = key(account);
         Long count = redisTemplate.opsForValue().increment(k);
         if (count != null && count == 1L) {
-            redisTemplate.expire(k,
-                    novaProperties.getSecurity().getLogin().getLockMinutes(),
-                    TimeUnit.MINUTES);
+            redisTemplate.expire(k, Duration.ofMinutes(
+                    novaProperties.getSecurity().getLogin().getLockMinutes()));
         }
         return count == null ? 0L : count;
     }

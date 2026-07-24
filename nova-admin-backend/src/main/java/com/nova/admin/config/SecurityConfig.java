@@ -29,7 +29,7 @@ import java.util.Arrays;
  * Spring Security 配置
  */
 @Configuration
-@EnableMethodSecurity(prePostEnabled = true)
+@EnableMethodSecurity
 @RequiredArgsConstructor
 public class SecurityConfig {
 
@@ -53,7 +53,7 @@ public class SecurityConfig {
     };
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) {
         http
                 .csrf(AbstractHttpConfigurer::disable)
                 .cors(c -> c.configurationSource(corsConfigurationSource()))
@@ -62,9 +62,9 @@ public class SecurityConfig {
                         .requestMatchers(WHITELIST).permitAll()
                         .anyRequest().authenticated())
                 .exceptionHandling(e -> e
-                        .authenticationEntryPoint((req, resp, ex) -> writeJson(resp,
+                        .authenticationEntryPoint((ignored, resp, ex) -> writeJson(resp,
                                 R.fail(ResultCode.UNAUTHORIZED, ex.getMessage())))
-                        .accessDeniedHandler((req, resp, ex) -> writeJson(resp,
+                        .accessDeniedHandler((ignored, resp, ex) -> writeJson(resp,
                                 R.fail(ResultCode.FORBIDDEN, ex.getMessage()))))
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
@@ -89,7 +89,7 @@ public class SecurityConfig {
     }
 
     @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration cfg) throws Exception {
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration cfg) {
         return cfg.getAuthenticationManager();
     }
 

@@ -1,6 +1,5 @@
 package com.nova.admin.modules.gen.mapper;
 
-import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.nova.admin.modules.gen.dto.ColumnInfo;
 import com.nova.admin.modules.gen.dto.TableInfo;
 import org.apache.ibatis.annotations.Mapper;

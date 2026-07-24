@@ -16,6 +16,6 @@ public interface SysDictDataMapper extends BaseMapper<SysDictData> {
     /**
      * 按字典类型ID查询字典数据
      */
-    @Select("SELECT * FROM sys_dict_data WHERE type_id = #{typeId} AND deleted = 0 ORDER BY sort ASC")
+    @Select("SELECT * FROM sys_dict_data WHERE type_id = #{typeId} AND deleted = 0 ORDER BY sort ")
     List<SysDictData> selectByTypeId(Long typeId);
 }

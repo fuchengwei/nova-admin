@@ -42,13 +42,8 @@ public class SysDictDataServiceImpl extends ServiceImpl<SysDictDataMapper, SysDi
     @Transactional(rollbackFor = Exception.class)
     public Long createDictData(DictDataCreateRequest req) {
         SysDictData dictData = new SysDictData();
-        dictData.setTypeId(req.getTypeId());
-        dictData.setLabel(req.getLabel());
-        dictData.setValue(req.getValue());
-        dictData.setCssClass(req.getCssClass());
-        dictData.setSort(req.getSort() != null ? req.getSort() : 0);
-        dictData.setStatus(req.getStatus());
-        dictData.setDefaultFlag(req.getDefaultFlag() != null ? req.getDefaultFlag() : 0);
+        populateDictDataFields(dictData, req.getTypeId(), req.getLabel(), req.getValue(),
+                req.getCssClass(), req.getSort(), req.getStatus(), req.getDefaultFlag());
 
         Long userId = SecurityUtils.requireUserId();
         dictData.setCreateBy(userId);
@@ -70,13 +65,8 @@ public class SysDictDataServiceImpl extends ServiceImpl<SysDictDataMapper, SysDi
 
         SysDictData dictData = new SysDictData();
         dictData.setId(req.getId());
-        dictData.setTypeId(req.getTypeId());
-        dictData.setLabel(req.getLabel());
-        dictData.setValue(req.getValue());
-        dictData.setCssClass(req.getCssClass());
-        dictData.setSort(req.getSort() != null ? req.getSort() : 0);
-        dictData.setStatus(req.getStatus());
-        dictData.setDefaultFlag(req.getDefaultFlag() != null ? req.getDefaultFlag() : 0);
+        populateDictDataFields(dictData, req.getTypeId(), req.getLabel(), req.getValue(),
+                req.getCssClass(), req.getSort(), req.getStatus(), req.getDefaultFlag());
 
         Long userId = SecurityUtils.requireUserId();
         dictData.setUpdateBy(userId);
@@ -98,5 +88,19 @@ public class SysDictDataServiceImpl extends ServiceImpl<SysDictDataMapper, SysDi
         removeById(id);
         Long userId = SecurityUtils.requireUserId();
         log.info("删除字典数据成功，id={}, operator={}", id, userId);
+    }
+
+    /**
+     * 填充字典数据字段
+     */
+    private void populateDictDataFields(SysDictData dictData, Long typeId, String label, String value,
+                                        String cssClass, Integer sort, Integer status, Integer defaultFlag) {
+        dictData.setTypeId(typeId);
+        dictData.setLabel(label);
+        dictData.setValue(value);
+        dictData.setCssClass(cssClass);
+        dictData.setSort(sort != null ? sort : 0);
+        dictData.setStatus(status);
+        dictData.setDefaultFlag(defaultFlag != null ? defaultFlag : 0);
     }
 }

@@ -63,7 +63,8 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
                 .filter(Objects::nonNull)
                 .collect(Collectors.toSet());
         if (!deptIds.isEmpty()) {
-            List<SysDept> depts = deptMapper.selectBatchIds(deptIds);
+            List<SysDept> depts = deptMapper.selectList(
+                    new LambdaQueryWrapper<SysDept>().in(SysDept::getId, deptIds));
             Map<Long, String> deptNameMap = depts.stream()
                     .collect(Collectors.toMap(SysDept::getId, SysDept::getName));
             for (SysUser user : records) {
@@ -101,13 +102,8 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
         SysUser user = new SysUser();
         user.setAccount(account);
         user.setPassword(passwordEncoder.encode(req.getPassword()));
-        user.setNickname(req.getNickname());
-        user.setRealName(req.getRealName());
-        user.setEmail(req.getEmail());
-        user.setPhone(req.getPhone());
-        user.setGender(req.getGender());
-        user.setDeptId(req.getDeptId());
-        user.setStatus(req.getStatus());
+        populateUserFields(user, req.getNickname(), req.getRealName(), req.getEmail(),
+                req.getPhone(), req.getGender(), req.getDeptId(), req.getStatus());
         user.setSuperAdmin(0);
 
         Long userId = SecurityUtils.requireUserId();
@@ -134,13 +130,8 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
 
         SysUser user = new SysUser();
         user.setId(req.getId());
-        user.setNickname(req.getNickname());
-        user.setRealName(req.getRealName());
-        user.setEmail(req.getEmail());
-        user.setPhone(req.getPhone());
-        user.setGender(req.getGender());
-        user.setDeptId(req.getDeptId());
-        user.setStatus(req.getStatus());
+        populateUserFields(user, req.getNickname(), req.getRealName(), req.getEmail(),
+                req.getPhone(), req.getGender(), req.getDeptId(), req.getStatus());
 
         Long operatorId = SecurityUtils.requireUserId();
         user.setUpdateBy(operatorId);
@@ -218,6 +209,20 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
     }
 
     // ==================== 私有方法 ====================
+
+    /**
+     * 填充用户字段
+     */
+    private void populateUserFields(SysUser user, String nickname, String realName, String email,
+                                    String phone, Integer gender, Long deptId, Integer status) {
+        user.setNickname(nickname);
+        user.setRealName(realName);
+        user.setEmail(email);
+        user.setPhone(phone);
+        user.setGender(gender);
+        user.setDeptId(deptId);
+        user.setStatus(status);
+    }
 
     /**
      * 随机生成唯一账号（8位纯数字，类似 QQ 号，冲突时重试）

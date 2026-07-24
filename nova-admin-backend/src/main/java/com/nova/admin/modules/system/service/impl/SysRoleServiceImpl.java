@@ -26,7 +26,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * 角色 Service 实现
@@ -68,12 +67,8 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impl
         checkRoleCodeUnique(null, req.getCode());
 
         SysRole role = new SysRole();
-        role.setName(req.getName());
-        role.setCode(req.getCode());
-        role.setDescription(req.getDescription());
-        role.setDataScope(req.getDataScope());
-        role.setSort(req.getSort() != null ? req.getSort() : 0);
-        role.setStatus(req.getStatus());
+        populateRoleFields(role, req.getName(), req.getCode(), req.getDescription(),
+                req.getDataScope(), req.getSort(), req.getStatus());
 
         Long userId = SecurityUtils.requireUserId();
         role.setCreateBy(userId);
@@ -102,12 +97,8 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impl
 
         SysRole role = new SysRole();
         role.setId(req.getId());
-        role.setName(req.getName());
-        role.setCode(req.getCode());
-        role.setDescription(req.getDescription());
-        role.setDataScope(req.getDataScope());
-        role.setSort(req.getSort() != null ? req.getSort() : 0);
-        role.setStatus(req.getStatus());
+        populateRoleFields(role, req.getName(), req.getCode(), req.getDescription(),
+                req.getDataScope(), req.getSort(), req.getStatus());
 
         Long operatorId = SecurityUtils.requireUserId();
         role.setUpdateBy(operatorId);
@@ -165,7 +156,7 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impl
                 .eq(SysRoleMenu::getRoleId, id));
         List<Long> menuIds = roleMenus.stream()
                 .map(SysRoleMenu::getMenuId)
-                .collect(Collectors.toList());
+                .toList();
 
         return RoleDetailDTO.builder()
                 .id(role.getId())
@@ -182,6 +173,19 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impl
     }
 
     // ==================== 私有方法 ====================
+
+    /**
+     * 填充角色字段
+     */
+    private void populateRoleFields(SysRole role, String name, String code, String description,
+                                    Integer dataScope, Integer sort, Integer status) {
+        role.setName(name);
+        role.setCode(code);
+        role.setDescription(description);
+        role.setDataScope(dataScope);
+        role.setSort(sort != null ? sort : 0);
+        role.setStatus(status);
+    }
 
     /**
      * 检查角色编码唯一

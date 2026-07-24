@@ -15,6 +15,7 @@ import java.util.stream.Stream;
  */
 @Getter
 @RequiredArgsConstructor
+@SuppressWarnings("NullableProblems")
 public class SecurityUser implements UserDetails {
 
     private final LoginUser loginUser;
@@ -32,8 +33,4 @@ public class SecurityUser implements UserDetails {
 
     @Override public String getPassword() { return password; }
     @Override public String getUsername() { return loginUser.getAccount(); }
-    @Override public boolean isAccountNonExpired() { return true; }
-    @Override public boolean isAccountNonLocked() { return true; }
-    @Override public boolean isCredentialsNonExpired() { return true; }
-    @Override public boolean isEnabled() { return true; }
 }

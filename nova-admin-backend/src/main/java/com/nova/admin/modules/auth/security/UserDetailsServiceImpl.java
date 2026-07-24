@@ -16,10 +16,10 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
+import java.time.Duration;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 /**
@@ -27,6 +27,7 @@ import java.util.stream.Collectors;
  */
 @Service
 @RequiredArgsConstructor
+@SuppressWarnings("NullableProblems")
 public class UserDetailsServiceImpl implements UserDetailsService {
 
     private final SysUserMapper userMapper;
@@ -50,6 +51,25 @@ public class UserDetailsServiceImpl implements UserDetailsService {
         if (user.getStatus() != null && user.getStatus() == 0) {
             throw new BizException(ResultCode.USER_DISABLED);
         }
+
+        LoginUser loginUser = buildLoginUser(user, null, null);
+        // 缓存 30 分钟
+        redisTemplate.opsForValue().set(cacheKey, loginUser, Duration.ofMinutes(30));
+        return new SecurityUser(loginUser, "");
+    }
+
+    /** 登录后重新建立缓存（包含 loginIp/loginTime） */
+    public LoginUser refreshCache(SysUser user, String loginIp) {
+        LoginUser loginUser = buildLoginUser(user, loginIp, System.currentTimeMillis());
+        String cacheKey = Constants.REDIS_KEY_USER + user.getAccount();
+        redisTemplate.opsForValue().set(cacheKey, loginUser, Duration.ofMinutes(30));
+        return loginUser;
+    }
+
+    /**
+     * 构建 LoginUser 对象（加载角色、权限、数据范围）
+     */
+    private LoginUser buildLoginUser(SysUser user, String loginIp, Long loginTime) {
         // 加载角色
         List<String> roleCodes = roleMapper.selectRoleCodesByUserId(user.getId());
         Set<String> roles = new HashSet<>(roleCodes);
@@ -57,29 +77,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
         List<String> perms = menuMapper.selectPermsByUserId(user.getId());
         Set<String> permissions = perms.stream().filter(p -> p != null && !p.isBlank()).collect(Collectors.toSet());
 
-        LoginUser loginUser = LoginUser.builder()
-                .userId(user.getId())
-                .account(user.getAccount())
-                .nickname(user.getNickname())
-                .deptId(user.getDeptId())
-                .roles(roles)
-                .permissions(permissions)
-                .dataScope(resolveDataScope(user.getId()))
-                .build();
-
-        // 缓存 30 分钟
-        redisTemplate.opsForValue().set(cacheKey, loginUser, 30, TimeUnit.MINUTES);
-        return new SecurityUser(loginUser, "");
-    }
-
-    /** 登录后重新建立缓存（包含 loginIp/loginTime） */
-    public LoginUser refreshCache(SysUser user, String loginIp) {
-        List<String> roleCodes = roleMapper.selectRoleCodesByUserId(user.getId());
-        Set<String> roles = new HashSet<>(roleCodes);
-        List<String> perms = menuMapper.selectPermsByUserId(user.getId());
-        Set<String> permissions = perms.stream().filter(p -> p != null && !p.isBlank()).collect(Collectors.toSet());
-
-        LoginUser loginUser = LoginUser.builder()
+        return LoginUser.builder()
                 .userId(user.getId())
                 .account(user.getAccount())
                 .nickname(user.getNickname())
@@ -88,16 +86,8 @@ public class UserDetailsServiceImpl implements UserDetailsService {
                 .permissions(permissions)
                 .dataScope(resolveDataScope(user.getId()))
                 .loginIp(loginIp)
-                .loginTime(System.currentTimeMillis())
+                .loginTime(loginTime)
                 .build();
-        String cacheKey = Constants.REDIS_KEY_USER + user.getAccount();
-        redisTemplate.opsForValue().set(cacheKey, loginUser, 30, TimeUnit.MINUTES);
-        return loginUser;
-    }
-
-    /** 失效用户缓存（信息变更时调用） */
-    public void evict(String account) {
-        redisTemplate.delete(Constants.REDIS_KEY_USER + account);
     }
 
     /**

@@ -28,6 +28,6 @@ public class LoginRequest implements Serializable {
     @Schema(description = "图形验证码 key", example = "uuid")
     private String captchaKey;
 
-    @Schema(description = "图形验证码", example = "abcd")
+    @Schema(description = "图形验证码", example = "abed")
     private String captchaCode;
 }

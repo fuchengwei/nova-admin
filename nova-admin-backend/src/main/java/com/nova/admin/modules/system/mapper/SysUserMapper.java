@@ -23,18 +23,9 @@ public interface SysUserMapper extends BaseMapper<SysUser> {
     SysUser selectByAccount(String account);
 
     /**
-     * 分页查询用户（数据权限过滤由 {@link DataScopeInnerInterceptor} 依据当前登录用户注入）。
+     * 分页查询用户（数据权限过滤由 {@link DataScope} 依据当前登录用户注入）。
+     * SQL 定义在 mapper/system/SysUserMapper.xml
      */
-    @DataScope(deptColumn = "dept_id", userColumn = "create_by")
-    @Select("<script>" +
-            "SELECT u.*, d.name AS dept_name " +
-            "FROM sys_user u " +
-            "LEFT JOIN sys_dept d ON d.id = u.dept_id AND d.deleted = 0 " +
-            "<where>" +
-            "u.deleted = 0 " +
-            "<if test=\"ew != null and ew.sqlSegment != null and ew.sqlSegment != ''\">AND ${ew.sqlSegment}</if>" +
-            "</where> " +
-            "ORDER BY u.create_time DESC" +
-            "</script>")
+    @DataScope
     IPage<SysUser> selectUserPage(IPage<SysUser> page, @Param(Constants.WRAPPER) Wrapper<SysUser> wrapper);
 }

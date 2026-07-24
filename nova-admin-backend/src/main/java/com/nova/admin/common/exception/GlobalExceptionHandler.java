@@ -34,7 +34,7 @@ public class GlobalExceptionHandler {
         return R.fail(ex.getCode(), ex.getMessage());
     }
 
-    /** @Valid 校验失败 */
+    /** 校验失败 */
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public R<Void> handleValid(MethodArgumentNotValidException ex) {
         String msg = ex.getBindingResult().getFieldErrors().stream()

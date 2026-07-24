@@ -6,6 +6,7 @@ import com.nova.admin.modules.gen.dto.TableInfo;
 import com.nova.admin.modules.gen.mapper.GenMapper;
 import com.nova.admin.modules.gen.service.GenService;
 import lombok.RequiredArgsConstructor;
+import org.jspecify.annotations.NonNull;
 import org.springframework.stereotype.Service;
 
 import java.io.ByteArrayOutputStream;
@@ -35,7 +36,7 @@ public class GenServiceImpl implements GenService {
         if (cols.isEmpty()) {
             throw new BizException("表不存在或无法读取: " + tableName);
         }
-        table.setTableComment(cols.get(0).getColumnComment());
+        table.setTableComment(cols.getFirst().getColumnComment());
         for (ColumnInfo c : cols) {
             c.setJavaField(toCamel(c.getColumnName()));
             c.setJavaType(mapJavaType(c.getDataType()));
@@ -58,27 +59,27 @@ public class GenServiceImpl implements GenService {
 
         Map<String, String> files = new LinkedHashMap<>();
         files.put("backend/" + module + "/entity/" + className + ".java",
-                renderEntity(base, module, table));
+                renderEntity(base, table));
         files.put("backend/" + module + "/mapper/" + className + "Mapper.java",
-                renderMapper(base, module, className));
+                renderMapper(base, className));
         files.put("backend/" + module + "/service/" + className + "Service.java",
-                renderService(base, module, className));
+                renderService(base, className));
         files.put("backend/" + module + "/service/impl/" + className + "ServiceImpl.java",
-                renderServiceImpl(base, module, className));
+                renderServiceImpl(base, className));
         files.put("backend/" + module + "/controller/" + className + "Controller.java",
                 renderController(base, module, className, camel, perm));
         files.put("frontend/src/api/" + camel + ".ts",
                 renderApi(module, camel));
         files.put("frontend/src/pages/" + module + "/" + camel + "/index.tsx",
-                renderPage(module, camel, table));
+                renderPage(camel, table));
         return files;
     }
 
     @Override
     public byte[] download(String tableName) {
         Map<String, String> files = preview(tableName);
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        try (ZipOutputStream zos = new ZipOutputStream(baos)) {
+        ByteArrayOutputStream zipBuffer = new ByteArrayOutputStream();
+        try (ZipOutputStream zos = new ZipOutputStream(zipBuffer)) {
             for (Map.Entry<String, String> entry : files.entrySet()) {
                 zos.putNextEntry(new ZipEntry(entry.getKey()));
                 zos.write(entry.getValue().getBytes(StandardCharsets.UTF_8));
@@ -87,10 +88,10 @@ public class GenServiceImpl implements GenService {
         } catch (Exception e) {
             throw new BizException("生成压缩包失败: " + e.getMessage());
         }
-        return baos.toByteArray();
+        return zipBuffer.toByteArray();
     }
 
-    private String renderEntity(String base, String module, TableInfo table) {
+    private String renderEntity(String base, TableInfo table) {
         StringBuilder sb = new StringBuilder();
         sb.append("package ").append(base).append(".entity;\n\n");
         sb.append("import com.baomidou.mybatisplus.annotation.IdType;\n");
@@ -115,21 +116,21 @@ public class GenServiceImpl implements GenService {
         return sb.toString();
     }
 
-    private String renderMapper(String base, String module, String className) {
+    private String renderMapper(String base, String className) {
         return "package " + base + ".mapper;\n\n"
                 + "import com.baomidou.mybatisplus.core.mapper.BaseMapper;\n"
                 + "import " + base + ".entity." + className + ";\n\n"
                 + "public interface " + className + "Mapper extends BaseMapper<" + className + "> {\n}\n";
     }
 
-    private String renderService(String base, String module, String className) {
+    private String renderService(String base, String className) {
         return "package " + base + ".service;\n\n"
                 + "import com.baomidou.mybatisplus.extension.service.IService;\n"
                 + "import " + base + ".entity." + className + ";\n\n"
                 + "public interface " + className + "Service extends IService<" + className + "> {\n}\n";
     }
 
-    private String renderServiceImpl(String base, String module, String className) {
+    private String renderServiceImpl(String base, String className) {
         return "package " + base + ".service.impl;\n\n"
                 + "import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;\n"
                 + "import " + base + ".entity." + className + ";\n"
@@ -190,25 +191,25 @@ public class GenServiceImpl implements GenService {
                 + "  return request.delete<R<void>>('/" + module + "/" + camel + "/' + id);\n}\n";
     }
 
-    private String renderPage(String module, String camel, TableInfo table) {
+    private String renderPage(String camel, TableInfo table) {
         StringBuilder sb = new StringBuilder();
         sb.append("import { useState } from 'react';\n");
         sb.append("import { Card, Table, Button, Space, Modal, Form, Input, message } from 'antd';\n");
         sb.append("import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';\n");
-        sb.append("import { " + cap(camel) + ", get" + cap(camel) + "Page, create" + cap(camel) + ", update" + cap(camel) + ", delete" + cap(camel) + " } from '@/api/" + camel + "';\n\n");
-        sb.append("export default function " + cap(camel) + "Page() {\n");
+        sb.append("import { ").append(cap(camel)).append(", get").append(cap(camel)).append("Page, create").append(cap(camel)).append(", update").append(cap(camel)).append(", delete").append(cap(camel)).append(" } from '@/api/").append(camel).append("';\n\n");
+        sb.append("export default function ").append(cap(camel)).append("Page() {\n");
         sb.append("  const queryClient = useQueryClient();\n");
         sb.append("  const [pageParams, setPageParams] = useState({ current: 1, size: 10 });\n");
-        sb.append("  const { data, isLoading } = useQuery({ queryKey: ['" + camel + "Page', pageParams], queryFn: async () => (await get" + cap(camel) + "Page(pageParams)).data });\n");
+        sb.append("  const { data, isLoading } = useQuery({ queryKey: ['").append(camel).append("Page', pageParams], queryFn: async () => (await get").append(cap(camel)).append("Page(pageParams)).data });\n");
         sb.append("  const columns = [\n");
         for (ColumnInfo c : table.getColumns()) {
             sb.append("    { title: '").append(c.getColumnComment() == null ? c.getJavaField() : c.getColumnComment()).append("', dataIndex: '").append(c.getJavaField()).append("', key: '").append(c.getJavaField()).append("' },\n");
         }
-        sb.append("    { title: '操作', key: 'action', render: (_: unknown, record: " + cap(camel) + ") => (\n");
+        sb.append("    { title: '操作', key: 'action', render: (_: unknown, record: ").append(cap(camel)).append(") => (\n");
         sb.append("      <Space>\n        <Button type=\"link\" onClick={() => remove.mutate(record.id as number)}>删除</Button>\n      </Space>\n    ) },\n");
         sb.append("  ];\n");
-        sb.append("  const remove = useMutation({ mutationFn: delete" + cap(camel) + ", onSuccess: (r) => { if (r.code === 0) { message.success('删除成功'); queryClient.invalidateQueries({ queryKey: ['" + camel + "Page'] }); } } });\n");
-        sb.append("  return (\n    <Card title='" + (table.getTableComment() == null ? table.getTableName() : table.getTableComment()) + "'>\n");
+        sb.append("  const remove = useMutation({ mutationFn: delete").append(cap(camel)).append(", onSuccess: (r) => { if (r.code === 0) { message.success('删除成功'); queryClient.invalidateQueries({ queryKey: ['").append(camel).append("Page'] }); } } });\n");
+        sb.append("  return (\n    <Card title='").append(table.getTableComment() == null ? table.getTableName() : table.getTableComment()).append("'>\n");
         sb.append("      <Table rowKey=\"id\" columns={columns} dataSource={data?.records ?? []} loading={isLoading}\n        pagination={{ current: data?.current, pageSize: data?.size, total: data?.total, onChange: (p: number, ps: number) => setPageParams({ current: p, size: ps }) }} />\n    </Card>\n  );\n}\n");
         return sb.toString();
     }
@@ -218,10 +219,15 @@ public class GenServiceImpl implements GenService {
         return idx > 0 ? tableName.substring(0, idx) : tableName;
     }
 
-    private static String toClassName(String tableName) {
+    private static String toUnderscoreSeparated(String name) {
         StringBuilder sb = new StringBuilder();
-        boolean upper = true;
-        for (char c : tableName.toCharArray()) {
+        boolean upper = false;
+        return getString(name, sb, upper);
+    }
+
+    @NonNull
+    private static String getString(String name, StringBuilder sb, boolean upper) {
+        for (char c : name.toCharArray()) {
             if (c == '_') {
                 upper = true;
             } else {
@@ -232,18 +238,14 @@ public class GenServiceImpl implements GenService {
         return sb.toString();
     }
 
-    private static String toCamel(String name) {
+    private static String toClassName(String tableName) {
         StringBuilder sb = new StringBuilder();
-        boolean upper = false;
-        for (char c : name.toCharArray()) {
-            if (c == '_') {
-                upper = true;
-            } else {
-                sb.append(upper ? Character.toUpperCase(c) : c);
-                upper = false;
-            }
-        }
-        return sb.toString();
+        boolean upper = true;
+        return getString(tableName, sb, upper);
+    }
+
+    private static String toCamel(String name) {
+        return toUnderscoreSeparated(name);
     }
 
     private static String cap(String s) {
@@ -256,13 +258,11 @@ public class GenServiceImpl implements GenService {
         if (t.contains("integer") || t.contains("int") || t.contains("serial")) return "Integer";
         if (t.contains("smallint")) return "Integer";
         if (t.contains("numeric") || t.contains("decimal") || t.contains("money")) return "java.math.BigDecimal";
-        if (t.contains("real") || t.contains("float")) return "Double";
-        if (t.contains("double")) return "Double";
+        if (t.contains("real") || t.contains("float") || t.contains("double")) return "Double";
         if (t.contains("bool")) return "Boolean";
         if (t.contains("timestamp")) return "java.time.LocalDateTime";
         if (t.contains("date")) return "java.time.LocalDate";
         if (t.contains("time")) return "java.time.LocalTime";
-        if (t.contains("json")) return "String";
         return "String";
     }
 }

@@ -31,7 +31,7 @@ public interface SysRoleMapper extends BaseMapper<SysRole> {
     @Select("""
             SELECT DISTINCT r.data_scope FROM sys_role r
             INNER JOIN sys_user_role ur ON ur.role_id = r.id
-            WHERE ur.user_id = #{userId} AND r.deleted = 0 AND r.data_scope IS NOT NULL
+            WHERE ur.user_id = #{userId} AND r.deleted = 0
             """)
     List<Integer> selectDataScopesByUserId(Long userId);
 }

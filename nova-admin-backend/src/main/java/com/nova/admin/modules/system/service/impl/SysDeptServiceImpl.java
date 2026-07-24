@@ -50,14 +50,8 @@ public class SysDeptServiceImpl extends ServiceImpl<SysDeptMapper, SysDept> impl
         checkDeptNameUnique(null, req.getParentId(), req.getName());
 
         SysDept dept = new SysDept();
-        dept.setParentId(req.getParentId());
-        dept.setName(req.getName());
-        dept.setCode(req.getCode());
-        dept.setLeader(req.getLeader());
-        dept.setPhone(req.getPhone());
-        dept.setEmail(req.getEmail());
-        dept.setSort(req.getSort() != null ? req.getSort() : 0);
-        dept.setStatus(req.getStatus());
+        populateDeptFields(dept, req.getParentId(), req.getName(), req.getCode(),
+                req.getLeader(), req.getPhone(), req.getEmail(), req.getSort(), req.getStatus());
 
         // 手动填充 createBy / updateBy
         Long userId = SecurityUtils.requireUserId();
@@ -91,14 +85,8 @@ public class SysDeptServiceImpl extends ServiceImpl<SysDeptMapper, SysDept> impl
 
         SysDept dept = new SysDept();
         dept.setId(req.getId());
-        dept.setParentId(req.getParentId());
-        dept.setName(req.getName());
-        dept.setCode(req.getCode());
-        dept.setLeader(req.getLeader());
-        dept.setPhone(req.getPhone());
-        dept.setEmail(req.getEmail());
-        dept.setSort(req.getSort() != null ? req.getSort() : 0);
-        dept.setStatus(req.getStatus());
+        populateDeptFields(dept, req.getParentId(), req.getName(), req.getCode(),
+                req.getLeader(), req.getPhone(), req.getEmail(), req.getSort(), req.getStatus());
 
         // 手动填充 updateBy
         Long userId = SecurityUtils.requireUserId();
@@ -149,7 +137,7 @@ public class SysDeptServiceImpl extends ServiceImpl<SysDeptMapper, SysDept> impl
         // 过滤掉排除的节点
         List<SysDept> filtered = allDepts.stream()
                 .filter(d -> !excludeIds.contains(d.getId()))
-                .collect(Collectors.toList());
+                .toList();
 
         return buildTree(filtered);
     }
@@ -179,6 +167,21 @@ public class SysDeptServiceImpl extends ServiceImpl<SysDeptMapper, SysDept> impl
     }
 
     // ==================== 私有方法 ====================
+
+    /**
+     * 填充部门字段
+     */
+    private void populateDeptFields(SysDept dept, Long parentId, String name, String code,
+                                     String leader, String phone, String email, Integer sort, Integer status) {
+        dept.setParentId(parentId);
+        dept.setName(name);
+        dept.setCode(code);
+        dept.setLeader(leader);
+        dept.setPhone(phone);
+        dept.setEmail(email);
+        dept.setSort(sort != null ? sort : 0);
+        dept.setStatus(status);
+    }
 
     /**
      * 检查同 parent_id 下部门名称是否重复
@@ -237,7 +240,7 @@ public class SysDeptServiceImpl extends ServiceImpl<SysDeptMapper, SysDept> impl
         // 转换为 DTO
         List<DeptTreeDTO> dtoList = allDepts.stream()
                 .map(this::toDTO)
-                .collect(Collectors.toList());
+                .toList();
 
         // 按 parentId 分组
         Map<Long, List<DeptTreeDTO>> parentMap = dtoList.stream()

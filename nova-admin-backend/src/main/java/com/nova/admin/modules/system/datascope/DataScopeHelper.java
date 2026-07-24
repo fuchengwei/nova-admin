@@ -42,28 +42,30 @@ public class DataScopeHelper {
         String deptCol = column(ann.deptAlias(), ann.deptColumn());
         String userCol = column(ann.userAlias(), ann.userColumn());
 
-        switch (scope) {
-            case 2: // 本部门及下级
+        return switch (scope) {
+            case 2 -> {
                 if (deptId == null) {
-                    return "1=0";
+                    yield "1=0";
                 }
-                return deptCol + " IN (" + joinIds(deptService.findSelfAndDescendantIds(deptId)) + ")";
-            case 3: // 本部门
+                yield deptCol + " IN (" + joinIds(deptService.findSelfAndDescendantIds(deptId)) + ")";
+            }
+            case 3 -> {
                 if (deptId == null) {
-                    return "1=0";
+                    yield "1=0";
                 }
-                return deptCol + " = " + deptId;
-            case 4: // 本人及下级：本人创建 + 本人所在部门及下级（下级部门近似“下级人员”）
+                yield deptCol + " = " + deptId;
+            }
+            case 4 -> {
                 if (deptId != null) {
                     String ids = joinIds(deptService.findSelfAndDescendantIds(deptId));
-                    return "(" + userCol + " = " + userId + " OR " + deptCol + " IN (" + ids + "))";
+                    yield "(" + userCol + " = " + userId + " OR " + deptCol + " IN (" + ids + "))";
                 }
-                return userCol + " = " + userId;
-            case 5: // 仅本人
-                return userCol + " = " + userId;
-            default:
-                return null;
-        }
+                yield userCol + " = " + userId;
+            }
+            case 5 -> // 仅本人
+                    userCol + " = " + userId;
+            default -> null;
+        };
     }
 
     private static String column(String alias, String col) {

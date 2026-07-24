@@ -9,7 +9,6 @@ import com.nova.admin.modules.system.dto.UserInfoDTO;
 import com.nova.admin.modules.system.entity.SysMenu;
 import com.nova.admin.modules.system.entity.SysUser;
 import com.nova.admin.modules.system.mapper.SysMenuMapper;
-import com.nova.admin.modules.system.mapper.SysRoleMapper;
 import com.nova.admin.modules.system.mapper.SysUserMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -19,6 +18,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static com.nova.admin.modules.system.service.impl.SysMenuServiceImpl.getMenuTreeDTO;
+
 /**
  * 系统侧用户/菜单查询（被 controller 与 AuthService 共用）
  */
@@ -27,7 +28,6 @@ import java.util.Map;
 public class AuthQueryService {
 
     private final SysUserMapper userMapper;
-    private final SysRoleMapper roleMapper;
     private final SysMenuMapper menuMapper;
 
     public UserInfoDTO currentUserInfo(Long userId) {
@@ -99,21 +99,6 @@ public class AuthQueryService {
     }
 
     private MenuTreeDTO toDto(SysMenu m) {
-        return MenuTreeDTO.builder()
-                .id(m.getId())
-                .parentId(m.getParentId())
-                .name(m.getName())
-                .type(m.getType())
-                .perms(m.getPerms())
-                .path(m.getPath())
-                .component(m.getComponent())
-                .redirect(m.getRedirect())
-                .icon(m.getIcon())
-                .sort(m.getSort())
-                .visible(m.getVisible())
-                .status(m.getStatus())
-                .keepAlive(m.getKeepAlive())
-                .alwaysShow(m.getAlwaysShow())
-                .build();
+        return getMenuTreeDTO(m);
     }
 }

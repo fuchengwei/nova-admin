@@ -12,7 +12,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
-import java.util.concurrent.TimeUnit;
+import java.time.Duration;
 
 /**
  * 图形验证码服务
@@ -36,8 +36,7 @@ public class CaptchaService {
         redisTemplate.opsForValue().set(
                 Constants.REDIS_KEY_CAPTCHA + key,
                 code,
-                expireSeconds,
-                TimeUnit.SECONDS);
+                Duration.ofSeconds(expireSeconds));
 
         return CaptchaResponse.builder()
                 .captchaKey(key)

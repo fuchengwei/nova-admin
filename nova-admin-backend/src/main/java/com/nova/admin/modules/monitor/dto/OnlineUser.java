@@ -2,11 +2,13 @@ package com.nova.admin.modules.monitor.dto;
 
 import lombok.Data;
 
+import java.io.Serial;
 import java.io.Serializable;
 
 /** 在线用户 */
 @Data
 public class OnlineUser implements Serializable {
+    @Serial
     private static final long serialVersionUID = 1L;
 
     /** 登录账号（作为唯一标识） */

@@ -29,5 +29,5 @@ public interface SysLoginLogService extends IService<SysLoginLog> {
      * @param success   是否成功
      * @param msg       提示消息
      */
-    void recordLoginLog(String username, String ip, String userAgent, boolean success, String msg);
+    void recordLoginLog(String account, String ip, String userAgent, boolean success, String msg);
 }

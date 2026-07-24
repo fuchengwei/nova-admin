@@ -2,12 +2,14 @@ package com.nova.admin.modules.monitor.dto;
 
 import lombok.Data;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.List;
 
 /** 服务器监控信息 */
 @Data
 public class ServerInfo implements Serializable {
+    @Serial
     private static final long serialVersionUID = 1L;
 
     /** CPU 信息 */
@@ -23,6 +25,7 @@ public class ServerInfo implements Serializable {
 
     @Data
     public static class Cpu implements Serializable {
+        @Serial
         private static final long serialVersionUID = 1L;
         /** 核心数 */
         private int cpuNum;
@@ -36,6 +39,7 @@ public class ServerInfo implements Serializable {
 
     @Data
     public static class Mem implements Serializable {
+        @Serial
         private static final long serialVersionUID = 1L;
         /** 总内存（GB） */
         private double total;
@@ -49,6 +53,7 @@ public class ServerInfo implements Serializable {
 
     @Data
     public static class Jvm implements Serializable {
+        @Serial
         private static final long serialVersionUID = 1L;
         private String name;
         private String version;
@@ -64,6 +69,7 @@ public class ServerInfo implements Serializable {
 
     @Data
     public static class Sys implements Serializable {
+        @Serial
         private static final long serialVersionUID = 1L;
         private String computerName;
         private String computerIp;
@@ -74,6 +80,7 @@ public class ServerInfo implements Serializable {
 
     @Data
     public static class Disk implements Serializable {
+        @Serial
         private static final long serialVersionUID = 1L;
         private String dirName;
         private String sysTypeName;

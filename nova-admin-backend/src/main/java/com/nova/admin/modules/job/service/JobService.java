@@ -1,6 +1,5 @@
 package com.nova.admin.modules.job.service;
 
-import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.nova.admin.common.api.PageResult;
 import com.nova.admin.modules.job.dto.JobPageQuery;
 import com.nova.admin.modules.job.entity.SysJob;

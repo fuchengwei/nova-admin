@@ -12,6 +12,7 @@ import com.nova.admin.modules.job.service.JobService;
 import com.nova.admin.security.SecurityUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.jspecify.annotations.NonNull;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.stereotype.Service;
@@ -128,7 +129,7 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
 
     /** 应用启动时加载所有运行中的任务 */
     @Override
-    public void run(ApplicationArguments args) {
+    public void run(@NonNull ApplicationArguments args) {
         jobMapper.selectList(new LambdaQueryWrapper<SysJob>().eq(SysJob::getStatus, 1))
                 .forEach(jobScheduler::schedule);
         log.info("定时任务调度器初始化完成");

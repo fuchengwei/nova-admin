@@ -54,7 +54,7 @@ public class MonitorService {
         com.sun.management.OperatingSystemMXBean osBean =
                 (com.sun.management.OperatingSystemMXBean) ManagementFactory.getOperatingSystemMXBean();
         cpu.setCpuNum(osBean.getAvailableProcessors());
-        double load = osBean.getSystemCpuLoad() * 100.0;
+        double load = osBean.getCpuLoad() * 100.0;
         if (load < 0) {
             load = osBean.getSystemLoadAverage() * 100.0;
         }
@@ -165,6 +165,7 @@ public class MonitorService {
     }
 
     /** 缓存（Redis）信息 */
+    @SuppressWarnings("SpellCheckingInspection")
     public CacheInfo getCacheInfo() {
         CacheInfo info = new CacheInfo();
         Properties props = redisTemplate.execute((RedisCallback<Properties>) connection ->
@@ -178,7 +179,7 @@ public class MonitorService {
             server.setUsedMemoryHuman(props.getProperty("used_memory_human"));
             server.setMaxMemoryHuman(props.getProperty("maxmemory_human"));
             server.setConnectedClients(props.getProperty("connected_clients"));
-            server.setMaxmemoryPolicy(props.getProperty("maxmemory_policy"));
+            server.setMaxMemoryPolicy(props.getProperty("maxmemory_policy"));
             info.setServer(server);
 
             List<CacheInfo.CommandStat> stats = new ArrayList<>();
