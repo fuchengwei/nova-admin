@@ -45,16 +45,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
     public PageResult<SysUser> getUserPage(UserPageQuery query) {
         Page<SysUser> page = new Page<>(query.getCurrent(), query.getSize());
 
-        LambdaQueryWrapper<SysUser> wrapper = new LambdaQueryWrapper<SysUser>()
-                .like(query.getAccount() != null, SysUser::getAccount, query.getAccount())
-                .like(query.getNickname() != null, SysUser::getNickname, query.getNickname())
-                .like(query.getPhone() != null, SysUser::getPhone, query.getPhone())
-                .eq(query.getStatus() != null, SysUser::getStatus, query.getStatus())
-                .eq(query.getDeptId() != null, SysUser::getDeptId, query.getDeptId())
-                .ge(query.getCreateTimeStart() != null, SysUser::getCreateTime, query.getCreateTimeStart())
-                .le(query.getCreateTimeEnd() != null, SysUser::getCreateTime, query.getCreateTimeEnd());
-
-        Page<SysUser> result = (Page<SysUser>) getBaseMapper().selectUserPage(page, wrapper);
+        Page<SysUser> result = (Page<SysUser>) getBaseMapper().selectUserPage(page, query);
 
         // 联查部门名称
         List<SysUser> records = result.getRecords();
