@@ -5,7 +5,6 @@ import {
   EditOutlined,
   DeleteOutlined,
 } from '@ant-design/icons';
-import * as Icons from '@ant-design/icons';
 import {
   ProCard,
   ProDescriptions,
@@ -27,27 +26,8 @@ import {
 } from '@/api/menu';
 import type { MenuInfo } from '@/types/api';
 import { toTreeSelectData } from '@/utils/tree';
-
-const iconMap: Record<string, React.ReactNode> = {
-  SettingOutlined: <Icons.SettingOutlined />,
-  ApartmentOutlined: <Icons.ApartmentOutlined />,
-  UserOutlined: <Icons.UserOutlined />,
-  TeamOutlined: <Icons.TeamOutlined />,
-  MenuOutlined: <Icons.MenuOutlined />,
-  BookOutlined: <Icons.BookOutlined />,
-  CodeOutlined: <Icons.CodeOutlined />,
-  FileOutlined: <Icons.FileOutlined />,
-  MonitorOutlined: <Icons.MonitorOutlined />,
-  CloudServerOutlined: <Icons.CloudServerOutlined />,
-  ScheduleOutlined: <Icons.ScheduleOutlined />,
-  DashboardOutlined: <Icons.DashboardOutlined />,
-  SafetyOutlined: <Icons.SafetyOutlined />,
-  TableOutlined: <Icons.TableOutlined />,
-  ToolOutlined: <Icons.ToolOutlined />,
-};
-
-const getIcon = (iconName?: string): React.ReactNode =>
-  (iconName && iconMap[iconName]) || <Icons.AppstoreOutlined />;
+import { getIcon } from '@/components/IconPicker/icon-catalog';
+import IconPicker from '@/components/IconPicker';
 
 const getTypeTag = (t: (k: string) => string, type?: string) => {
   if (type === 'M') return <Tag color="blue">{t('menu.typeDir')}</Tag>;
@@ -324,7 +304,11 @@ export default function MenuPage() {
             const mt = ((form.getFieldValue('type') as string) || selectedMenu?.type || 'M');
             return (
               <>
-                {mt !== 'F' && <ProFormText name="icon" label={t('menu.icon')} />}
+                {mt !== 'F' && (
+                  <Form.Item name="icon" label={t('menu.icon')}>
+                    <IconPicker />
+                  </Form.Item>
+                )}
                 {mt !== 'F' && <ProFormText name="path" label={t('menu.path')} />}
                 {mt === 'C' && <ProFormText name="component" label={t('menu.component')} />}
                 {mt === 'M' && <ProFormText name="redirect" label={t('menu.redirect')} />}

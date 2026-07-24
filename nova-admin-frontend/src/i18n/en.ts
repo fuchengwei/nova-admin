@@ -336,4 +336,12 @@ export default {
     cmd: 'Command',
     calls: 'Calls',
   },
+  iconPicker: {
+    placeholder: 'Select an icon',
+    search: 'Search icons',
+    clear: 'Clear icon',
+    noResult: 'No icons found',
+    unknownIcon: 'Unknown icon',
+    selectedLabel: '{{name}} selected',
+  },
 };

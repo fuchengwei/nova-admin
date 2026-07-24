@@ -337,4 +337,12 @@ export default {
     cmd: '命令',
     calls: '调用统计',
   },
+  iconPicker: {
+    placeholder: '请选择图标',
+    search: '搜索图标',
+    clear: '清除图标',
+    noResult: '未找到匹配的图标',
+    unknownIcon: '未知图标',
+    selectedLabel: '已选择 {{name}}',
+  },
 };

@@ -1,54 +1,11 @@
-import * as Icons from '@ant-design/icons';
-import {
-  DashboardOutlined,
-  UserOutlined,
-} from '@ant-design/icons';
 import { type ProLayoutProps } from '@ant-design/pro-components';
 import type { MenuInfo } from '@/types/api';
+import { getIcon } from '@/components/IconPicker/icon-catalog';
 
 /** ProLayout 路由树节点（与 ProLayoutProps['route'] 结构一致） */
 export type LayoutRoute = NonNullable<ProLayoutProps['route']>;
 
-/** 图标名称 → React 组件映射 */
-const iconMap: Record<string, React.ReactNode> = {
-  DashboardOutlined: <DashboardOutlined />,
-  SettingOutlined: <Icons.SettingOutlined />,
-  MonitorOutlined: <Icons.MonitorOutlined />,
-  CloudServerOutlined: <Icons.CloudServerOutlined />,
-  ApartmentOutlined: <Icons.ApartmentOutlined />,
-  UserOutlined: <UserOutlined />,
-  TeamOutlined: <Icons.TeamOutlined />,
-  MenuOutlined: <Icons.MenuOutlined />,
-  FileOutlined: <Icons.FileOutlined />,
-  ScheduleOutlined: <Icons.ScheduleOutlined />,
-  CodeOutlined: <Icons.CodeOutlined />,
-  SafetyOutlined: <Icons.SafetyOutlined />,
-  TableOutlined: <Icons.TableOutlined />,
-  BookOutlined: <Icons.BookOutlined />,
-  ToolOutlined: <Icons.ToolOutlined />,
-  BarChartOutlined: <Icons.BarChartOutlined />,
-  LineChartOutlined: <Icons.LineChartOutlined />,
-  PieChartOutlined: <Icons.PieChartOutlined />,
-  DesktopOutlined: <Icons.DesktopOutlined />,
-  DatabaseOutlined: <Icons.DatabaseOutlined />,
-  GlobalOutlined: <Icons.GlobalOutlined />,
-  AppstoreOutlined: <Icons.AppstoreOutlined />,
-  ShopOutlined: <Icons.ShopOutlined />,
-  ShoppingOutlined: <Icons.ShoppingOutlined />,
-  NotificationOutlined: <Icons.NotificationOutlined />,
-  SoundOutlined: <Icons.SoundOutlined />,
-  TagOutlined: <Icons.TagOutlined />,
-  ProfileOutlined: <Icons.ProfileOutlined />,
-  FormOutlined: <Icons.FormOutlined />,
-  ContainerOutlined: <Icons.ContainerOutlined />,
-  HomeOutlined: <Icons.HomeOutlined />,
-};
-
-/** 获取图标组件 */
-export function getIcon(iconName?: string): React.ReactNode {
-  if (!iconName) return undefined;
-  return iconMap[iconName] ?? <Icons.AppstoreOutlined />;
-}
+export { getIcon };
 
 /** 判断用户是否拥有菜单所需权限（超级管理员 *:*:* 豁免） */
 export function hasPermission(perms?: string, permissions: string[] = []): boolean {
@@ -83,30 +40,30 @@ export function fallbackRoutes(t: (key: string) => string): LayoutRoute[] {
     {
       path: '/system',
       name: t('menu.system'),
-      icon: <Icons.SettingOutlined />,
+      icon: getIcon('SettingOutlined'),
       routes: [
-        { path: '/system/dept', name: t('menu.dept'), icon: <Icons.ApartmentOutlined /> },
-        { path: '/system/user', name: t('menu.user'), icon: <UserOutlined /> },
-        { path: '/system/role', name: t('menu.role'), icon: <Icons.TeamOutlined /> },
-        { path: '/system/menu', name: t('menu.menu'), icon: <Icons.MenuOutlined /> },
-        { path: '/system/dict', name: t('menu.dict'), icon: <Icons.BookOutlined /> },
-        { path: '/system/log', name: t('menu.log'), icon: <Icons.FileOutlined /> },
-        { path: '/tool/gen', name: t('menu.gen'), icon: <Icons.CodeOutlined /> },
+        { path: '/system/dept', name: t('menu.dept'), icon: getIcon('ApartmentOutlined') },
+        { path: '/system/user', name: t('menu.user'), icon: getIcon('UserOutlined') },
+        { path: '/system/role', name: t('menu.role'), icon: getIcon('TeamOutlined') },
+        { path: '/system/menu', name: t('menu.menu'), icon: getIcon('MenuOutlined') },
+        { path: '/system/dict', name: t('menu.dict'), icon: getIcon('BookOutlined') },
+        { path: '/system/log', name: t('menu.log'), icon: getIcon('FileOutlined') },
+        { path: '/tool/gen', name: t('menu.gen'), icon: getIcon('CodeOutlined') },
       ],
     },
     {
       path: '/infra',
       name: t('menu.infra'),
-      icon: <Icons.CloudServerOutlined />,
-      routes: [{ path: '/infra/file', name: t('menu.file'), icon: <Icons.FileOutlined /> }],
+      icon: getIcon('CloudServerOutlined'),
+      routes: [{ path: '/infra/file', name: t('menu.file'), icon: getIcon('FileOutlined') }],
     },
     {
       path: '/monitor',
       name: t('menu.monitor'),
-      icon: <Icons.MonitorOutlined />,
+      icon: getIcon('MonitorOutlined'),
       routes: [
-        { path: '/monitor/job', name: t('menu.job'), icon: <Icons.ScheduleOutlined /> },
-        { path: '/monitor/server', name: t('menu.server'), icon: <DashboardOutlined /> },
+        { path: '/monitor/job', name: t('menu.job'), icon: getIcon('ScheduleOutlined') },
+        { path: '/monitor/server', name: t('menu.server'), icon: getIcon('DashboardOutlined') },
       ],
     },
   ];
