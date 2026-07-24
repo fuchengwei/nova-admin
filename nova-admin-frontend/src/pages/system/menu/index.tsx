@@ -271,91 +271,100 @@ export default function MenuPage() {
           return true;
         }}
       >
-        <ProFormTreeSelect
-          name="parentId"
-          label={t('menu.parentMenu')}
-          rules={[{ required: true, message: t('menu.parentMenuRequired') }]}
-          fieldProps={{
-            treeData: [{ value: 0, title: t('menu.rootMenu'), children: treeSelectData }],
-            allowClear: true,
-            treeDefaultExpandAll: true,
-            placeholder: t('menu.parentMenu'),
-          }}
-        />
-        <ProFormRadio.Group
-          name="type"
-          label={t('menu.menuType')}
-          disabled={editMode}
-          rules={[{ required: true }]}
-          options={[
-            { label: t('menu.typeDir'), value: 'M' },
-            { label: t('menu.typeMenu'), value: 'C' },
-            { label: t('menu.typeButton'), value: 'F' },
-          ]}
-        />
-        <ProFormText
-          name="name"
-          label={t('menu.menuName')}
-          rules={[{ required: true, message: t('menu.menuNameRequired') }]}
-        />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4">
+          <ProFormTreeSelect
+            name="parentId"
+            label={t('menu.parentMenu')}
+            rules={[{ required: true, message: t('menu.parentMenuRequired') }]}
+            fieldProps={{
+              treeData: [{ value: 0, title: t('menu.rootMenu'), children: treeSelectData }],
+              allowClear: true,
+              treeDefaultExpandAll: true,
+              placeholder: t('menu.parentMenu'),
+            }}
+          />
+          <ProFormRadio.Group
+            name="type"
+            label={t('menu.menuType')}
+            disabled={editMode}
+            rules={[{ required: true }]}
+            options={[
+              { label: t('menu.typeDir'), value: 'M' },
+              { label: t('menu.typeMenu'), value: 'C' },
+              { label: t('menu.typeButton'), value: 'F' },
+            ]}
+          />
+          <ProFormText
+            name="name"
+            label={t('menu.menuName')}
+            rules={[{ required: true, message: t('menu.menuNameRequired') }]}
+          />
 
-        <Form.Item noStyle shouldUpdate>
-          {(form) => {
-            const mt = ((form.getFieldValue('type') as string) || selectedMenu?.type || 'M');
-            return (
-              <>
-                {mt !== 'F' && (
-                  <Form.Item name="icon" label={t('menu.icon')}>
-                    <IconPicker />
-                  </Form.Item>
-                )}
-                {mt !== 'F' && <ProFormText name="path" label={t('menu.path')} />}
-                {mt === 'C' && <ProFormText name="component" label={t('menu.component')} />}
-                {mt === 'M' && <ProFormText name="redirect" label={t('menu.redirect')} />}
-                {mt !== 'M' && <ProFormText name="perms" label={t('menu.perms')} />}
-                {mt !== 'F' && (
-                  <div className="grid grid-cols-3 gap-x-4">
-                    <ProFormRadio.Group
-                      name="visible"
-                      label={t('menu.visible')}
-                      options={[
-                        { label: t('menu.yes'), value: 1 },
-                        { label: t('menu.no'), value: 0 },
-                      ]}
-                    />
-                    <ProFormRadio.Group
-                      name="keepAlive"
-                      label={t('menu.keepAlive')}
-                      options={[
-                        { label: t('menu.yes'), value: 1 },
-                        { label: t('menu.no'), value: 0 },
-                      ]}
-                    />
-                    <ProFormRadio.Group
-                      name="alwaysShow"
-                      label={t('menu.alwaysShow')}
-                      options={[
-                        { label: t('menu.yes'), value: 1 },
-                        { label: t('menu.no'), value: 0 },
-                      ]}
-                    />
-                  </div>
-                )}
-              </>
-            );
-          }}
-        </Form.Item>
+          <Form.Item noStyle shouldUpdate>
+            {(form) => {
+              const mt = ((form.getFieldValue('type') as string) || selectedMenu?.type || 'M');
+              return (
+                <>
+                  {mt !== 'F' && (
+                    <Form.Item name="icon" label={t('menu.icon')}>
+                      <IconPicker />
+                    </Form.Item>
+                  )}
+                  {mt !== 'F' && <ProFormText name="path" label={t('menu.path')} />}
+                  {mt === 'C' && <ProFormText name="component" label={t('menu.component')} />}
+                  {mt === 'M' && <ProFormText name="redirect" label={t('menu.redirect')} />}
+                  {mt !== 'M' && <ProFormText name="perms" label={t('menu.perms')} />}
+                </>
+              );
+            }}
+          </Form.Item>
 
-        <ProFormDigit name="sort" label={t('menu.sort')} min={0} />
-        <ProFormRadio.Group
-          name="status"
-          label={t('menu.status')}
-          rules={[{ required: true }]}
-          options={[
-            { label: t('menu.enabled'), value: 1 },
-            { label: t('menu.disabled'), value: 0 },
-          ]}
-        />
+          <ProFormDigit name="sort" label={t('menu.sort')} min={0} />
+          <ProFormRadio.Group
+            name="status"
+            label={t('menu.status')}
+            rules={[{ required: true }]}
+            options={[
+              { label: t('menu.enabled'), value: 1 },
+              { label: t('menu.disabled'), value: 0 },
+            ]}
+          />
+
+          <Form.Item noStyle shouldUpdate>
+            {(form) => {
+              const mt = ((form.getFieldValue('type') as string) || selectedMenu?.type || 'M');
+              if (mt === 'F') return null;
+              return (
+                <>
+                  <ProFormRadio.Group
+                    name="visible"
+                    label={t('menu.visible')}
+                    options={[
+                      { label: t('menu.yes'), value: 1 },
+                      { label: t('menu.no'), value: 0 },
+                    ]}
+                  />
+                  <ProFormRadio.Group
+                    name="keepAlive"
+                    label={t('menu.keepAlive')}
+                    options={[
+                      { label: t('menu.yes'), value: 1 },
+                      { label: t('menu.no'), value: 0 },
+                    ]}
+                  />
+                  <ProFormRadio.Group
+                    name="alwaysShow"
+                    label={t('menu.alwaysShow')}
+                    options={[
+                      { label: t('menu.yes'), value: 1 },
+                      { label: t('menu.no'), value: 0 },
+                    ]}
+                  />
+                </>
+              );
+            }}
+          </Form.Item>
+        </div>
       </ModalForm>
     </div>
   );
