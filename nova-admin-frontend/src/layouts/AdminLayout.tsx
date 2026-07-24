@@ -6,7 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { ProLayout } from '@ant-design/pro-components';
 import { useAppStore, type Locale } from '@/stores/appStore';
 import { useUserStore } from '@/stores/userStore';
-import { clearTokens } from '@/utils/request';
+import { clearTokens, getToken } from '@/utils/request';
 import { getUserInfo, getUserMenus, logout as apiLogout } from '@/api/auth';
 import { toLayoutRoutes, fallbackRoutes, findRouteNode } from '@/utils/layout';
 
@@ -19,9 +19,10 @@ export default function AdminLayout() {
   const { token } = antdTheme.useToken();
   const [menuLoading, setMenuLoading] = useState(false);
 
-  // 加载用户信息 + 菜单
+  // 加载用户信息 + 菜单（无 token 时跳过，避免退出后触发 401）
   useEffect(() => {
     if (!userInfo) {
+      if (!getToken()) return;
       setMenuLoading(true);
       getUserInfo()
         .then((res) => {
@@ -92,8 +93,8 @@ export default function AdminLayout() {
           // 忽略错误，继续本地清理
         }
         clearTokens();
-        reset();
         navigate('/login');
+        reset();
       }
     },
   };
