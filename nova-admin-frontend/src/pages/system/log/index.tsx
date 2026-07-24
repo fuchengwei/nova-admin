@@ -36,7 +36,7 @@ export default function LogPage() {
     { title: t('log.description'), dataIndex: 'description', width: 160, ellipsis: true, render: (v) => v || '-' },
     { title: t('log.requestMethod'), dataIndex: 'requestMethod', width: 100, render: (v) => v || '-' },
     { title: t('log.requestUrl'), dataIndex: 'requestUrl', width: 200, ellipsis: true, render: (v) => v || '-' },
-    { title: t('log.operator'), dataIndex: 'username', width: 100, render: (v) => v || '-' },
+    { title: t('log.operator'), dataIndex: 'account', width: 100, render: (v) => v || '-' },
     { title: 'IP', dataIndex: 'ip', width: 130, render: (v) => v || '-' },
     {
       title: t('log.costMs'),
@@ -64,7 +64,7 @@ export default function LogPage() {
   ];
 
   const loginColumns: ProColumns<LoginLogRecord>[] = [
-    { title: t('log.username'), dataIndex: 'username', width: 120, render: (v) => v || '-' },
+    { title: t('log.account'), dataIndex: 'account', width: 120, render: (v) => v || '-' },
     { title: 'IP', dataIndex: 'ip', width: 130, render: (v) => v || '-' },
     { title: t('log.os'), dataIndex: 'os', width: 140, render: (v) => v || '-' },
     { title: t('log.browser'), dataIndex: 'browser', width: 140, render: (v) => v || '-' },
@@ -115,7 +115,7 @@ export default function LogPage() {
                     current: params.current ?? 1,
                     size: params.pageSize ?? 10,
                     module: params.module,
-                    username: params.username,
+                    account: params.account,
                     status: params.status,
                   });
                   if (res.code !== 0) return { data: [], success: false, total: 0 };
@@ -166,7 +166,7 @@ export default function LogPage() {
                   const res = await getLoginLogPage({
                     current: params.current ?? 1,
                     size: params.pageSize ?? 10,
-                    username: params.username,
+                    account: params.account,
                     status: params.status,
                   });
                   if (res.code !== 0) return { data: [], success: false, total: 0 };
