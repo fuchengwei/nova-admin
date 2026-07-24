@@ -187,6 +187,29 @@ const openEdit = (record: UserRecord) => { setEditing(record); setModalOpen(true
 - 返回 `true` → 自动关闭弹窗
 - 禁止在外部手动 `setModalOpen(false)` 来模拟提交关闭
 
+### 4.1.1 弹窗表单布局密度
+
+**弹窗表单字段必须使用两列网格布局，禁止一个字段独占一行平铺。**
+
+用 Tailwind 的 `grid grid-cols-2 gap-x-4` 包裹所有 ProForm 字段：
+
+```tsx
+<ModalForm width={640} layout="vertical" ...>
+  <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4">
+    <ProFormText name="name" label={t('user.name')} />
+    <ProFormText name="email" label={t('user.email')} />
+    <ProFormRadio.Group name="status" label={t('user.status')} options={[...]} />
+    <ProFormTreeSelect name="deptId" label={t('user.dept')} ... />
+  </div>
+</ModalForm>
+```
+
+**说明**：
+- 弹窗宽度搭配 `640px`（字段较少时可用 `520px`）
+- `ProFormDependency` 或 `Form.Item noStyle shouldUpdate` 的条件字段放入 `grid` 内，条件隐藏时自然占位消失，不影响布局
+- 需要全宽的字段（如长文本域、树选择较宽时）加 `className="col-span-2"`
+- 参考实现：[`UserFormModal.tsx`](../../nova-admin-frontend/src/pages/system/user/components/UserFormModal.tsx)、[`src/pages/system/menu/index.tsx`](../../nova-admin-frontend/src/pages/system/menu/index.tsx)
+
 ### 4.2 常用 ProForm 字段组件
 
 | 组件 | 适用场景 |
