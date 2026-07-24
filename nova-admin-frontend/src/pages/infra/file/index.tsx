@@ -218,7 +218,7 @@ export default function FilePage() {
         onCancel={() => setPreviewOpen(false)}
         footer={null}
         width={800}
-        destroyOnClose
+        destroyOnHidden
       >
         {previewFile && isImage(previewFile.contentType) ? (
           <div className="flex justify-center">

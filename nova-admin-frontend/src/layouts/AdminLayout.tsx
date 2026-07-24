@@ -88,7 +88,7 @@ export default function AdminLayout() {
   if (!menusLoaded) {
     return (
       <div className="flex h-screen items-center justify-center">
-        <Spin size="large" tip={t('common.loading') ?? '加载中...'} />
+        <Spin size="large" description={t('common.loading') ?? '加载中...'} />
       </div>
     );
   }

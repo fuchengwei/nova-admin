@@ -247,7 +247,7 @@ export default function MenuPage() {
           setModalOpen(open);
           if (!open) setEditMode(false);
         }}
-        modalProps={{ destroyOnClose: true }}
+        modalProps={{ destroyOnHidden: true }}
         width={640}
         layout="vertical"
         initialValues={

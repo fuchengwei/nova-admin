@@ -8,7 +8,7 @@ import {
 import { useTranslation } from 'react-i18next';
 import { phoneRule, emailRule } from '@/utils/validators';
 import type { TreeSelectNode } from '@/utils/tree';
-import type { UserRecord, UserUpdateRequest, UserCreateRequest } from '@/api/user';
+import type { UserRecord } from '@/api/user';
 
 export interface UserFormModalProps {
   open: boolean;
@@ -43,7 +43,7 @@ export default function UserFormModal({
       onOpenChange={(visible) => {
         if (!visible) onClose();
       }}
-      modalProps={{ destroyOnClose: true }}
+      modalProps={{ destroyOnHidden: true }}
       width={640}
       layout="vertical"
       initialValues={

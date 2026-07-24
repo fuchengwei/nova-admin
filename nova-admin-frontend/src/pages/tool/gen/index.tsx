@@ -108,7 +108,7 @@ export default function GenPage() {
         onCancel={() => setPreviewOpen(false)}
         width={900}
         footer={null}
-        destroyOnClose
+        destroyOnHidden
       >
         <Tabs
           items={Object.entries(files).map(([path, content]) => ({
