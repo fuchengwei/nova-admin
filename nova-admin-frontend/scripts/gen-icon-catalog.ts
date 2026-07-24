@@ -1,15 +1,14 @@
-#!/usr/bin/env node
 /**
  * 生成 src/components/IconPicker/icon-catalog.ts
- * 运行方式：node scripts/gen-icon-catalog.cjs
+ * 运行方式：pnpm gen:icons
  */
-'use strict';
+import * as AntdIcons from '@ant-design/icons';
+import { writeFileSync } from 'node:fs';
+import { resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-const path = require('path');
-const fs = require('fs');
-
-// ─── 词典：英文单词 → 中文 ────────────────────────────────────────────────
-const DICT = {
+// ─── 词典：驼峰词段 → 中文别名 ─────────────────────────────────────────────
+const DICT: Record<string, string[]> = {
   Account: ['账户', '账号'],
   Add: ['添加', '新增', '增加'],
   Aim: ['瞄准', '目标'],
@@ -28,7 +27,7 @@ const DICT = {
   Audit: ['审计', '审核'],
   Award: ['奖励', '奖项'],
   Back: ['返回', '后退'],
-  Backward: ['后退', '后退'],
+  Backward: ['后退'],
   Bank: ['银行', '金融'],
   Bar: ['柱状', '条形'],
   Barcode: ['条形码'],
@@ -40,7 +39,7 @@ const DICT = {
   Border: ['边框'],
   Bot: ['机器人', 'AI'],
   Box: ['盒子', '箱子'],
-  BoxPlot: ['箱线图'],
+  Boxplot: ['箱线图'],
   Branch: ['分支', '枝'],
   Branches: ['分支', '多分支'],
   Browser: ['浏览器'],
@@ -55,16 +54,11 @@ const DICT = {
   Carry: ['搬运', '携带'],
   Chart: ['图表', '统计'],
   Check: ['勾选', '确认', '选中'],
-  CheckSquare: ['勾选框', '复选框'],
   Chrome: ['Chrome浏览器'],
   Clear: ['清除', '清空'],
   Clock: ['时钟', '时间'],
-  Close: ['关闭', '关', '删除'],
+  Close: ['关闭', '删除'],
   Cloud: ['云', '云端', '云服务'],
-  CloudDownload: ['云下载'],
-  CloudServer: ['云服务器'],
-  CloudSync: ['云同步'],
-  CloudUpload: ['云上传'],
   Cluster: ['集群', '集合'],
   Code: ['代码', '编程', '开发'],
   Codepen: ['Codepen'],
@@ -108,52 +102,25 @@ const DICT = {
   Eraser: ['橡皮擦', '清除'],
   Error: ['错误', '异常'],
   Euro: ['欧元'],
-  Except: ['除外'],
   Exclamation: ['感叹号', '警告', '注意'],
   Expand: ['展开', '扩展', '扩大'],
   Experiment: ['实验', '测试'],
   Export: ['导出', '输出'],
   Eye: ['眼睛', '查看', '预览', '可见'],
-  EyeInvisible: ['隐藏', '不可见'],
+  Invisible: ['隐藏', '不可见'],
   Facebook: ['Facebook'],
   Fall: ['下降', '下跌'],
-  FastBackward: ['快退'],
-  FastForward: ['快进'],
   Field: ['字段'],
   File: ['文件', '文档'],
-  FileAdd: ['新增文件'],
-  FileDone: ['文件完成'],
-  FileExcel: ['Excel文件'],
-  FileExclamation: ['文件警告'],
-  FileGif: ['GIF文件'],
-  FileImage: ['图片文件'],
-  FileJpg: ['JPG文件'],
-  FileMarkdown: ['Markdown文件'],
-  FilePdf: ['PDF文件'],
-  FilePpt: ['PPT文件'],
-  FileProtect: ['文件保护'],
-  FileSearch: ['文件搜索'],
-  FileSync: ['文件同步'],
-  FileText: ['文本文件', '文档'],
-  FileUnknown: ['未知文件'],
-  FileWord: ['Word文件'],
-  FileZip: ['压缩文件'],
   Filter: ['筛选', '过滤'],
   Fire: ['火', '热门', '热'],
-  Flag: ['旗帜', '标记', '标签'],
+  Flag: ['旗帜', '标记'],
   Folder: ['文件夹', '目录'],
-  FolderAdd: ['新建文件夹'],
-  FolderOpen: ['打开文件夹'],
-  FolderView: ['查看文件夹'],
-  FontColors: ['字体颜色'],
-  FontSize: ['字体大小', '字号'],
+  Font: ['字体', '文字'],
   Fork: ['分叉'],
   Form: ['表单', '表格'],
-  Format: ['格式'],
   Forward: ['前进'],
-  FrownOpen: ['皱眉', '不满'],
   Frown: ['皱眉', '不满', '难过'],
-  FullScreen: ['全屏'],
   Fullscreen: ['全屏'],
   Fund: ['基金', '资金', '财务'],
   Gateway: ['网关'],
@@ -171,7 +138,6 @@ const DICT = {
   History: ['历史', '记录'],
   Home: ['首页', '主页', '家'],
   Html: ['HTML'],
-  Html5: ['HTML5'],
   Http: ['HTTP', '协议'],
   Ie: ['IE浏览器'],
   Image: ['图片', '图像'],
@@ -196,10 +162,8 @@ const DICT = {
   Lock: ['锁', '加锁', '安全'],
   Login: ['登录'],
   Logout: ['登出', '退出'],
-  MacCommand: ['Mac命令键'],
   Mail: ['邮件', '邮箱'],
   Man: ['男', '男性'],
-  ManyToOne: ['多对一'],
   Medium: ['Medium'],
   Menu: ['菜单', '导航'],
   Merge: ['合并'],
@@ -212,14 +176,8 @@ const DICT = {
   Mountain: ['山', '景观'],
   Muted: ['静音'],
   Node: ['节点'],
-  NotificationOutlined: ['通知', '提醒', '公告'],
   Notification: ['通知', '提醒', '公告'],
   Number: ['数字', '编号'],
-  Object: ['对象'],
-  Obsolete: ['废弃'],
-  OneToMany: ['一对多'],
-  OneToOne: ['一对一'],
-  Open: ['打开'],
   Ordered: ['有序'],
   Outdent: ['取消缩进'],
   Paper: ['纸', '文档'],
@@ -227,35 +185,30 @@ const DICT = {
   Partition: ['分区', '分割'],
   Pause: ['暂停'],
   Pay: ['支付', '付款'],
-  PayCircle: ['支付', '圆形支付'],
   Percent: ['百分比', '折扣'],
   Phone: ['电话', '手机'],
   Picture: ['图片', '图像'],
+  Pic: ['图片', '图像'],
   Pie: ['饼图', '圆形'],
   Play: ['播放'],
-  PlaySquare: ['播放', '方形播放'],
   Plus: ['添加', '加号', '新增', '增加'],
   Pound: ['英镑'],
-  PowerOff: ['关机', '电源'],
+  Power: ['电源', '关机'],
   Print: ['打印'],
   Profile: ['概要', '档案', '配置文件'],
   Project: ['项目'],
   Property: ['属性'],
-  Pull: ['拉取', '拖'],
-  Push: ['推送', '推'],
+  Pull: ['拉取'],
+  Push: ['推送'],
   Pushpin: ['图钉', '置顶'],
-  QrCode: ['二维码', 'QR码'],
-  QuestionCircle: ['帮助', '问题'],
+  Qrcode: ['二维码', 'QR码'],
   Question: ['问题', '帮助'],
   Queue: ['队列'],
   Radius: ['圆角'],
   Read: ['阅读', '读取'],
   Reconciliation: ['核对', '对账'],
-  Red: ['红', '红色'],
   Redo: ['重做', '恢复'],
   Reload: ['刷新', '重新加载'],
-  Rest: ['REST'],
-  Retail: ['零售'],
   Right: ['右', '向右'],
   Rise: ['上升', '增长'],
   Robot: ['机器人', 'AI', '自动化'],
@@ -264,12 +217,10 @@ const DICT = {
   Row: ['行'],
   Safari: ['Safari浏览器'],
   Safety: ['安全', '防护'],
-  SafetyCertificate: ['安全认证', '证书'],
   Save: ['保存', '存储'],
   Scan: ['扫描'],
   Schedule: ['计划', '日程', '排班', '定时'],
   Scissor: ['剪刀', '裁剪'],
-  Scisors: ['剪刀', '裁剪'],
   Search: ['搜索', '查找', '查询'],
   Select: ['选择', '选取'],
   Send: ['发送'],
@@ -281,24 +232,14 @@ const DICT = {
   Sketch: ['设计', '草图'],
   Skin: ['皮肤', '主题'],
   Slack: ['Slack'],
-  Sliders: ['滑块', '调节'],
-  Small: ['小'],
-  SmileOpen: ['笑脸', '满意'],
   Smile: ['笑脸', '满意', '高兴'],
   Solution: ['解决方案', '方案'],
   Sort: ['排序'],
   Sound: ['声音', '音频', '音量'],
   Split: ['分割', '拆分'],
   Star: ['星', '收藏', '评分'],
-  Status: ['状态'],
-  Step: ['步骤'],
   Stock: ['股票', '库存'],
   Stop: ['停止', '禁止'],
-  StrikeThrough: ['删除线'],
-  Sub: ['子级'],
-  Subnode: ['子节点'],
-  SwapLeft: ['向左交换'],
-  SwapRight: ['向右交换'],
   Swap: ['交换', '互换'],
   Switch: ['开关', '切换'],
   Sync: ['同步', '刷新'],
@@ -308,8 +249,7 @@ const DICT = {
   Tablet: ['平板', '平板电脑'],
   Team: ['团队', '群组', '成员'],
   Text: ['文本', '文字'],
-  Theme: ['主题'],
-  To: ['到'],
+  Thunderbolt: ['闪电', '快速', '高速'],
   Tool: ['工具'],
   Trademark: ['商标'],
   Transaction: ['交易', '事务'],
@@ -318,21 +258,14 @@ const DICT = {
   Twitter: ['Twitter'],
   Underline: ['下划线'],
   Undo: ['撤销'],
-  Ungroup: ['取消分组'],
   Unlock: ['解锁', '开锁'],
   Unordered: ['无序'],
   Up: ['上', '向上'],
   Upload: ['上传'],
   Usb: ['USB'],
   User: ['用户', '人员', '账号', '个人'],
-  UserAdd: ['添加用户', '新用户'],
-  UserDelete: ['删除用户'],
-  UserGroup: ['用户组', '群组'],
-  UserSwitch: ['切换用户'],
   Verified: ['已验证', '认证'],
-  Video: ['视频', '视频播放'],
-  VideoCameraAdd: ['添加摄像头'],
-  VideoCamera: ['摄像头', '摄像机', '视频'],
+  Video: ['视频'],
   Wallet: ['钱包'],
   Warning: ['警告', '注意', '告警'],
   Weibo: ['微博'],
@@ -343,86 +276,54 @@ const DICT = {
   Yuque: ['语雀'],
   Zhihu: ['知乎'],
   Zoom: ['缩放', '放大缩小'],
-  ZoomIn: ['放大'],
-  ZoomOut: ['缩小'],
-  Apartment: ['层级', '组织架构', '公寓'],
-  AlignCenter: ['居中对齐'],
-  AlignLeft: ['左对齐'],
-  AlignRight: ['右对齐'],
-  VerticalAlignBottom: ['底部对齐'],
-  VerticalAlignMiddle: ['垂直居中'],
-  VerticalAlignTop: ['顶部对齐'],
-  DoubleLeft: ['双左'],
-  DoubleRight: ['双右'],
-  Home: ['首页', '主页', '家'],
-  Inbox: ['收件箱'],
-  Alert: ['警报', '提示'],
-  Canteen: ['食堂', '餐厅'],
-  Civil: ['民用'],
-  DeliveryBox: ['配送箱', '快递'],
-  Dot: ['点', '标记'],
-  Field: ['字段', '田野'],
-  Hdd: ['硬盘'],
-  Insurance: ['保险'],
-  Lift: ['电梯', '提升'],
-  Man: ['男性', '男士'],
-  Mediicine: ['医疗', '药品'],
-  Medicine: ['医疗', '医药', '药'],
+  Sun: ['太阳', '晴天'],
   Moon: ['月亮', '夜间'],
+  Medicine: ['医疗', '医药', '药'],
+  Insurance: ['保险'],
   Oil: ['石油', '燃油'],
-  Paragraph: ['段落'],
-  Pic: ['图片'],
-  Sig: ['签名'],
   Site: ['网站', '站点'],
   Slope: ['坡度', '斜率'],
-  Sun: ['太阳', '晴天'],
-  Thunderbolt: ['闪电', '快速', '高速'],
+  Paragraph: ['段落'],
+  Vertical: ['垂直'],
+  Horizontal: ['水平'],
+  Double: ['双'],
+  Fast: ['快速'],
+  Strikethrough: ['删除线'],
+  // Note: Column already defined above with ['列', '栏']
 };
 
 // ─── 驼峰分词 ─────────────────────────────────────────────────────────────────
-function splitCamel(name) {
-  // 去掉结尾的 Outlined / Filled / TwoTone
+function splitCamel(name: string): string[] {
   const base = name.replace(/(Outlined|Filled|TwoTone)$/, '');
-  // 驼峰分词
-  const words = base.match(/[A-Z][a-z0-9]*/g) || [base];
-  return words;
+  return base.match(/[A-Z][a-z0-9]*/g) ?? [base];
 }
 
 // ─── 为单个 icon name 生成中文别名 ──────────────────────────────────────────
-function getAliases(name) {
+function getAliases(name: string): string[] {
   const base = name.replace(/(Outlined|Filled|TwoTone)$/, '');
-  const set = new Set();
-
-  // 先尝试整体匹配
-  if (DICT[base]) {
-    DICT[base].forEach((a) => set.add(a));
-  }
-
-  // 按分词逐词匹配
-  const words = splitCamel(name);
-  for (const w of words) {
+  const set = new Set<string>();
+  if (DICT[base]) DICT[base].forEach((a) => set.add(a));
+  for (const w of splitCamel(name)) {
     if (DICT[w]) DICT[w].forEach((a) => set.add(a));
   }
-
   return [...set];
 }
 
 // ─── 主逻辑 ───────────────────────────────────────────────────────────────────
-const antdIcons = require('@ant-design/icons');
-
-const iconNames = Object.keys(antdIcons)
+const iconNames = (Object.keys(AntdIcons) as string[])
   .filter((k) => {
-    const v = antdIcons[k];
-    return (
-      (typeof v === 'function' || typeof v === 'object') &&
-      (k.endsWith('Outlined') || k.endsWith('Filled') || k.endsWith('TwoTone'))
-    );
+    if (!(k.endsWith('Outlined') || k.endsWith('Filled') || k.endsWith('TwoTone'))) {
+      return false;
+    }
+    // Ant Design v6 图标为 forwardRef 组件（object），旧版本为 function，两者都接受
+    const v = (AntdIcons as Record<string, unknown>)[k];
+    return typeof v === 'function' || (typeof v === 'object' && v !== null);
   })
   .sort();
 
-const lines = [];
+const lines: string[] = [];
 lines.push(`import * as AntdIcons from '@ant-design/icons';`);
-lines.push(`import type React from 'react';`);
+lines.push(`import React from 'react';`);
 lines.push(``);
 lines.push(`export interface IconCatalogItem {`);
 lines.push(`  name: string;`);
@@ -435,9 +336,7 @@ lines.push(`export const iconCatalog: readonly IconCatalogItem[] = [`);
 
 for (const name of iconNames) {
   const aliases = getAliases(name);
-  const aliasJson = aliases.length
-    ? `[${aliases.map((a) => `'${a}'`).join(', ')}]`
-    : '[]';
+  const aliasJson = aliases.length ? `[${aliases.map((a) => `'${a}'`).join(', ')}]` : '[]';
   lines.push(`  { name: '${name}', aliases: ${aliasJson}, icon: AntdIcons.${name} },`);
 }
 
@@ -456,7 +355,7 @@ lines.push(`export function getIcon(iconName?: string): React.ReactElement | und
 lines.push(`  if (!iconName) return undefined;`);
 lines.push(`  const item = iconCatalogMap.get(iconName);`);
 lines.push(`  const IconComp = item ? item.icon : AntdIcons.AppstoreOutlined;`);
-lines.push(`  return <IconComp />;`);
+lines.push(`  return React.createElement(IconComp);`);
 lines.push(`}`);
 lines.push(``);
 lines.push(`/** 风格后缀 */`);
@@ -478,15 +377,15 @@ lines.push(`  if (!kw) return [...catalog];`);
 lines.push(`  const lower = kw.toLowerCase();`);
 lines.push(`  return catalog.filter((item) => {`);
 lines.push(`    if (item.name.toLowerCase().includes(lower)) return true;`);
-lines.push(`    const baseName = STYLE_SUFFIXES.reduce((n, s) => n.replace(new RegExp(s + '$'), ''), item.name);`);
+lines.push(
+  `    const baseName = STYLE_SUFFIXES.reduce((n, s) => n.replace(new RegExp(s + '$'), ''), item.name);`,
+);
 lines.push(`    if (baseName.toLowerCase().includes(lower)) return true;`);
 lines.push(`    return item.aliases.some((a) => a.includes(kw));`);
 lines.push(`  });`);
 lines.push(`}`);
 
-const outPath = path.resolve(
-  __dirname,
-  '../src/components/IconPicker/icon-catalog.ts',
-);
-fs.writeFileSync(outPath, lines.join('\n'), 'utf8');
+const __dirname = fileURLToPath(new URL('.', import.meta.url));
+const outPath = resolve(__dirname, '../src/components/IconPicker/icon-catalog.ts');
+writeFileSync(outPath, lines.join('\n'), 'utf8');
 console.log(`✓ 写入 ${outPath}（共 ${iconNames.length} 个图标）`);

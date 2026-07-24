@@ -86,6 +86,12 @@ refactor(frontend): 用 ProLayout 重写 AdminLayout 并落地顶部操作区
 docs(rules): 补充 docs/rules 规则体系并更新 AGENTS.md 导航
 ```
 
+## 2.1 提交前审查（强制）
+
+- **不得自动 `git commit`。** 代码变更完成后，仅暂存（`git add`）并向用户展示变更摘要（文件列表 + 关键 diff）。
+- 等待用户明确确认后，再执行 `git commit`。
+- 提交信息仍遵循本文件的 Conventional Commits 格式。
+
 ## 3. 分支规范
 
 | 分支类型 | 命名格式 | 示例 |

@@ -44,6 +44,8 @@
 - 用户可见文案必须走 i18n：后端 `MessageSource`，前端 `t()`；zh.ts 与 en.ts 同步更新
 - 新增/修改逻辑必须有对应测试（后端 JUnit5；前端 Vitest + RTL）
 - 改动公开 API 或新增模块须同步 `CHANGELOG.md` 与 `README.md`
+- **前端包管理器必须使用 pnpm**；禁止使用 npm 或 yarn（`pnpm add`、`pnpm add -D`、`pnpm remove`、`pnpm exec`）
+- **代码变更完成后不得自动提交**；展示变更摘要并等待用户明确确认后再执行 `git commit`（详见 [git-workflow.md](docs/rules/git-workflow.md)）
 
 ## 扩展：模块子规则
 

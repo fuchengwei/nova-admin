@@ -1,3 +1,5 @@
+allowBuilds:
+  esbuild: true
 minimumReleaseAgeExclude:
   - '@vitejs/plugin-react@6.0.4'
   - '@ant-design/pro-components@3.1.14-4'

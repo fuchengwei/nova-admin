@@ -8,5 +8,5 @@
     "skipLibCheck": true,
     "composite": true
   },
-  "include": ["vite.config.ts"]
+  "include": ["scripts/*.ts", "vite.config.ts"]
 }
