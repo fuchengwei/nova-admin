@@ -425,3 +425,25 @@ INSERT INTO sys_user_role (user_id, role_id) VALUES (1, 1), (2, 1);
 -- 角色菜单关联（全部菜单给超管）
 INSERT INTO sys_role_menu (role_id, menu_id)
 SELECT 1, id FROM sys_menu;
+
+-- =====================================================
+-- 常用字典数据
+-- =====================================================
+INSERT INTO sys_dict_type (id, type, name, description, status, create_time, update_time, deleted)
+VALUES
+    (1, 'sys_gender', '性别', '用户性别',  1, NOW(), NOW(), 0),
+    (2, 'sys_yes_no', '是否', '通用是/否', 1, NOW(), NOW(), 0),
+    (3, 'sys_status', '状态', '启用/禁用', 1, NOW(), NOW(), 0);
+
+INSERT INTO sys_dict_data (id, type_id, label, value, css_class, sort, status, default_flag, create_time, update_time, deleted)
+VALUES
+    -- 性别
+    (101, 1, '男',   'MAN',     NULL, 0, 1, 0, NOW(), NOW(), 0),
+    (102, 1, '女',   'WOMAN',   NULL, 1, 1, 0, NOW(), NOW(), 0),
+    (103, 1, '未知', 'UNKNOWN', NULL, 2, 1, 1, NOW(), NOW(), 0),
+    -- 是否
+    (201, 2, '是', 'YES', NULL, 0, 1, 0, NOW(), NOW(), 0),
+    (202, 2, '否', 'NO',  NULL, 1, 1, 1, NOW(), NOW(), 0),
+    -- 状态（启用/禁用）
+    (301, 3, '启用', 'ENABLED',  NULL, 0, 1, 0, NOW(), NOW(), 0),
+    (302, 3, '禁用', 'DISABLED', NULL, 1, 1, 1, NOW(), NOW(), 0);
