@@ -10,6 +10,7 @@ import lombok.EqualsAndHashCode;
 
 import java.io.Serial;
 import java.time.LocalDateTime;
+import java.util.List;
 
 /**
  * 用户
@@ -45,4 +46,8 @@ public class SysUser extends BaseDO {
     /** 联表查询用（非数据库字段） */
     @TableField(exist = false)
     private String deptName;
+
+    /** 用户角色ID列表（非数据库字段，分页查询时批量填充） */
+    @TableField(exist = false)
+    private List<Long> roleIds;
 }

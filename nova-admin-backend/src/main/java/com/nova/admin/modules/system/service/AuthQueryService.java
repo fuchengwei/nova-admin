@@ -57,14 +57,16 @@ public class AuthQueryService {
         if (user == null) {
             throw new BizException(ResultCode.USER_NOT_FOUND);
         }
-        // 超级管理员返回全部菜单
-        List<SysMenu> menus = (user.getSuperAdmin() != null && user.getSuperAdmin() == 1)
-                ? menuMapper.selectList(null)
-                : menuMapper.selectMenusByUserId(userId);
-
-        // 按 sort 升序排序，保证前后端菜单顺序一致
-        menus.sort(java.util.Comparator.comparingInt(
-                m -> m.getSort() == null ? 0 : m.getSort()));
+        // 超级管理员返回全部菜单（仅M/C类型），普通用户按权限过滤
+        List<SysMenu> menus;
+        if (user.getSuperAdmin() != null && user.getSuperAdmin() == 1) {
+            menus = menuMapper.selectList(new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<SysMenu>()
+                    .eq(SysMenu::getStatus, 1)
+                    .in(SysMenu::getType, "M", "C")
+                    .orderByAsc(SysMenu::getSort));
+        } else {
+            menus = menuMapper.selectMenusByUserId(userId);
+        }
 
         List<MenuTreeDTO> all = new ArrayList<>();
         Map<Long, MenuTreeDTO> map = new HashMap<>();

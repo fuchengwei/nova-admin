@@ -73,6 +73,22 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
             }
         }
 
+        // 批量填充用户角色 ID 列表（用于前端编辑回显）
+        Set<Long> userIds = records.stream().map(SysUser::getId).collect(Collectors.toSet());
+        if (!userIds.isEmpty()) {
+            List<SysUserRole> userRoles = userRoleMapper.selectList(
+                    new LambdaQueryWrapper<SysUserRole>().in(SysUserRole::getUserId, userIds)
+            );
+            Map<Long, List<Long>> userRoleMap = userRoles.stream()
+                    .collect(Collectors.groupingBy(
+                            SysUserRole::getUserId,
+                            Collectors.mapping(SysUserRole::getRoleId, Collectors.toList())
+                    ));
+            for (SysUser user : records) {
+                user.setRoleIds(userRoleMap.getOrDefault(user.getId(), List.of()));
+            }
+        }
+
         return PageResult.of(result);
     }
 
