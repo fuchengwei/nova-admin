@@ -40,7 +40,7 @@ public class AuthQueryService {
                 .orElseThrow(() -> new BizException(ResultCode.UNAUTHORIZED));
         return UserInfoDTO.builder()
                 .id(user.getId())
-                .username(user.getUsername())
+                .account(user.getAccount())
                 .nickname(user.getNickname())
                 .avatar(user.getAvatar())
                 .email(user.getEmail())

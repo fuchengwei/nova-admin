@@ -7,7 +7,7 @@ export const getCaptcha = () =>
 
 /** 登录 */
 export async function login(payload: {
-  username: string;
+  account: string;
   password: string;
   captchaKey?: string;
   captchaCode?: string;

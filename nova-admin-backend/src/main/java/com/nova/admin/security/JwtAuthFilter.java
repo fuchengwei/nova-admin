@@ -49,7 +49,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                     throw new BizException(ResultCode.TOKEN_INVALID);
                 }
                 String jti = claims.get("jti", String.class);
-                String username = claims.get("username", String.class);
+                String account = claims.get("account", String.class);
 
                 // 黑名单校验（被踢下线 / 主动注销）：按 token 唯一标识 jti 精确判断，
                 // 避免按 userId 拉黑导致注销后短时间内重新登录也被拦截
@@ -59,7 +59,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                 }
 
                 // 从 UserDetailsService 加载（已含角色/权限缓存）
-                UserDetails ud = userDetailsService.loadUserByUsername(username);
+                UserDetails ud = userDetailsService.loadUserByUsername(account);
                 if (ud instanceof SecurityUser securityUser) {
                     securityUser.getLoginUser().setJti(jti);
                 }

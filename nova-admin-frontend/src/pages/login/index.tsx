@@ -16,7 +16,7 @@ import type { R } from '@/types/api';
 const { Title, Text } = Typography;
 
 interface LoginForm {
-  username: string;
+  account: string;
   password: string;
   captchaCode: string;
 }
@@ -72,7 +72,7 @@ export default function LoginPage() {
     setLoading(true);
     try {
       const res = await login({
-        username: values.username,
+        account: values.account,
         password: values.password,
         captchaKey,
         captchaCode: values.captchaCode,
@@ -109,7 +109,7 @@ export default function LoginPage() {
         <ProForm<LoginForm>
           form={form}
           layout="vertical"
-          initialValues={{ username: 'admin', password: 'admin123' }}
+          initialValues={{ account: 'superAdmin', password: '123456' }}
           onFinish={onSubmit}
           submitter={{
             render: () => (
@@ -119,14 +119,14 @@ export default function LoginPage() {
             ),
           }}
         >
-          <ProFormText
-            name="username"
-            label={t('login.username')}
-            rules={[{ required: true, message: `${t('login.username')} 不能为空` }]}
+        <ProFormText
+            name="account"
+            label={t('login.account')}
+            rules={[{ required: true, message: `${t('login.account')} 不能为空` }]}
             fieldProps={{
               prefix: <UserOutlined />,
               size: 'large',
-              placeholder: 'admin',
+              placeholder: 'superAdmin / admin',
               autoComplete: 'username',
             }}
           />
@@ -174,7 +174,7 @@ export default function LoginPage() {
             }}
           />
         </ProForm>
-        <div className="mt-4 text-center text-xs text-gray-400">Default: admin / admin123</div>
+        <div className="mt-4 text-center text-xs text-gray-400">Default: superAdmin or admin / 123456</div>
       </Card>
     </div>
   );

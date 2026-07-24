@@ -10,7 +10,7 @@ export interface OperationLogRecord {
   requestUrl?: string;
   javaMethod?: string;
   userId?: number;
-  username?: string;
+  account?: string;
   ip?: string;
   costMs?: number;
   status?: number;
@@ -20,7 +20,7 @@ export interface OperationLogRecord {
 
 export interface LoginLogRecord {
   id: number;
-  username?: string;
+  account?: string;
   ip?: string;
   os?: string;
   browser?: string;

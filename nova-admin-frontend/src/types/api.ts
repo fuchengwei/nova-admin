@@ -28,7 +28,7 @@ export interface LoginResult {
 
 export interface UserInfo {
   id: number;
-  username: string;
+  account: string;
   nickname: string;
   avatar?: string;
   email?: string;

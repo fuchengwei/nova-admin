@@ -137,7 +137,7 @@ export default function AdminLayout() {
               <Dropdown key="user" menu={userMenu} placement="bottomRight">
                 <Space className="cursor-pointer">
                   <Avatar src={userInfo?.avatar} icon={<UserOutlined />} />
-                  <span>{userInfo?.nickname ?? userInfo?.username ?? 'Admin'}</span>
+                  <span>{userInfo?.nickname ?? userInfo?.account ?? 'Admin'}</span>
                 </Space>
               </Dropdown>,
             ]

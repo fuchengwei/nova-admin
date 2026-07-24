@@ -19,8 +19,8 @@ public class UserInfoDTO implements Serializable {
     @Schema(description = "用户 ID")
     private Long id;
 
-    @Schema(description = "用户名")
-    private String username;
+    @Schema(description = "账号")
+    private String account;
 
     @Schema(description = "昵称")
     private String nickname;

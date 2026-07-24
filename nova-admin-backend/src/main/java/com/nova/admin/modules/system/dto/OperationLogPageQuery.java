@@ -26,8 +26,8 @@ public class OperationLogPageQuery extends PageQuery {
     @Schema(description = "操作动作")
     private String action;
 
-    @Schema(description = "操作用户名")
-    private String username;
+    @Schema(description = "操作账号")
+    private String account;
 
     @Schema(description = "操作状态: 1成功 0失败")
     private Integer status;

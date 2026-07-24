@@ -3,7 +3,7 @@ import type { R, PageResult } from '@/types/api';
 
 export interface UserRecord {
   id: number;
-  username: string;
+  account: string;
   nickname?: string;
   realName?: string;
   avatar?: string;
@@ -21,7 +21,6 @@ export interface UserRecord {
 }
 
 export interface UserCreateRequest {
-  username: string;
   password: string;
   nickname?: string;
   realName?: string;
@@ -41,7 +40,7 @@ export interface UserUpdateRequest extends Partial<Omit<UserCreateRequest, 'pass
 export interface UserPageParams {
   current?: number;
   size?: number;
-  username?: string;
+  account?: string;
   nickname?: string;
   phone?: string;
   status?: number;

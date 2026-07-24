@@ -18,8 +18,8 @@ public class UserPageQuery extends PageQuery {
     @Serial
     private static final long serialVersionUID = 1L;
 
-    @Schema(description = "用户名")
-    private String username;
+    @Schema(description = "账号")
+    private String account;
 
     @Schema(description = "昵称")
     private String nickname;

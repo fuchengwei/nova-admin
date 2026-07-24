@@ -20,8 +20,8 @@ public class LoginLogPageQuery extends PageQuery {
     @Serial
     private static final long serialVersionUID = 1L;
 
-    @Schema(description = "用户名")
-    private String username;
+    @Schema(description = "账号")
+    private String account;
 
     @Schema(description = "登录状态: 1成功 0失败")
     private Integer status;

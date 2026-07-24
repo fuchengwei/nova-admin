@@ -30,7 +30,7 @@ public class SysLoginLogServiceImpl extends ServiceImpl<SysLoginLogMapper, SysLo
         Page<SysLoginLog> page = new Page<>(query.getCurrent(), query.getSize());
 
         LambdaQueryWrapper<SysLoginLog> wrapper = new LambdaQueryWrapper<SysLoginLog>()
-                .like(query.getUsername() != null, SysLoginLog::getUsername, query.getUsername())
+                .like(query.getAccount() != null, SysLoginLog::getAccount, query.getAccount())
                 .eq(query.getStatus() != null, SysLoginLog::getStatus, query.getStatus())
                 .ge(query.getStartTime() != null, SysLoginLog::getLoginTime, query.getStartTime())
                 .le(query.getEndTime() != null, SysLoginLog::getLoginTime, query.getEndTime())
@@ -49,9 +49,9 @@ public class SysLoginLogServiceImpl extends ServiceImpl<SysLoginLogMapper, SysLo
     }
 
     @Override
-    public void recordLoginLog(String username, String ip, String userAgent, boolean success, String msg) {
+    public void recordLoginLog(String account, String ip, String userAgent, boolean success, String msg) {
         SysLoginLog loginLog = new SysLoginLog();
-        loginLog.setUsername(username);
+        loginLog.setAccount(account);
         loginLog.setIp(ip);
         loginLog.setUserAgent(userAgent);
         loginLog.setStatus(success ? 1 : 0);
@@ -70,6 +70,6 @@ public class SysLoginLogServiceImpl extends ServiceImpl<SysLoginLogMapper, SysLo
         }
 
         save(loginLog);
-        log.info("记录登录日志，username={}, ip={}, success={}", username, ip, success);
+        log.info("记录登录日志，account={}, ip={}, success={}", account, ip, success);
     }
 }

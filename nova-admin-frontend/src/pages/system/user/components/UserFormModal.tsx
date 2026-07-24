@@ -51,12 +51,13 @@ export default function UserFormModal({
       onFinish={async (values) => onSubmit(values, editMode, record)}
     >
       <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4">
-        <ProFormText
-          name="username"
-          label={t('user.username')}
-          disabled={editMode}
-          rules={[{ required: true, message: t('user.usernameRequired') }]}
-        />
+        {editMode && (
+          <ProFormText
+            name="account"
+            label={t('user.account')}
+            disabled
+          />
+        )}
         <ProFormText.Password
           name="password"
           label={t('user.password')}

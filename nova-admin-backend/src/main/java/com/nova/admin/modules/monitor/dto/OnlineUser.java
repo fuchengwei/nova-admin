@@ -9,9 +9,9 @@ import java.io.Serializable;
 public class OnlineUser implements Serializable {
     private static final long serialVersionUID = 1L;
 
-    /** 登录用户名（作为唯一标识） */
+    /** 登录账号（作为唯一标识） */
     private String tokenKey;
-    private String username;
+    private String account;
     private String nickname;
     private Long deptId;
     private String loginIp;

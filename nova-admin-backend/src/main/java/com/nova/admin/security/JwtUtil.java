@@ -35,13 +35,13 @@ public class JwtUtil {
         this.key = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
     }
 
-    public String generateAccessToken(Long userId, String username) {
+    public String generateAccessToken(Long userId, String account) {
         NovaProperties.Jwt jwt = novaProperties.getSecurity().getJwt();
         long now = System.currentTimeMillis();
         return Jwts.builder()
                 .id(UUID.randomUUID().toString())
                 .subject(String.valueOf(userId))
-                .claim("username", username)
+                .claim("account", account)
                 .claim("type", "access")
                 .issuedAt(new Date(now))
                 .expiration(new Date(now + jwt.getAccessTokenExpireMinutes() * 60_000L))
@@ -49,13 +49,13 @@ public class JwtUtil {
                 .compact();
     }
 
-    public String generateRefreshToken(Long userId, String username) {
+    public String generateRefreshToken(Long userId, String account) {
         NovaProperties.Jwt jwt = novaProperties.getSecurity().getJwt();
         long now = System.currentTimeMillis();
         return Jwts.builder()
                 .id(UUID.randomUUID().toString())
                 .subject(String.valueOf(userId))
-                .claim("username", username)
+                .claim("account", account)
                 .claim("type", "refresh")
                 .issuedAt(new Date(now))
                 .expiration(new Date(now + jwt.getRefreshTokenExpireMinutes() * 60_000L))

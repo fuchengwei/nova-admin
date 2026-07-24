@@ -28,7 +28,7 @@ public class SysOperationLogServiceImpl extends ServiceImpl<SysOperationLogMappe
         LambdaQueryWrapper<SysOperationLog> wrapper = new LambdaQueryWrapper<SysOperationLog>()
                 .like(query.getModule() != null, SysOperationLog::getModule, query.getModule())
                 .like(query.getAction() != null, SysOperationLog::getAction, query.getAction())
-                .like(query.getUsername() != null, SysOperationLog::getUsername, query.getUsername())
+                .like(query.getAccount() != null, SysOperationLog::getAccount, query.getAccount())
                 .eq(query.getStatus() != null, SysOperationLog::getStatus, query.getStatus())
                 .ge(query.getStartTime() != null, SysOperationLog::getCreateTime, query.getStartTime())
                 .le(query.getEndTime() != null, SysOperationLog::getCreateTime, query.getEndTime())

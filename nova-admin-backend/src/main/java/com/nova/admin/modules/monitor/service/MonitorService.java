@@ -154,7 +154,7 @@ public class MonitorService {
             }
             OnlineUser o = new OnlineUser();
             o.setTokenKey(key);
-            o.setUsername(lu.getUsername());
+            o.setAccount(lu.getAccount());
             o.setNickname(lu.getNickname());
             o.setDeptId(lu.getDeptId());
             o.setLoginIp(lu.getLoginIp());

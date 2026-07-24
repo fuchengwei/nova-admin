@@ -24,8 +24,8 @@ public class LoginUser implements Serializable {
     /** 用户 ID */
     private Long userId;
 
-    /** 用户名 */
-    private String username;
+    /** 账号 */
+    private String account;
 
     /** 昵称 */
     private String nickname;

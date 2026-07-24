@@ -13,14 +13,14 @@ import org.apache.ibatis.annotations.Select;
 @Mapper
 public interface SysUserMapper extends BaseMapper<SysUser> {
 
-    /** 根据用户名查询（联部门） */
+    /** 根据账号查询（联部门） */
     @Select("""
             SELECT u.*, d.name AS dept_name
             FROM sys_user u
             LEFT JOIN sys_dept d ON d.id = u.dept_id AND d.deleted = 0
-            WHERE u.username = #{username} AND u.deleted = 0
+            WHERE u.account = #{account} AND u.deleted = 0
             """)
-    SysUser selectByUsername(String username);
+    SysUser selectByAccount(String account);
 
     /**
      * 分页查询用户（数据权限过滤由 {@link DataScopeInnerInterceptor} 依据当前登录用户注入）。

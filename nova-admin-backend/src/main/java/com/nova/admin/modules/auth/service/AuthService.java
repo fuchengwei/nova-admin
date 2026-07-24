@@ -53,15 +53,15 @@ public class AuthService {
         // 0. 校验图形验证码
         captchaService.verify(req.getCaptchaKey(), req.getCaptchaCode());
 
-        String username = req.getUsername();
+        String account = req.getAccount();
         // 1. 账号是否已锁定
-        if (loginAttemptService.isLocked(username)) {
+        if (loginAttemptService.isLocked(account)) {
             throw new BizException(ResultCode.USER_LOCKED);
         }
         // 2. 查用户
-        SysUser user = userMapper.selectByUsername(username);
+        SysUser user = userMapper.selectByAccount(account);
         if (user == null) {
-            loginAttemptService.recordFailure(username);
+            loginAttemptService.recordFailure(account);
             throw new BizException(ResultCode.USERNAME_OR_PASSWORD_INVALID);
         }
         if (user.getStatus() != null && user.getStatus() == 0) {
@@ -69,15 +69,15 @@ public class AuthService {
         }
         // 3. 校验密码
         if (!passwordEncoder.matches(req.getPassword(), user.getPassword())) {
-            long count = loginAttemptService.recordFailure(username);
-            log.warn("登录失败: user={} attempts={}", username, count);
+            long count = loginAttemptService.recordFailure(account);
+            log.warn("登录失败: account={} attempts={}", account, count);
             throw new BizException(ResultCode.USERNAME_OR_PASSWORD_INVALID);
         }
-        loginAttemptService.reset(username);
+        loginAttemptService.reset(account);
 
         // 4. 生成 token
-        String access = jwtUtil.generateAccessToken(user.getId(), user.getUsername());
-        String refresh = jwtUtil.generateRefreshToken(user.getId(), user.getUsername());
+        String access = jwtUtil.generateAccessToken(user.getId(), user.getAccount());
+        String refresh = jwtUtil.generateRefreshToken(user.getId(), user.getAccount());
 
         // 5. 刷新登录用户缓存（含 loginIp/time）
         String ip = resolveIp(httpReq);
@@ -98,7 +98,7 @@ public class AuthService {
         // 8. 构造响应
         UserInfoDTO userInfo = UserInfoDTO.builder()
                 .id(user.getId())
-                .username(user.getUsername())
+                .account(user.getAccount())
                 .nickname(user.getNickname())
                 .avatar(user.getAvatar())
                 .email(user.getEmail())
@@ -148,8 +148,8 @@ public class AuthService {
         if (user == null) {
             throw new BizException(ResultCode.USER_NOT_FOUND);
         }
-        String newAccess = jwtUtil.generateAccessToken(userId, user.getUsername());
-        String newRefresh = jwtUtil.generateRefreshToken(userId, user.getUsername());
+        String newAccess = jwtUtil.generateAccessToken(userId, user.getAccount());
+        String newRefresh = jwtUtil.generateRefreshToken(userId, user.getAccount());
         redisTemplate.opsForValue().set(
                 Constants.REDIS_KEY_AUTH + "refresh:" + userId,
                 newRefresh,
@@ -158,7 +158,7 @@ public class AuthService {
 
         UserInfoDTO userInfo = UserInfoDTO.builder()
                 .id(user.getId())
-                .username(user.getUsername())
+                .account(user.getAccount())
                 .nickname(user.getNickname())
                 .avatar(user.getAvatar())
                 .email(user.getEmail())
@@ -187,7 +187,7 @@ public class AuthService {
         // 这里简化：直接复用 userDetailsService 的缓存来获取角色/权限
         return UserInfoDTO.builder()
                 .id(user.getId())
-                .username(user.getUsername())
+                .account(user.getAccount())
                 .nickname(user.getNickname())
                 .avatar(user.getAvatar())
                 .email(user.getEmail())

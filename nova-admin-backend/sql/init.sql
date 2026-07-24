@@ -37,7 +37,7 @@ CREATE INDEX idx_dept_deleted ON sys_dept(deleted);
 DROP TABLE IF EXISTS sys_user CASCADE;
 CREATE TABLE sys_user (
     id              BIGINT PRIMARY KEY,
-    username        VARCHAR(64) NOT NULL,
+    account         VARCHAR(64) NOT NULL,
     password        VARCHAR(128) NOT NULL,
     nickname        VARCHAR(64),
     real_name       VARCHAR(64),
@@ -57,7 +57,7 @@ CREATE TABLE sys_user (
     deleted         SMALLINT NOT NULL DEFAULT 0
 );
 COMMENT ON TABLE sys_user IS '用户表';
-CREATE UNIQUE INDEX uk_user_username ON sys_user(username) WHERE deleted = 0;
+CREATE UNIQUE INDEX uk_user_account ON sys_user(account) WHERE deleted = 0;
 CREATE INDEX idx_user_dept ON sys_user(dept_id);
 CREATE INDEX idx_user_deleted ON sys_user(deleted);
 
@@ -191,7 +191,7 @@ CREATE TABLE sys_operation_log (
     java_method     VARCHAR(255),
     java_args       TEXT,
     user_id         BIGINT,
-    username        VARCHAR(64),
+    account         VARCHAR(64),
     ip              VARCHAR(64),
     user_agent      VARCHAR(512),
     cost_ms         BIGINT,
@@ -206,7 +206,7 @@ CREATE INDEX idx_oplog_time ON sys_operation_log(create_time);
 DROP TABLE IF EXISTS sys_login_log CASCADE;
 CREATE TABLE sys_login_log (
     id              BIGINT PRIMARY KEY,
-    username        VARCHAR(64),
+    account         VARCHAR(64),
     ip              VARCHAR(64),
     user_agent      VARCHAR(512),
     os              VARCHAR(64),
@@ -216,7 +216,7 @@ CREATE TABLE sys_login_log (
     login_time      TIMESTAMP
 );
 COMMENT ON TABLE sys_login_log IS '登录日志';
-CREATE INDEX idx_loginlog_username ON sys_login_log(username);
+CREATE INDEX idx_loginlog_account ON sys_login_log(account);
 CREATE INDEX idx_loginlog_time ON sys_login_log(login_time);
 
 -- =====================================================
@@ -355,17 +355,17 @@ VALUES
 -- 系统管理子菜单与权限（补全此前模块所需的种子数据，否则超管无权限访问）
 INSERT INTO sys_menu (id, parent_id, name, type, perms, path, component, icon, sort, visible, status, create_time)
 VALUES
-    -- 部门管理
-    (11, 1, '部门管理', 'C', 'system:dept:list',   '/system/dept', 'system/dept/index', 'ApartmentOutlined', 0, 1, 1, NOW()),
-    (12, 11, '新增部门', 'F', 'system:dept:add',    '', '', '', 0, 0, 1, NOW()),
-    (13, 11, '修改部门', 'F', 'system:dept:edit',   '', '', '', 1, 0, 1, NOW()),
-    (14, 11, '删除部门', 'F', 'system:dept:remove', '', '', '', 2, 0, 1, NOW()),
     -- 用户管理
-    (15, 1, '用户管理', 'C', 'system:user:list',      '/system/user', 'system/user/index', 'UserOutlined', 1, 1, 1, NOW()),
+    (15, 1, '用户管理', 'C', 'system:user:list',      '/system/user', 'system/user/index', 'UserOutlined', 0, 1, 1, NOW()),
     (16, 15, '新增用户', 'F', 'system:user:add',       '', '', '', 0, 0, 1, NOW()),
     (17, 15, '修改用户', 'F', 'system:user:edit',      '', '', '', 1, 0, 1, NOW()),
     (18, 15, '删除用户', 'F', 'system:user:remove',    '', '', '', 2, 0, 1, NOW()),
     (19, 15, '重置密码', 'F', 'system:user:reset-pwd', '', '', '', 3, 0, 1, NOW()),
+    -- 部门管理
+    (11, 1, '部门管理', 'C', 'system:dept:list',   '/system/dept', 'system/dept/index', 'ApartmentOutlined', 1, 1, 1, NOW()),
+    (12, 11, '新增部门', 'F', 'system:dept:add',    '', '', '', 0, 0, 1, NOW()),
+    (13, 11, '修改部门', 'F', 'system:dept:edit',   '', '', '', 1, 0, 1, NOW()),
+    (14, 11, '删除部门', 'F', 'system:dept:remove', '', '', '', 2, 0, 1, NOW()),
     -- 角色管理
     (20, 1, '角色管理', 'C', 'system:role:list',   '/system/role', 'system/role/index', 'TeamOutlined', 2, 1, 1, NOW()),
     (21, 20, '新增角色', 'F', 'system:role:add',    '', '', '', 0, 0, 1, NOW()),
@@ -412,13 +412,15 @@ INSERT INTO sys_menu (id, parent_id, name, type, perms, path, component, icon, s
 VALUES
     (51, 1,  '代码生成器', 'C', 'tool:gen:list', '/tool/gen', 'tool/gen/index', 'CodeOutlined', 6, 1, 1, NOW());
 
--- 超级管理员用户 (密码 admin123 的 BCrypt 哈希)
--- 替换为你生成的实际哈希
-INSERT INTO sys_user (id, username, password, nickname, dept_id, super_admin, status, create_time)
-VALUES (1, 'admin', '$2a$10$YdS7uGOGKHdGsJdqb02Nz.X/IFPEaBmuYjPDRfvJSftiGZsPaKKcq', '超级管理员', 1, 1, 1, NOW());
+-- 初始账号（密码均为 123456 的 BCrypt 哈希，cost=10）
+-- 如需重新生成：new BCryptPasswordEncoder().encode("123456")
+INSERT INTO sys_user (id, account, password, nickname, dept_id, super_admin, status, create_time)
+VALUES
+    (1, 'superAdmin', '$2b$10$1HGY4CVItB50Wmfeaf09gO8LWa5eTKpF0V/0syMPc6/sxTsalYgBO', '超级管理员', 1, 1, 1, NOW()),
+    (2, 'admin',      '$2b$10$1HGY4CVItB50Wmfeaf09gO8LWa5eTKpF0V/0syMPc6/sxTsalYgBO', '管理员',   1, 0, 1, NOW());
 
 -- 用户角色关联
-INSERT INTO sys_user_role (user_id, role_id) VALUES (1, 1);
+INSERT INTO sys_user_role (user_id, role_id) VALUES (1, 1), (2, 1);
 
 -- 角色菜单关联（全部菜单给超管）
 INSERT INTO sys_role_menu (role_id, menu_id)

@@ -17,8 +17,8 @@ public class LoginRequest implements Serializable {
 
     @NotBlank
     @Size(min = 2, max = 64)
-    @Schema(description = "用户名", example = "admin")
-    private String username;
+    @Schema(description = "账号/手机号/邮箱", example = "admin")
+    private String account;
 
     @NotBlank
     @Size(min = 6, max = 64)

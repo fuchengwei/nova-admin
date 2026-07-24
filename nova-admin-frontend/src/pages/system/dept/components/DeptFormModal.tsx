@@ -73,7 +73,7 @@ export default function DeptFormModal({
       list.push({ label: currentLeader, value: currentLeader });
     }
     for (const u of userPage ?? []) {
-      const name = u.realName || u.nickname || u.username;
+      const name = u.realName || u.nickname || u.account;
       if (name && !seen.has(name)) {
         seen.add(name);
         list.push({ label: name, value: name });

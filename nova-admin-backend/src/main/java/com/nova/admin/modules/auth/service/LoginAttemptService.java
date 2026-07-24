@@ -18,13 +18,13 @@ public class LoginAttemptService {
     private final NovaProperties novaProperties;
     private final RedisTemplate<String, Object> redisTemplate;
 
-    private String key(String username) {
-        return Constants.REDIS_KEY_LOGIN_FAIL + username;
+    private String key(String account) {
+        return Constants.REDIS_KEY_LOGIN_FAIL + account;
     }
 
     /** 记录一次失败，返回当前累计失败次数 */
-    public long recordFailure(String username) {
-        String k = key(username);
+    public long recordFailure(String account) {
+        String k = key(account);
         Long count = redisTemplate.opsForValue().increment(k);
         if (count != null && count == 1L) {
             redisTemplate.expire(k,
@@ -35,8 +35,8 @@ public class LoginAttemptService {
     }
 
     /** 是否已被锁定 */
-    public boolean isLocked(String username) {
-        Object v = redisTemplate.opsForValue().get(key(username));
+    public boolean isLocked(String account) {
+        Object v = redisTemplate.opsForValue().get(key(account));
         if (v == null) {
             return false;
         }
@@ -45,7 +45,7 @@ public class LoginAttemptService {
     }
 
     /** 登录成功，重置计数 */
-    public void reset(String username) {
-        redisTemplate.delete(key(username));
+    public void reset(String account) {
+        redisTemplate.delete(key(account));
     }
 }

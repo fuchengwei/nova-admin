@@ -23,7 +23,7 @@ public interface SysLoginLogService extends IService<SysLoginLog> {
     /**
      * 记录登录日志
      *
-     * @param username  用户名
+     * @param account   账号
      * @param ip        IP地址
      * @param userAgent 用户代理
      * @param success   是否成功

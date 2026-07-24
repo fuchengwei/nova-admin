@@ -35,7 +35,7 @@ export default function ServerMonitorPage() {
   }, []);
 
   const onlineColumns: ProColumns<OnlineUser>[] = [
-    { title: t('monitor.username'), dataIndex: 'username', key: 'username' },
+    { title: t('monitor.account'), dataIndex: 'account', key: 'account' },
     { title: t('monitor.nickname'), dataIndex: 'nickname', key: 'nickname' },
     { title: t('monitor.deptId'), dataIndex: 'deptId', key: 'deptId', render: (v) => v ?? '-' },
     { title: t('monitor.loginIp'), dataIndex: 'loginIp', key: 'loginIp', render: (v) => v ?? '-' },

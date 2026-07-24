@@ -25,7 +25,7 @@ public class SysUser extends BaseDO {
     @TableId(type = IdType.ASSIGN_ID)
     private Long id;
 
-    private String username;
+    private String account;
     private String password;
     private String nickname;
     private String realName;

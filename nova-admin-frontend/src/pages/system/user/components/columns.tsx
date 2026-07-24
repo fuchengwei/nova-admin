@@ -18,7 +18,7 @@ export const useUserColumns = (deps: UserColumnDeps): ProColumns<UserRecord>[] =
   const { onEdit, onResetPwd, onDelete, toggleStatus, toggleLoading } = deps;
 
   return [
-    { title: t('user.username'), dataIndex: 'username', width: 120, ellipsis: true },
+    { title: t('user.account'), dataIndex: 'account', width: 120, ellipsis: true },
     { title: t('user.nickname'), dataIndex: 'nickname', width: 120, ellipsis: true },
     {
       title: t('user.dept'),

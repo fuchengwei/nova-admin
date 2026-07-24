@@ -150,7 +150,7 @@ export default function UserPage() {
           const payload: UserPageParams = {
             current: params.current ?? 1,
             size: params.pageSize ?? 10,
-            username: params.username,
+            account: params.account,
             nickname: params.nickname,
             phone: params.phone,
             status: params.status,

@@ -22,8 +22,8 @@ public class SysLoginLog implements Serializable {
     @TableId(type = IdType.ASSIGN_ID)
     private Long id;
 
-    /** 用户名 */
-    private String username;
+    /** 账号 */
+    private String account;
 
     /** IP地址 */
     private String ip;

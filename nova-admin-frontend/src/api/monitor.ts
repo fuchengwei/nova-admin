@@ -11,7 +11,7 @@ export interface ServerInfo {
 
 export interface OnlineUser {
   tokenKey: string;
-  username: string;
+  account: string;
   nickname: string;
   deptId?: number;
   loginIp?: string;

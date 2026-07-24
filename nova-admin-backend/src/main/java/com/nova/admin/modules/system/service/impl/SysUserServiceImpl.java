@@ -46,7 +46,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
         Page<SysUser> page = new Page<>(query.getCurrent(), query.getSize());
 
         LambdaQueryWrapper<SysUser> wrapper = new LambdaQueryWrapper<SysUser>()
-                .like(query.getUsername() != null, SysUser::getUsername, query.getUsername())
+                .like(query.getAccount() != null, SysUser::getAccount, query.getAccount())
                 .like(query.getNickname() != null, SysUser::getNickname, query.getNickname())
                 .like(query.getPhone() != null, SysUser::getPhone, query.getPhone())
                 .eq(query.getStatus() != null, SysUser::getStatus, query.getStatus())
@@ -79,11 +79,11 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
     @Override
     @Transactional(rollbackFor = Exception.class)
     public Long createUser(UserCreateRequest req) {
-        // 检查用户名唯一
-        checkUsernameUnique(null, req.getUsername());
+        // 自动生成唯一账号
+        String account = generateUniqueAccount();
 
         SysUser user = new SysUser();
-        user.setUsername(req.getUsername());
+        user.setAccount(account);
         user.setPassword(passwordEncoder.encode(req.getPassword()));
         user.setNickname(req.getNickname());
         user.setRealName(req.getRealName());
@@ -103,7 +103,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
         // 保存用户角色关联
         saveUserRoles(user.getId(), req.getRoleIds());
 
-        log.info("创建用户成功，id={}, username={}, operator={}", user.getId(), user.getUsername(), userId);
+        log.info("创建用户成功，id={}, account={}, operator={}", user.getId(), user.getAccount(), userId);
         return user.getId();
     }
 
@@ -204,18 +204,19 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
     // ==================== 私有方法 ====================
 
     /**
-     * 检查用户名唯一
+     * 随机生成唯一账号（8位纯数字，类似 QQ 号，冲突时重试）
      */
-    private void checkUsernameUnique(Long excludeId, String username) {
-        LambdaQueryWrapper<SysUser> wrapper = new LambdaQueryWrapper<SysUser>()
-                .eq(SysUser::getUsername, username);
-        if (excludeId != null) {
-            wrapper.ne(SysUser::getId, excludeId);
+    private String generateUniqueAccount() {
+        java.util.Random random = new java.util.Random();
+        for (int i = 0; i < 20; i++) {
+            // 10000000 ~ 99999999，共 8 位
+            String candidate = String.valueOf(10000000 + random.nextInt(90000000));
+            long count = count(new LambdaQueryWrapper<SysUser>().eq(SysUser::getAccount, candidate));
+            if (count == 0) {
+                return candidate;
+            }
         }
-        long count = count(wrapper);
-        if (count > 0) {
-            throw new BizException(ResultCode.USERNAME_EXISTS);
-        }
+        throw new BizException(ResultCode.INTERNAL_ERROR);
     }
 
     /**
