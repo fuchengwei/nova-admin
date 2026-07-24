@@ -103,9 +103,13 @@ export default function UserPage() {
     isEdit: boolean,
     record: UserRecord | null,
   ): Promise<boolean> => {
-    const res = isEdit && record
-      ? await updateMutation.mutateAsync({ ...values, id: record.id } as unknown as UserUpdateRequest)
-      : await createMutation.mutateAsync({ ...values } as unknown as UserCreateRequest);
+    const res =
+      isEdit && record
+        ? await updateMutation.mutateAsync({
+            ...values,
+            id: record.id,
+          } as unknown as UserUpdateRequest)
+        : await createMutation.mutateAsync({ ...values } as unknown as UserCreateRequest);
     if (res.code !== 0) {
       message.error(res.msg || t('common.error'));
       return false;
@@ -146,37 +150,37 @@ export default function UserPage() {
           columns={columns}
           style={{ height: '100%' }}
           scroll={{ x: 1100, y: scrollY }}
-        request={async (params) => {
-          const payload: UserPageParams = {
-            current: params.current ?? 1,
-            size: params.pageSize ?? 10,
-            account: params.account,
-            nickname: params.nickname,
-            phone: params.phone,
-            status: params.status,
-            deptId: params.deptId,
-          };
-          const res = await getUserPage(payload);
-          if (res.code !== 0) return { data: [], success: false, total: 0 };
-          return {
-            data: res.data.records,
-            success: true,
-            total: res.data.total,
-          };
-        }}
-        pagination={{ pageSize: 10, showSizeChanger: true }}
-        search={{ labelWidth: 'auto' }}
-        toolBarRender={() => [
-          <Button key="add" type="primary" icon={<PlusOutlined />} onClick={handleOpenAdd}>
-            {t('user.addUser')}
-          </Button>,
-        ]}
-        options={{ reload: true, density: true, setting: true }}
-        columnsState={{
-          persistenceKey: 'user-table',
-          persistenceType: 'localStorage',
-        }}
-      />
+          request={async (params) => {
+            const payload: UserPageParams = {
+              current: params.current ?? 1,
+              size: params.pageSize ?? 10,
+              account: params.account,
+              nickname: params.nickname,
+              phone: params.phone,
+              status: params.status,
+              deptId: params.deptId,
+            };
+            const res = await getUserPage(payload);
+            if (res.code !== 0) return { data: [], success: false, total: 0 };
+            return {
+              data: res.data.records,
+              success: true,
+              total: res.data.total,
+            };
+          }}
+          pagination={{ pageSize: 10, showSizeChanger: true }}
+          search={{ labelWidth: 'auto' }}
+          toolBarRender={() => [
+            <Button key="add" type="primary" icon={<PlusOutlined />} onClick={handleOpenAdd}>
+              {t('user.addUser')}
+            </Button>,
+          ]}
+          options={{ reload: true, density: true, setting: true }}
+          columnsState={{
+            persistenceKey: 'user-table',
+            persistenceType: 'localStorage',
+          }}
+        />
       </div>
 
       <UserFormModal
@@ -189,7 +193,12 @@ export default function UserPage() {
         onClose={closeUserModal}
       />
 
-      <ResetPwdModal open={pwdModalOpen} record={pwdRecord} onSubmit={handleResetPwd} onClose={closePwdModal} />
+      <ResetPwdModal
+        open={pwdModalOpen}
+        record={pwdRecord}
+        onSubmit={handleResetPwd}
+        onClose={closePwdModal}
+      />
     </PageContainer>
   );
 }

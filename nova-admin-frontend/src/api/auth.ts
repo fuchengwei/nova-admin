@@ -2,8 +2,7 @@ import { request, setToken } from '@/utils/request';
 import type { R, CaptchaResult, LoginResult, UserInfo, MenuInfo } from '@/types/api';
 
 /** 获取图形验证码 */
-export const getCaptcha = () =>
-  request<R<CaptchaResult>>({ url: '/auth/captcha', method: 'GET' });
+export const getCaptcha = () => request<R<CaptchaResult>>({ url: '/auth/captcha', method: 'GET' });
 
 /** 登录 */
 export async function login(payload: {
@@ -34,7 +33,8 @@ export const refreshToken = (refreshToken: string) =>
 export const getUserInfo = () => request<R<UserInfo>>({ url: '/system/user/me', method: 'GET' });
 
 /** 获取当前用户菜单 */
-export const getUserMenus = () => request<R<MenuInfo[]>>({ url: '/system/menu/routers', method: 'GET' });
+export const getUserMenus = () =>
+  request<R<MenuInfo[]>>({ url: '/system/menu/routers', method: 'GET' });
 
 /** 健康检查 */
 export const ping = () =>

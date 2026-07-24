@@ -97,7 +97,7 @@ export default function AdminLayout() {
     <ProLayout
       title={false}
       logo={
-        <span className="font-bold text-base" style={{ color: token.colorPrimary }}>
+        <span className="text-base font-bold" style={{ color: token.colorPrimary }}>
           Nova Admin
         </span>
       }
@@ -105,7 +105,12 @@ export default function AdminLayout() {
       // 不启用 splitMenus：完整菜单常驻侧栏，顶部仅放品牌 + 操作区
       layout="mix"
       style={{ height: '100vh', overflow: 'hidden' }}
-      contentStyle={{ height: 'calc(100vh - 56px)', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}
+      contentStyle={{
+        height: 'calc(100vh - 56px)',
+        overflow: 'hidden',
+        display: 'flex',
+        flexDirection: 'column',
+      }}
       navTheme={theme === 'dark' ? 'realDark' : 'light'}
       fixSiderbar
       siderWidth={220}

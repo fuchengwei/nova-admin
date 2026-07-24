@@ -117,7 +117,7 @@ export default function DeptFormModal({
       }
       onFinish={async (values) => onSubmit(values, editMode, record)}
     >
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4">
+      <div className="grid grid-cols-1 gap-x-4 md:grid-cols-2">
         <ProFormTreeSelect
           name="parentId"
           label={t('dept.parent')}

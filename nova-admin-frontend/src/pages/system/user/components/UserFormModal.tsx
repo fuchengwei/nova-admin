@@ -16,11 +16,7 @@ export interface UserFormModalProps {
   record: UserRecord | null;
   roleOptions: { label: string; value: number }[];
   deptTreeData: TreeSelectNode[];
-  onSubmit: (
-    values: UserRecord,
-    editMode: boolean,
-    record: UserRecord | null,
-  ) => Promise<boolean>;
+  onSubmit: (values: UserRecord, editMode: boolean, record: UserRecord | null) => Promise<boolean>;
   onClose: () => void;
 }
 
@@ -51,14 +47,8 @@ export default function UserFormModal({
       }
       onFinish={async (values) => onSubmit(values, editMode, record)}
     >
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4">
-        {editMode && (
-          <ProFormText
-            name="account"
-            label={t('user.account')}
-            disabled
-          />
-        )}
+      <div className="grid grid-cols-1 gap-x-4 md:grid-cols-2">
+        {editMode && <ProFormText name="account" label={t('user.account')} disabled />}
         <ProFormText.Password
           name="password"
           label={t('user.password')}
@@ -70,8 +60,16 @@ export default function UserFormModal({
         />
         <ProFormText name="nickname" label={t('user.nickname')} />
         <ProFormText name="realName" label={t('user.realName')} />
-        <ProFormText name="email" label={t('user.email')} rules={[emailRule(t('user.emailInvalid'))]} />
-        <ProFormText name="phone" label={t('user.phone')} rules={[phoneRule(t('user.phoneInvalid'))]} />
+        <ProFormText
+          name="email"
+          label={t('user.email')}
+          rules={[emailRule(t('user.emailInvalid'))]}
+        />
+        <ProFormText
+          name="phone"
+          label={t('user.phone')}
+          rules={[phoneRule(t('user.phoneInvalid'))]}
+        />
         <ProFormRadio.Group
           name="gender"
           label={t('user.gender')}

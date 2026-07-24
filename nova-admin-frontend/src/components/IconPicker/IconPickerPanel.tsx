@@ -13,10 +13,7 @@ export default function IconPickerPanel({ value, onSelect }: IconPickerPanelProp
   const [keyword, setKeyword] = useState('');
   const inputRef = useRef<InputRef>(null);
 
-  const filtered = useMemo(
-    () => filterIconCatalog(iconCatalog, keyword),
-    [keyword],
-  );
+  const filtered = useMemo(() => filterIconCatalog(iconCatalog, keyword), [keyword]);
 
   useEffect(() => {
     // 面板挂载后让搜索框获得焦点
@@ -25,7 +22,7 @@ export default function IconPickerPanel({ value, onSelect }: IconPickerPanelProp
   }, []);
 
   return (
-    <div className="w-72 p-2 flex flex-col gap-2">
+    <div className="flex w-72 flex-col gap-2 p-2">
       <Input
         ref={inputRef}
         value={keyword}
@@ -36,11 +33,11 @@ export default function IconPickerPanel({ value, onSelect }: IconPickerPanelProp
       />
 
       {filtered.length === 0 ? (
-        <div className="flex items-center justify-center h-24 text-sm text-gray-400">
+        <div className="flex h-24 items-center justify-center text-sm text-gray-400">
           {t('iconPicker.noResult')}
         </div>
       ) : (
-        <div className="grid grid-cols-8 gap-1 max-h-64 overflow-y-auto">
+        <div className="grid max-h-64 grid-cols-8 gap-1 overflow-y-auto">
           {filtered.map((item: IconCatalogItem) => (
             <IconCell
               key={item.name}
@@ -71,11 +68,11 @@ function IconCell({ item, selected, onSelect }: IconCellProps) {
       aria-pressed={selected}
       onClick={() => onSelect(item.name)}
       className={[
-        'aspect-square flex items-center justify-center rounded text-base',
+        'flex aspect-square items-center justify-center rounded text-base',
         'cursor-pointer border transition-colors',
         selected
           ? 'border-blue-500 bg-blue-50 text-blue-600'
-          : 'border-transparent hover:bg-gray-100 text-gray-600',
+          : 'border-transparent text-gray-600 hover:bg-gray-100',
       ].join(' ')}
     >
       <IconComp />

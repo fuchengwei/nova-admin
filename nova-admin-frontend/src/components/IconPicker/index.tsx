@@ -58,11 +58,11 @@ export default function IconPicker({
       disabled={disabled}
       onClick={() => !disabled && setOpen((v) => !v)}
       className={[
-        'flex items-center gap-2 w-full h-8 px-3 rounded border text-sm text-left',
+        'flex h-8 w-full items-center gap-2 rounded border px-3 text-left text-sm',
         'transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500',
         disabled
-          ? 'bg-gray-50 border-gray-200 text-gray-400 cursor-not-allowed'
-          : 'bg-white border-gray-300 hover:border-blue-400 cursor-pointer',
+          ? 'cursor-not-allowed border-gray-200 bg-gray-50 text-gray-400'
+          : 'cursor-pointer border-gray-300 bg-white hover:border-blue-400',
       ].join(' ')}
       aria-haspopup="listbox"
       aria-expanded={open}
@@ -88,7 +88,7 @@ export default function IconPicker({
           role="button"
           aria-label={t('iconPicker.clear')}
           onClick={handleClear}
-          className="text-gray-400 hover:text-gray-600 flex items-center"
+          className="flex items-center text-gray-400 hover:text-gray-600"
         >
           <CloseCircleFilled style={{ fontSize: 12 }} />
         </span>
@@ -105,11 +105,7 @@ export default function IconPicker({
       trigger="click"
       placement="bottomLeft"
       arrow={false}
-      content={
-        open ? (
-          <IconPickerPanel value={value} onSelect={handleSelect} />
-        ) : null
-      }
+      content={open ? <IconPickerPanel value={value} onSelect={handleSelect} /> : null}
     >
       {trigger}
     </Popover>

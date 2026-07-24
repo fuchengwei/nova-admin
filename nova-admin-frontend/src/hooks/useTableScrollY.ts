@@ -31,9 +31,12 @@ export function useTableScrollY() {
       const padBottom = parseFloat(cardStyle.paddingBottom) || 0;
 
       const search = card.querySelector<HTMLElement>('.ant-pro-table-search')?.offsetHeight ?? 0;
-      const toolbar = card.querySelector<HTMLElement>('.ant-pro-table-list-toolbar')?.offsetHeight ?? 0;
+      const toolbar =
+        card.querySelector<HTMLElement>('.ant-pro-table-list-toolbar')?.offsetHeight ?? 0;
       const alert = card.querySelector<HTMLElement>('.ant-pro-table-alert')?.offsetHeight ?? 0;
-      const pagination = card.querySelector<HTMLElement>('.ant-table-pagination.ant-table-pagination');
+      const pagination = card.querySelector<HTMLElement>(
+        '.ant-table-pagination.ant-table-pagination',
+      );
       const pagHeight = pagination ? pagination.offsetHeight + 16 : 0;
 
       const bodyHeight = cardHeight - padTop - padBottom - search - toolbar - alert - pagHeight;

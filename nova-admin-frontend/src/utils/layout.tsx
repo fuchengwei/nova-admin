@@ -70,10 +70,7 @@ export function fallbackRoutes(t: (key: string) => string): LayoutRoute[] {
 }
 
 /** 沿路由树查找当前路径对应的节点 */
-export function findRouteNode(
-  routes: LayoutRoute[] = [],
-  path: string,
-): LayoutRoute | undefined {
+export function findRouteNode(routes: LayoutRoute[] = [], path: string): LayoutRoute | undefined {
   for (const r of routes) {
     if (r.path === path) return r;
     if (r.routes) {

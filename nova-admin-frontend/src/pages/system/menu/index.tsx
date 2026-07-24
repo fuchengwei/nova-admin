@@ -1,10 +1,6 @@
 import { useState, useMemo } from 'react';
 import { Button, Tree, Space, Tag, Popconfirm, message, Form } from 'antd';
-import {
-  PlusOutlined,
-  EditOutlined,
-  DeleteOutlined,
-} from '@ant-design/icons';
+import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
 import {
   ProCard,
   ProDescriptions,
@@ -96,16 +92,16 @@ export default function MenuPage() {
   const treeSelectData = useMemo(() => toTreeSelectData(menuTree ?? []), [menuTree]);
 
   return (
-    <div className="flex flex-col h-full">
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-lg font-semibold m-0">{t('menu.menu')}</h2>
+    <div className="flex h-full flex-col">
+      <div className="mb-4 flex items-center justify-between">
+        <h2 className="m-0 text-lg font-semibold">{t('menu.menu')}</h2>
         <Button type="primary" icon={<PlusOutlined />} onClick={handleAdd}>
           {t('menu.addMenu')}
         </Button>
       </div>
 
-      <div className="flex gap-4 flex-1 min-h-0">
-        <ProCard className="flex-1 w-72 shrink-0 overflow-auto" loading={isLoading}>
+      <div className="flex min-h-0 flex-1 gap-4">
+        <ProCard className="w-72 flex-1 shrink-0 overflow-auto" loading={isLoading}>
           {menuTree && menuTree.length > 0 && (
             <Tree
               treeData={menuTree}
@@ -125,7 +121,7 @@ export default function MenuPage() {
           )}
         </ProCard>
 
-        <ProCard className="flex-2 h-full">
+        <ProCard className="h-full flex-2">
           {selectedMenu ? (
             <>
               <ProDescriptions<MenuInfo>
@@ -133,15 +129,23 @@ export default function MenuPage() {
                 dataSource={selectedMenu}
                 column={2}
                 bordered
-                size='small'
+                size="small"
                 columns={[
                   { title: t('menu.menuName'), dataIndex: 'name' },
-                  { title: t('menu.menuType'), dataIndex: 'type', render: (_, r) => getTypeTag(t, r.type) },
+                  {
+                    title: t('menu.menuType'),
+                    dataIndex: 'type',
+                    render: (_, r) => getTypeTag(t, r.type),
+                  },
                   { title: t('menu.perms'), dataIndex: 'perms', render: (v) => v || '-' },
                   { title: t('menu.path'), dataIndex: 'path', render: (v) => v || '-' },
                   { title: t('menu.component'), dataIndex: 'component', render: (v) => v || '-' },
                   { title: t('menu.redirect'), dataIndex: 'redirect', render: (v) => v || '-' },
-                  { title: t('menu.icon'), dataIndex: 'icon', render: (v) => (v ? getIcon(v as string) : '-') },
+                  {
+                    title: t('menu.icon'),
+                    dataIndex: 'icon',
+                    render: (v) => (v ? getIcon(v as string) : '-'),
+                  },
                   { title: t('menu.sort'), dataIndex: 'sort' },
                   {
                     title: t('menu.visible'),
@@ -196,7 +200,11 @@ export default function MenuPage() {
                   </Button>
                   <Popconfirm
                     title={t('menu.deleteConfirm')}
-                    description={selectedMenu.children && selectedMenu.children.length > 0 ? t('menu.hasChildren') : undefined}
+                    description={
+                      selectedMenu.children && selectedMenu.children.length > 0
+                        ? t('menu.hasChildren')
+                        : undefined
+                    }
                     onConfirm={() => {
                       if (!selectedMenu) return;
                       deleteMutation.mutate(selectedMenu.id);
@@ -215,7 +223,9 @@ export default function MenuPage() {
               </div>
             </>
           ) : (
-            <div className="flex items-center justify-center h-64 text-gray-400">{t('menu.selectHint')}</div>
+            <div className="flex h-64 items-center justify-center text-gray-400">
+              {t('menu.selectHint')}
+            </div>
           )}
         </ProCard>
       </div>
@@ -233,34 +243,37 @@ export default function MenuPage() {
         initialValues={
           editMode && selectedMenu
             ? {
-              parentId: selectedMenu.parentId,
-              name: selectedMenu.name,
-              type: selectedMenu.type,
-              perms: selectedMenu.perms,
-              path: selectedMenu.path,
-              component: selectedMenu.component,
-              redirect: selectedMenu.redirect,
-              icon: selectedMenu.icon,
-              sort: selectedMenu.sort,
-              visible: selectedMenu.visible,
-              status: selectedMenu.status,
-              keepAlive: selectedMenu.keepAlive,
-              alwaysShow: selectedMenu.alwaysShow,
-            }
+                parentId: selectedMenu.parentId,
+                name: selectedMenu.name,
+                type: selectedMenu.type,
+                perms: selectedMenu.perms,
+                path: selectedMenu.path,
+                component: selectedMenu.component,
+                redirect: selectedMenu.redirect,
+                icon: selectedMenu.icon,
+                sort: selectedMenu.sort,
+                visible: selectedMenu.visible,
+                status: selectedMenu.status,
+                keepAlive: selectedMenu.keepAlive,
+                alwaysShow: selectedMenu.alwaysShow,
+              }
             : {
-              parentId: selectedMenu?.id ?? 0,
-              type: 'M',
-              sort: 0,
-              visible: 1,
-              status: 1,
-              keepAlive: 1,
-              alwaysShow: 1,
-            }
+                parentId: selectedMenu?.id ?? 0,
+                type: 'M',
+                sort: 0,
+                visible: 1,
+                status: 1,
+                keepAlive: 1,
+                alwaysShow: 1,
+              }
         }
         onFinish={async (values) => {
           const res =
             editMode && selectedMenu
-              ? await updateMutation.mutateAsync({ id: selectedMenu.id, ...values } as unknown as MenuUpdateRequest)
+              ? await updateMutation.mutateAsync({
+                  id: selectedMenu.id,
+                  ...values,
+                } as unknown as MenuUpdateRequest)
               : await createMutation.mutateAsync(values as unknown as MenuCreateRequest);
           if (res.code !== 0) {
             message.error(res.msg || t('common.error'));
@@ -271,7 +284,7 @@ export default function MenuPage() {
           return true;
         }}
       >
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4">
+        <div className="grid grid-cols-1 gap-x-4 md:grid-cols-2">
           <ProFormTreeSelect
             name="parentId"
             label={t('menu.parentMenu')}
@@ -302,7 +315,7 @@ export default function MenuPage() {
 
           <Form.Item noStyle shouldUpdate>
             {(form) => {
-              const mt = ((form.getFieldValue('type') as string) || selectedMenu?.type || 'M');
+              const mt = (form.getFieldValue('type') as string) || selectedMenu?.type || 'M';
               return (
                 <>
                   {mt !== 'F' && (
@@ -332,7 +345,7 @@ export default function MenuPage() {
 
           <Form.Item noStyle shouldUpdate>
             {(form) => {
-              const mt = ((form.getFieldValue('type') as string) || selectedMenu?.type || 'M');
+              const mt = (form.getFieldValue('type') as string) || selectedMenu?.type || 'M';
               if (mt === 'F') return null;
               return (
                 <>

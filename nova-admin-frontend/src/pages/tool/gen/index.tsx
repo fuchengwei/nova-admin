@@ -1,11 +1,7 @@
 import { useRef, useState } from 'react';
 import { Button, Modal, Tabs, message, Typography } from 'antd';
 import { DownloadOutlined, CodeOutlined } from '@ant-design/icons';
-import {
-  ProTable,
-  type ProColumns,
-  type ActionType,
-} from '@ant-design/pro-components';
+import { ProTable, type ProColumns, type ActionType } from '@ant-design/pro-components';
 import { useMutation } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { listGenTables, previewGen, downloadGen, type GenTable } from '@/api/gen';
@@ -81,8 +77,8 @@ export default function GenPage() {
   const { wrapperRef, scrollY } = useTableScrollY();
 
   return (
-    <div className="flex min-h-0 h-full flex-col">
-      <h2 className="text-lg font-semibold mb-4">{t('menu.gen')}</h2>
+    <div className="flex h-full min-h-0 flex-col">
+      <h2 className="mb-4 text-lg font-semibold">{t('menu.gen')}</h2>
 
       <div ref={wrapperRef} className="min-h-0 flex-1">
         <ProTable<GenTable>
@@ -116,7 +112,7 @@ export default function GenPage() {
             label: path,
             children: (
               <Typography.Paragraph>
-                <pre className="text-xs bg-gray-50 p-3 overflow-auto max-h-[480px]">{content}</pre>
+                <pre className="max-h-[480px] overflow-auto bg-gray-50 p-3 text-xs">{content}</pre>
               </Typography.Paragraph>
             ),
           }))}

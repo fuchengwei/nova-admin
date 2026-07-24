@@ -1,8 +1,4 @@
-import axios, {
-  AxiosHeaders,
-  type AxiosInstance,
-  type AxiosRequestConfig,
-} from 'axios';
+import axios, { AxiosHeaders, type AxiosInstance, type AxiosRequestConfig } from 'axios';
 import { message } from 'antd';
 import { useAppStore } from '@/stores/appStore';
 import { useUserStore } from '@/stores/userStore';

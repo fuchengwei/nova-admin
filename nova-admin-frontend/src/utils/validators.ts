@@ -27,10 +27,8 @@ const PATTERN_MAP: Record<ValidationType, RegExp> = {
  * @param pattern 正则表达式
  * @returns 匹配且非空返回 true，否则 false
  */
-export const matchesPattern = (
-  value: string | undefined | null,
-  pattern: RegExp,
-): boolean => !!value && pattern.test(value);
+export const matchesPattern = (value: string | undefined | null, pattern: RegExp): boolean =>
+  !!value && pattern.test(value);
 
 /**
  * 校验手机号是否合法。
@@ -57,9 +55,7 @@ export const isValidEmail = (value: string | undefined | null): boolean =>
  */
 export const patternRule = (pattern: RegExp, message: string): Rule => ({
   validator: (_, value) =>
-    !value || pattern.test(String(value))
-      ? Promise.resolve()
-      : Promise.reject(new Error(message)),
+    !value || pattern.test(String(value)) ? Promise.resolve() : Promise.reject(new Error(message)),
 });
 
 /**

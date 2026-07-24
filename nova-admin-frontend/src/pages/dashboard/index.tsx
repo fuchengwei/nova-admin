@@ -21,7 +21,7 @@ export default function DashboardPage() {
   });
 
   return (
-    <div className="h-full overflow-auto space-y-4 p-6">
+    <div className="h-full space-y-4 overflow-auto p-6">
       <ProCard>
         <Title level={3} className="!mb-2">
           {t('menu.dashboard')}
@@ -32,8 +32,16 @@ export default function DashboardPage() {
       </ProCard>
 
       <ProCard gutter={16} wrap>
-        <StatisticCard colSpan={6} title="用户" statistic={{ value: 0, prefix: <UserOutlined /> }} />
-        <StatisticCard colSpan={6} title="角色" statistic={{ value: 0, prefix: <TeamOutlined /> }} />
+        <StatisticCard
+          colSpan={6}
+          title="用户"
+          statistic={{ value: 0, prefix: <UserOutlined /> }}
+        />
+        <StatisticCard
+          colSpan={6}
+          title="角色"
+          statistic={{ value: 0, prefix: <TeamOutlined /> }}
+        />
         <StatisticCard
           colSpan={6}
           title="菜单"

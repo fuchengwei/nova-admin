@@ -11,7 +11,10 @@ export function listGenTables() {
 }
 
 export function previewGen(tableName: string) {
-  return request<R<Record<string, string>>>({ url: '/tool/gen/preview/' + tableName, method: 'GET' });
+  return request<R<Record<string, string>>>({
+    url: '/tool/gen/preview/' + tableName,
+    method: 'GET',
+  });
 }
 
 export function downloadGen(tableName: string) {

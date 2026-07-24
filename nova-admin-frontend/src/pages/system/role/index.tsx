@@ -190,31 +190,31 @@ export default function RolePage() {
           columns={columns}
           style={{ height: '100%' }}
           scroll={{ x: 1000, y: scrollY }}
-        request={async (params) => {
-          const payload: RolePageParams = {
-            current: params.current ?? 1,
-            size: params.pageSize ?? 10,
-            name: params.name,
-            code: params.code,
-            status: params.status,
-          };
-          const res = await getRolePage(payload);
-          if (res.code !== 0) return { data: [], success: false, total: 0 };
-          return {
-            data: res.data.records,
-            success: true,
-            total: res.data.total,
-          };
-        }}
-        pagination={{ pageSize: 10, showSizeChanger: true }}
-        search={{ labelWidth: 'auto' }}
-        toolBarRender={() => [
-          <Button key="add" type="primary" icon={<PlusOutlined />} onClick={handleOpenAdd}>
-            {t('role.addRole')}
-          </Button>,
-        ]}
-        options={{ reload: true, density: true, setting: true }}
-      />
+          request={async (params) => {
+            const payload: RolePageParams = {
+              current: params.current ?? 1,
+              size: params.pageSize ?? 10,
+              name: params.name,
+              code: params.code,
+              status: params.status,
+            };
+            const res = await getRolePage(payload);
+            if (res.code !== 0) return { data: [], success: false, total: 0 };
+            return {
+              data: res.data.records,
+              success: true,
+              total: res.data.total,
+            };
+          }}
+          pagination={{ pageSize: 10, showSizeChanger: true }}
+          search={{ labelWidth: 'auto' }}
+          toolBarRender={() => [
+            <Button key="add" type="primary" icon={<PlusOutlined />} onClick={handleOpenAdd}>
+              {t('role.addRole')}
+            </Button>,
+          ]}
+          options={{ reload: true, density: true, setting: true }}
+        />
       </div>
 
       <ModalForm
@@ -273,7 +273,11 @@ export default function RolePage() {
             disabled={editMode}
             rules={[{ required: true, message: t('role.roleCodeRequired') }]}
           />
-          <ProFormTextArea name="description" label={t('role.description')} className="col-span-2" />
+          <ProFormTextArea
+            name="description"
+            label={t('role.description')}
+            className="col-span-2"
+          />
           <ProFormSelect
             name="dataScope"
             label={t('role.dataScope')}
@@ -306,7 +310,7 @@ export default function RolePage() {
             treeData={menuTreeNodes}
             defaultExpandAll
             height={280}
-            className="border rounded p-2"
+            className="rounded border p-2"
           />
         </Form.Item>
       </ModalForm>

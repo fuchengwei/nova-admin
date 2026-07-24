@@ -1,11 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Card, Button, Typography, message, theme as antdTheme, Form } from 'antd';
-import {
-  UserOutlined,
-  LockOutlined,
-  SafetyOutlined,
-  ReloadOutlined,
-} from '@ant-design/icons';
+import { UserOutlined, LockOutlined, SafetyOutlined, ReloadOutlined } from '@ant-design/icons';
 import { ProForm, ProFormText } from '@ant-design/pro-components';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -94,13 +89,13 @@ export default function LoginPage() {
 
   return (
     <div
-      className="min-h-screen flex items-center justify-center p-4"
+      className="flex min-h-screen items-center justify-center p-4"
       style={{
         background: `linear-gradient(135deg, ${token.colorPrimary} 0%, #69b1ff 100%)`,
       }}
     >
       <Card className="!w-full !max-w-md !shadow-2xl" styles={{ body: { padding: 32 } }}>
-        <div className="text-center mb-6">
+        <div className="mb-6 text-center">
           <Title level={2} style={{ marginBottom: 4, color: token.colorPrimary }}>
             {t('login.title')}
           </Title>
@@ -119,7 +114,7 @@ export default function LoginPage() {
             ),
           }}
         >
-        <ProFormText
+          <ProFormText
             name="account"
             label={t('login.account')}
             rules={[{ required: true, message: `${t('login.account')} 不能为空` }]}
@@ -155,7 +150,7 @@ export default function LoginPage() {
               autoComplete: 'off',
               suffix: (
                 <div
-                  className="cursor-pointer flex items-center"
+                  className="flex cursor-pointer items-center"
                   onClick={loadCaptcha}
                   title="点击刷新"
                 >
@@ -174,7 +169,9 @@ export default function LoginPage() {
             }}
           />
         </ProForm>
-        <div className="mt-4 text-center text-xs text-gray-400">Default: superAdmin or admin / 123456</div>
+        <div className="mt-4 text-center text-xs text-gray-400">
+          Default: superAdmin or admin / 123456
+        </div>
       </Card>
     </div>
   );

@@ -1,12 +1,7 @@
 import { useState, useMemo } from 'react';
 import { Button, Tree, Space, Popconfirm, message } from 'antd';
 import type { DataNode } from 'antd/es/tree';
-import {
-  PlusOutlined,
-  EditOutlined,
-  DeleteOutlined,
-  ApartmentOutlined,
-} from '@ant-design/icons';
+import { PlusOutlined, EditOutlined, DeleteOutlined, ApartmentOutlined } from '@ant-design/icons';
 import { ProCard, ProDescriptions } from '@ant-design/pro-components';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
@@ -142,15 +137,15 @@ export default function DeptPage() {
   };
 
   return (
-    <div className="flex flex-col h-full">
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-lg font-semibold m-0">{t('menu.dept')}</h2>
+    <div className="flex h-full flex-col">
+      <div className="mb-4 flex items-center justify-between">
+        <h2 className="m-0 text-lg font-semibold">{t('menu.dept')}</h2>
         <Button type="primary" icon={<PlusOutlined />} onClick={handleAddRoot}>
           {t('dept.addRoot')}
         </Button>
       </div>
 
-      <div className="flex gap-4 flex-1 min-h-0">
+      <div className="flex min-h-0 flex-1 gap-4">
         <ProCard className="flex-1 shrink-0 overflow-auto" loading={isLoading}>
           {treeNodes.length > 0 && (
             <Tree
@@ -173,7 +168,7 @@ export default function DeptPage() {
                 dataSource={selectedDept}
                 column={2}
                 bordered
-                size='small'
+                size="small"
                 columns={[
                   { title: t('dept.name'), dataIndex: 'name' },
                   { title: t('dept.code'), dataIndex: 'code', render: (v) => v || '-' },
@@ -222,7 +217,7 @@ export default function DeptPage() {
               </div>
             </>
           ) : (
-            <div className="flex items-center justify-center h-64 text-gray-400">
+            <div className="flex h-64 items-center justify-center text-gray-400">
               {t('dept.selectHint')}
             </div>
           )}

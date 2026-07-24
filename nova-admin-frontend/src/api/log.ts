@@ -30,7 +30,11 @@ export interface LoginLogRecord {
 }
 
 export const getOperationLogPage = (params: any) =>
-  request<R<PageResult<OperationLogRecord>>>({ url: '/system/operation-log/page', method: 'GET', params });
+  request<R<PageResult<OperationLogRecord>>>({
+    url: '/system/operation-log/page',
+    method: 'GET',
+    params,
+  });
 
 export const cleanOperationLog = () =>
   request<R<void>>({ url: '/system/operation-log/clean', method: 'DELETE' });

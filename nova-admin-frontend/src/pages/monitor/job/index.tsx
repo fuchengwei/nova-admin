@@ -94,7 +94,13 @@ export default function JobPage() {
   const columns: ProColumns<SysJob>[] = [
     { title: t('job.jobName'), dataIndex: 'jobName', width: 160, ellipsis: true },
     { title: t('job.jobGroup'), dataIndex: 'jobGroup', width: 100 },
-    { title: t('job.invokeTarget'), dataIndex: 'invokeTarget', width: 200, ellipsis: true, render: (v) => <code>{v as string}</code> },
+    {
+      title: t('job.invokeTarget'),
+      dataIndex: 'invokeTarget',
+      width: 200,
+      ellipsis: true,
+      render: (v) => <code>{v as string}</code>,
+    },
     { title: t('job.cronExpression'), dataIndex: 'cronExpression', width: 150 },
     {
       title: t('job.status'),
@@ -103,7 +109,11 @@ export default function JobPage() {
       valueType: 'select',
       valueEnum: statusEnum,
       render: (_, r) =>
-        r.status === 1 ? <Tag color="green">{t('job.statusRunning')}</Tag> : <Tag color="default">{t('job.statusPaused')}</Tag>,
+        r.status === 1 ? (
+          <Tag color="green">{t('job.statusRunning')}</Tag>
+        ) : (
+          <Tag color="default">{t('job.statusPaused')}</Tag>
+        ),
     },
     {
       title: t('job.concurrent'),
@@ -112,8 +122,20 @@ export default function JobPage() {
       search: false,
       render: (_, r) => (r.concurrent === 1 ? t('job.concurrentAllow') : t('job.concurrentForbid')),
     },
-    { title: t('job.remark'), dataIndex: 'remark', width: 160, search: false, render: (v) => (v as string) || '-' },
-    { title: t('job.createTime'), dataIndex: 'createTime', width: 170, search: false, render: (v) => (v as string) || '-' },
+    {
+      title: t('job.remark'),
+      dataIndex: 'remark',
+      width: 160,
+      search: false,
+      render: (v) => (v as string) || '-',
+    },
+    {
+      title: t('job.createTime'),
+      dataIndex: 'createTime',
+      width: 170,
+      search: false,
+      render: (v) => (v as string) || '-',
+    },
     {
       title: t('common.action'),
       valueType: 'option',
@@ -121,19 +143,46 @@ export default function JobPage() {
       width: 260,
       fixed: 'right',
       render: (_, record) => [
-        <Button key="run" type="link" size="small" icon={<PlayCircleOutlined />} onClick={() => runMutation.mutate(record.id as number)}>
+        <Button
+          key="run"
+          type="link"
+          size="small"
+          icon={<PlayCircleOutlined />}
+          onClick={() => runMutation.mutate(record.id as number)}
+        >
           {t('job.run')}
         </Button>,
         record.status === 1 ? (
-          <Button key="pause" type="link" size="small" icon={<PauseCircleOutlined />} onClick={() => pauseMutation.mutate(record.id as number)}>
+          <Button
+            key="pause"
+            type="link"
+            size="small"
+            icon={<PauseCircleOutlined />}
+            onClick={() => pauseMutation.mutate(record.id as number)}
+          >
             {t('job.pause')}
           </Button>
         ) : (
-          <Button key="resume" type="link" size="small" icon={<CaretRightOutlined />} onClick={() => resumeMutation.mutate(record.id as number)}>
+          <Button
+            key="resume"
+            type="link"
+            size="small"
+            icon={<CaretRightOutlined />}
+            onClick={() => resumeMutation.mutate(record.id as number)}
+          >
             {t('job.resume')}
           </Button>
         ),
-        <Button key="edit" type="link" size="small" icon={<EditOutlined />} onClick={() => { setEditing(record); setModalOpen(true); }}>
+        <Button
+          key="edit"
+          type="link"
+          size="small"
+          icon={<EditOutlined />}
+          onClick={() => {
+            setEditing(record);
+            setModalOpen(true);
+          }}
+        >
           {t('job.edit')}
         </Button>,
         <Popconfirm
@@ -155,9 +204,9 @@ export default function JobPage() {
   const { wrapperRef, scrollY } = useTableScrollY();
 
   return (
-    <div className="flex min-h-0 h-full flex-col">
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-lg font-semibold m-0">{t('menu.job')}</h2>
+    <div className="flex h-full min-h-0 flex-col">
+      <div className="mb-4 flex items-center justify-between">
+        <h2 className="m-0 text-lg font-semibold">{t('menu.job')}</h2>
         <Space>
           <Button icon={<ReloadOutlined />} onClick={() => actionRef.current?.reload()}>
             {t('common.refresh')}
@@ -165,7 +214,10 @@ export default function JobPage() {
           <Button
             type="primary"
             icon={<PlusOutlined />}
-            onClick={() => { setEditing(null); setModalOpen(true); }}
+            onClick={() => {
+              setEditing(null);
+              setModalOpen(true);
+            }}
           >
             {t('job.add')}
           </Button>
@@ -179,21 +231,21 @@ export default function JobPage() {
           columns={columns}
           style={{ height: '100%' }}
           scroll={{ x: 1300, y: scrollY }}
-        request={async (params) => {
-          const payload: JobPageQuery = {
-            current: params.current ?? 1,
-            size: params.pageSize ?? 10,
-            jobName: params.jobName,
-            status: params.status,
-          };
-          const res = await getJobPage(payload);
-          if (res.code !== 0) return { data: [], success: false, total: 0 };
-          return { data: res.data.records, success: true, total: res.data.total };
-        }}
-        pagination={{ pageSize: 10, showSizeChanger: true }}
-        search={{ labelWidth: 'auto' }}
-        options={{ reload: true, density: true, setting: true }}
-      />
+          request={async (params) => {
+            const payload: JobPageQuery = {
+              current: params.current ?? 1,
+              size: params.pageSize ?? 10,
+              jobName: params.jobName,
+              status: params.status,
+            };
+            const res = await getJobPage(payload);
+            if (res.code !== 0) return { data: [], success: false, total: 0 };
+            return { data: res.data.records, success: true, total: res.data.total };
+          }}
+          pagination={{ pageSize: 10, showSizeChanger: true }}
+          search={{ labelWidth: 'auto' }}
+          options={{ reload: true, density: true, setting: true }}
+        />
       </div>
 
       <ModalForm<SysJob>
