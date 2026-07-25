@@ -11,6 +11,7 @@ export default {
     submit: '提交',
     back: '返回',
     loading: '加载中...',
+    refresh: '刷新',
     success: '操作成功',
     fail: '操作失败',
     error: '操作失败',

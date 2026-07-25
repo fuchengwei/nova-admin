@@ -11,6 +11,7 @@ export default {
     submit: 'Submit',
     back: 'Back',
     loading: 'Loading...',
+    refresh: 'Refresh',
     success: 'Success',
     fail: 'Failed',
     error: 'Operation failed',

@@ -53,7 +53,7 @@ export interface CacheInfo {
     usedMemoryHuman?: string;
     maxMemoryHuman?: string;
     connectedClients?: string;
-    maxmemoryPolicy?: string;
+    maxMemoryPolicy?: string;
   };
   dbSize: number;
 }
