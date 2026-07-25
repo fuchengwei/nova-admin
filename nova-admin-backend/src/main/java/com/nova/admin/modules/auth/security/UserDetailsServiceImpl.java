@@ -77,6 +77,11 @@ public class UserDetailsServiceImpl implements UserDetailsService {
         List<String> perms = menuMapper.selectPermsByUserId(user.getId());
         Set<String> permissions = perms.stream().filter(p -> p != null && !p.isBlank()).collect(Collectors.toSet());
 
+        // 超管直接拥有全部数据权限，无需查角色
+        Integer dataScope = Integer.valueOf(1).equals(user.getSuperAdmin())
+                ? 1
+                : resolveDataScope(user.getId());
+
         return LoginUser.builder()
                 .userId(user.getId())
                 .account(user.getAccount())
@@ -84,7 +89,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
                 .deptId(user.getDeptId())
                 .roles(roles)
                 .permissions(permissions)
-                .dataScope(resolveDataScope(user.getId()))
+                .dataScope(dataScope)
                 .loginIp(loginIp)
                 .loginTime(loginTime)
                 .build();
