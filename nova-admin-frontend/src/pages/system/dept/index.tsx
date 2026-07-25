@@ -16,6 +16,7 @@ import {
   type DeptUpdateRequest,
 } from '@/api/dept';
 import { toTreeSelectData } from '@/utils/tree';
+import { displayText } from '@/utils/display';
 import DeptFormModal, { type DeptFormValues } from './components/DeptFormModal';
 
 const QUERY_KEY = ['deptTree'];
@@ -170,12 +171,36 @@ export default function DeptPage() {
                 bordered
                 size="small"
                 columns={[
-                  { title: t('dept.name'), dataIndex: 'name' },
-                  { title: t('dept.code'), dataIndex: 'code', render: (v) => v || '-' },
-                  { title: t('dept.leader'), dataIndex: 'leader', render: (v) => v || '-' },
-                  { title: t('dept.phone'), dataIndex: 'phone', render: (v) => v || '-' },
-                  { title: t('dept.email'), dataIndex: 'email', render: (v) => v || '-' },
-                  { title: t('dept.sort'), dataIndex: 'sort' },
+                  {
+                    title: t('dept.name'),
+                    dataIndex: 'name',
+                    render: (value) => displayText(value),
+                  },
+                  {
+                    title: t('dept.code'),
+                    dataIndex: 'code',
+                    render: (value) => displayText(value),
+                  },
+                  {
+                    title: t('dept.leader'),
+                    dataIndex: 'leader',
+                    render: (value) => displayText(value),
+                  },
+                  {
+                    title: t('dept.phone'),
+                    dataIndex: 'phone',
+                    render: (value) => displayText(value),
+                  },
+                  {
+                    title: t('dept.email'),
+                    dataIndex: 'email',
+                    render: (value) => displayText(value),
+                  },
+                  {
+                    title: t('dept.sort'),
+                    dataIndex: 'sort',
+                    render: (value) => displayText(value),
+                  },
                   {
                     title: t('dept.status'),
                     dataIndex: 'status',
@@ -184,7 +209,11 @@ export default function DeptPage() {
                       0: { text: t('dept.disabled'), status: 'Error' },
                     },
                   },
-                  { title: t('dept.createTime'), dataIndex: 'createTime', render: (v) => v || '-' },
+                  {
+                    title: t('dept.createTime'),
+                    dataIndex: 'createTime',
+                    render: (value) => displayText(value),
+                  },
                 ]}
               />
 

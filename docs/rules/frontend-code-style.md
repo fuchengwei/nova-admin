@@ -86,6 +86,15 @@ src/
 - ❌ 页面容器自建，应使用 `ProLayout` / `ProCard` / `PageContainer`
 - ❌ class 组件；使用函数组件 + hooks
 
+### 3.5 表格/详情空值展示
+
+- `ProTable` / `ProDescriptions` 的文本型字段，空值统一显示 `-`
+- 仅 `null`、`undefined`、`''` 视为空值
+- `0`、`false` **不得**视为空值
+- 禁止使用 `value || '-'` 这类会误伤合法 falsy 值的写法
+- 统一复用 `src/utils/display.ts`
+- 详细规则与示例见 [`frontend-procomponents.md`](./frontend-procomponents.md)
+
 ## 4. Tailwind CSS 约束
 
 ### 4.1 类名自动排序

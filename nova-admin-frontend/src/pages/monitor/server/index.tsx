@@ -4,8 +4,12 @@ import { Progress, Tabs, Tag } from 'antd';
 import { ProDescriptions, ProTable, type ProColumns } from '@ant-design/pro-components';
 import { getServerInfo, getOnlineUsers, getCacheInfo } from '@/api/monitor';
 import type { CacheInfo, OnlineUser, ServerInfo } from '@/api/monitor';
+import { displayText, isEmptyDisplayValue } from '@/utils/display';
 
 const usageStatus = (v: number) => (v > 80 ? 'exception' : v > 60 ? 'normal' : 'success');
+
+const formatWithUnit = (value: unknown, suffix: string) =>
+  isEmptyDisplayValue(value) ? '-' : `${value}${suffix}`;
 
 export default function ServerMonitorPage() {
   const { t } = useTranslation();
@@ -31,37 +35,95 @@ export default function ServerMonitorPage() {
   }, []);
 
   const onlineColumns: ProColumns<OnlineUser>[] = [
-    { title: t('monitor.account'), dataIndex: 'account', key: 'account' },
-    { title: t('monitor.nickname'), dataIndex: 'nickname', key: 'nickname' },
-    { title: t('monitor.deptId'), dataIndex: 'deptId', key: 'deptId', render: (v) => v ?? '-' },
-    { title: t('monitor.loginIp'), dataIndex: 'loginIp', key: 'loginIp', render: (v) => v ?? '-' },
+    {
+      title: t('monitor.account'),
+      dataIndex: 'account',
+      key: 'account',
+      render: (value) => displayText(value),
+    },
+    {
+      title: t('monitor.nickname'),
+      dataIndex: 'nickname',
+      key: 'nickname',
+      render: (value) => displayText(value),
+    },
+    {
+      title: t('monitor.deptId'),
+      dataIndex: 'deptId',
+      key: 'deptId',
+      render: (value) => displayText(value),
+    },
+    {
+      title: t('monitor.loginIp'),
+      dataIndex: 'loginIp',
+      key: 'loginIp',
+      render: (value) => displayText(value),
+    },
     {
       title: t('monitor.loginTime'),
       dataIndex: 'loginTime',
       key: 'loginTime',
-      render: (v) => v ?? '-',
+      render: (value) => displayText(value),
     },
   ];
 
   const diskColumns: ProColumns<ServerInfo['disks'][number]>[] = [
-    { title: t('monitor.diskPath'), dataIndex: 'dirName', key: 'dirName' },
-    { title: t('monitor.diskType'), dataIndex: 'sysTypeName', key: 'sysTypeName' },
-    { title: t('monitor.total'), dataIndex: 'total', key: 'total', render: (v) => `${v} GB` },
-    { title: t('monitor.used'), dataIndex: 'used', key: 'used', render: (v) => `${v} GB` },
-    { title: t('monitor.free'), dataIndex: 'free', key: 'free', render: (v) => `${v} GB` },
+    {
+      title: t('monitor.diskPath'),
+      dataIndex: 'dirName',
+      key: 'dirName',
+      render: (value) => displayText(value),
+    },
+    {
+      title: t('monitor.diskType'),
+      dataIndex: 'sysTypeName',
+      key: 'sysTypeName',
+      render: (value) => displayText(value),
+    },
+    {
+      title: t('monitor.total'),
+      dataIndex: 'total',
+      key: 'total',
+      render: (value) => formatWithUnit(value, ' GB'),
+    },
+    {
+      title: t('monitor.used'),
+      dataIndex: 'used',
+      key: 'used',
+      render: (value) => formatWithUnit(value, ' GB'),
+    },
+    {
+      title: t('monitor.free'),
+      dataIndex: 'free',
+      key: 'free',
+      render: (value) => formatWithUnit(value, ' GB'),
+    },
     {
       title: t('monitor.usage'),
       dataIndex: 'usage',
       key: 'usage',
-      render: (v) => (
-        <Progress percent={Math.round(v as number)} status={usageStatus(v as number)} />
-      ),
+      render: (value) =>
+        isEmptyDisplayValue(value) ? (
+          '-'
+        ) : (
+          <Progress percent={Math.round(value as number)} status={usageStatus(value as number)} />
+        ),
     },
   ];
 
   const cmdColumns: ProColumns<CacheInfo['commandStats'][number]>[] = [
-    { title: t('monitor.cmd'), dataIndex: 'name', key: 'name' },
-    { title: t('monitor.calls'), dataIndex: 'value', key: 'value' },
+    {
+      title: t('monitor.cmd'),
+      dataIndex: 'name',
+      key: 'name',
+      render: (value) => displayText(value),
+    },
+    {
+      title: t('monitor.calls'),
+      dataIndex: 'value',
+      key: 'value',
+      render: (value) => displayText(value),
+    },
   ];
 
   return (
@@ -84,17 +146,17 @@ export default function ServerMonitorPage() {
                     {
                       title: t('monitor.cpuNum'),
                       dataIndex: 'cpu.cpuNum',
-                      render: (_, r) => r.cpu?.cpuNum,
+                      render: (_, record) => displayText(record.cpu?.cpuNum),
                     },
                     {
                       title: t('monitor.cpuSys'),
                       dataIndex: 'cpu.sys',
-                      render: (_, r) => `${r.cpu?.sys}%`,
+                      render: (_, record) => formatWithUnit(record.cpu?.sys, '%'),
                     },
                     {
                       title: t('monitor.cpuUsed'),
                       dataIndex: 'cpu.used',
-                      render: (_, r) => `${r.cpu?.used}%`,
+                      render: (_, record) => formatWithUnit(record.cpu?.used, '%'),
                     },
                   ]}
                 />
@@ -115,17 +177,17 @@ export default function ServerMonitorPage() {
                     {
                       title: t('monitor.total'),
                       dataIndex: 'mem.total',
-                      render: (_, r) => `${r.mem?.total} GB`,
+                      render: (_, record) => formatWithUnit(record.mem?.total, ' GB'),
                     },
                     {
                       title: t('monitor.used'),
                       dataIndex: 'mem.used',
-                      render: (_, r) => `${r.mem?.used} GB`,
+                      render: (_, record) => formatWithUnit(record.mem?.used, ' GB'),
                     },
                     {
                       title: t('monitor.free'),
                       dataIndex: 'mem.free',
-                      render: (_, r) => `${r.mem?.free} GB`,
+                      render: (_, record) => formatWithUnit(record.mem?.free, ' GB'),
                     },
                   ]}
                 />
@@ -146,27 +208,27 @@ export default function ServerMonitorPage() {
                     {
                       title: t('monitor.jvmName'),
                       dataIndex: 'jvm.name',
-                      render: (_, r) => r.jvm?.name,
+                      render: (_, record) => displayText(record.jvm?.name),
                     },
                     {
                       title: t('monitor.jvmVersion'),
                       dataIndex: 'jvm.version',
-                      render: (_, r) => r.jvm?.version,
+                      render: (_, record) => displayText(record.jvm?.version),
                     },
                     {
                       title: t('monitor.jvmUsed'),
                       dataIndex: 'jvm.used',
-                      render: (_, r) => `${r.jvm?.used} GB`,
+                      render: (_, record) => formatWithUnit(record.jvm?.used, ' GB'),
                     },
                     {
                       title: t('monitor.jvmStartTime'),
                       dataIndex: 'jvm.startTime',
-                      render: (_, r) => r.jvm?.startTime,
+                      render: (_, record) => displayText(record.jvm?.startTime),
                     },
                     {
                       title: t('monitor.jvmRunTime'),
                       dataIndex: 'jvm.runTime',
-                      render: (_, r) => r.jvm?.runTime,
+                      render: (_, record) => displayText(record.jvm?.runTime),
                     },
                   ]}
                 />
@@ -187,27 +249,27 @@ export default function ServerMonitorPage() {
                     {
                       title: t('monitor.computerName'),
                       dataIndex: 'sys.computerName',
-                      render: (_, r) => r.sys?.computerName,
+                      render: (_, record) => displayText(record.sys?.computerName),
                     },
                     {
                       title: t('monitor.computerIp'),
                       dataIndex: 'sys.computerIp',
-                      render: (_, r) => r.sys?.computerIp,
+                      render: (_, record) => displayText(record.sys?.computerIp),
                     },
                     {
                       title: t('monitor.osName'),
                       dataIndex: 'sys.osName',
-                      render: (_, r) => r.sys?.osName,
+                      render: (_, record) => displayText(record.sys?.osName),
                     },
                     {
                       title: t('monitor.osArch'),
                       dataIndex: 'sys.osArch',
-                      render: (_, r) => r.sys?.osArch,
+                      render: (_, record) => displayText(record.sys?.osArch),
                     },
                     {
                       title: t('monitor.userDir'),
                       dataIndex: 'sys.userDir',
-                      render: (_, r) => r.sys?.userDir,
+                      render: (_, record) => displayText(record.sys?.userDir),
                     },
                   ]}
                 />
@@ -259,47 +321,52 @@ export default function ServerMonitorPage() {
                     {
                       title: t('monitor.cacheVersion'),
                       dataIndex: 'server.version',
-                      render: (_, r) => r.server?.version,
+                      render: (_, record) => displayText(record.server?.version),
                     },
                     {
                       title: t('monitor.cacheMode'),
                       dataIndex: 'server.mode',
-                      render: (_, r) => r.server?.mode,
+                      render: (_, record) => displayText(record.server?.mode),
                     },
                     {
                       title: t('monitor.cacheOs'),
                       dataIndex: 'server.os',
-                      render: (_, r) => r.server?.os,
+                      render: (_, record) => displayText(record.server?.os),
                     },
                     {
                       title: t('monitor.cacheUptime'),
                       dataIndex: 'server.uptime',
-                      render: (_, r) => `${r.server?.uptime} d`,
+                      render: (_, record) => formatWithUnit(record.server?.uptime, ' d'),
                     },
                     {
                       title: t('monitor.cacheUsedMem'),
                       dataIndex: 'server.usedMemoryHuman',
-                      render: (_, r) => r.server?.usedMemoryHuman,
+                      render: (_, record) => displayText(record.server?.usedMemoryHuman),
                     },
                     {
                       title: t('monitor.cacheMaxMem'),
                       dataIndex: 'server.maxMemoryHuman',
-                      render: (_, r) => r.server?.maxMemoryHuman,
+                      render: (_, record) => displayText(record.server?.maxMemoryHuman),
                     },
                     {
                       title: t('monitor.cacheClients'),
                       dataIndex: 'server.connectedClients',
-                      render: (_, r) => r.server?.connectedClients,
+                      render: (_, record) => displayText(record.server?.connectedClients),
                     },
                     {
                       title: t('monitor.cachePolicy'),
                       dataIndex: 'server.maxmemoryPolicy',
-                      render: (_, r) => <Tag>{r.server?.maxmemoryPolicy}</Tag>,
+                      render: (_, record) =>
+                        isEmptyDisplayValue(record.server?.maxmemoryPolicy) ? (
+                          '-'
+                        ) : (
+                          <Tag>{record.server?.maxmemoryPolicy}</Tag>
+                        ),
                     },
                     {
                       title: t('monitor.cacheDbSize'),
                       dataIndex: 'dbSize',
-                      render: (_, r) => r.dbSize,
+                      render: (_, record) => displayText(record.dbSize),
                     },
                   ]}
                 />

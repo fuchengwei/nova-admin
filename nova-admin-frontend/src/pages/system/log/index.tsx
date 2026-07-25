@@ -13,6 +13,7 @@ import {
   type LoginLogRecord,
 } from '@/api/log';
 import { useTableScrollY } from '@/hooks/useTableScrollY';
+import { displayText, isEmptyDisplayValue } from '@/utils/display';
 
 const statusEnum = {
   1: { text: '成功', status: 'Success' },
@@ -33,35 +34,40 @@ export default function LogPage() {
       dataIndex: 'module',
       width: 120,
       ellipsis: true,
-      render: (v) => v || '-',
+      render: (value) => displayText(value),
     },
     {
       title: t('log.description'),
       dataIndex: 'description',
       width: 160,
       ellipsis: true,
-      render: (v) => v || '-',
+      render: (value) => displayText(value),
     },
     {
       title: t('log.requestMethod'),
       dataIndex: 'requestMethod',
       width: 100,
-      render: (v) => v || '-',
+      render: (value) => displayText(value),
     },
     {
       title: t('log.requestUrl'),
       dataIndex: 'requestUrl',
       width: 200,
       ellipsis: true,
-      render: (v) => v || '-',
+      render: (value) => displayText(value),
     },
-    { title: t('log.operator'), dataIndex: 'account', width: 100, render: (v) => v || '-' },
-    { title: 'IP', dataIndex: 'ip', width: 130, render: (v) => v || '-' },
+    {
+      title: t('log.operator'),
+      dataIndex: 'account',
+      width: 100,
+      render: (value) => displayText(value),
+    },
+    { title: 'IP', dataIndex: 'ip', width: 130, render: (value) => displayText(value) },
     {
       title: t('log.costMs'),
       dataIndex: 'costMs',
       width: 100,
-      render: (v) => (v !== undefined && v !== null ? `${v}ms` : '-'),
+      render: (value) => (isEmptyDisplayValue(value) ? '-' : `${value}ms`),
     },
     {
       title: t('log.status'),
@@ -82,15 +88,25 @@ export default function LogPage() {
       width: 180,
       valueType: 'dateTime',
       search: false,
-      render: (v) => v || '-',
+      render: (value) => displayText(value),
     },
   ];
 
   const loginColumns: ProColumns<LoginLogRecord>[] = [
-    { title: t('log.account'), dataIndex: 'account', width: 120, render: (v) => v || '-' },
-    { title: 'IP', dataIndex: 'ip', width: 130, render: (v) => v || '-' },
-    { title: t('log.os'), dataIndex: 'os', width: 140, render: (v) => v || '-' },
-    { title: t('log.browser'), dataIndex: 'browser', width: 140, render: (v) => v || '-' },
+    {
+      title: t('log.account'),
+      dataIndex: 'account',
+      width: 120,
+      render: (value) => displayText(value),
+    },
+    { title: 'IP', dataIndex: 'ip', width: 130, render: (value) => displayText(value) },
+    { title: t('log.os'), dataIndex: 'os', width: 140, render: (value) => displayText(value) },
+    {
+      title: t('log.browser'),
+      dataIndex: 'browser',
+      width: 140,
+      render: (value) => displayText(value),
+    },
     {
       title: t('log.loginResult'),
       dataIndex: 'status',
@@ -104,14 +120,20 @@ export default function LogPage() {
           <Tag color="red">{t('log.fail')}</Tag>
         ),
     },
-    { title: t('log.msg'), dataIndex: 'msg', width: 160, ellipsis: true, render: (v) => v || '-' },
+    {
+      title: t('log.msg'),
+      dataIndex: 'msg',
+      width: 160,
+      ellipsis: true,
+      render: (value) => displayText(value),
+    },
     {
       title: t('log.loginTime'),
       dataIndex: 'loginTime',
       width: 180,
       valueType: 'dateTime',
       search: false,
-      render: (v) => v || '-',
+      render: (value) => displayText(value),
     },
   ];
 

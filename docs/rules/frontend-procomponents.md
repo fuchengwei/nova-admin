@@ -132,6 +132,36 @@ const columns: ProColumns<UserRecord>[] = [
 
 **列定义较长（>6 列）时**，提取到同目录 `columns.tsx`，保持 `index.tsx` 简洁。
 
+### 3.4 表格 / 详情空值展示
+
+**`ProTable` / `ProDescriptions` 的文本型字段，空值统一显示 `-`。**
+
+判定规则：
+- `null` → `-`
+- `undefined` → `-`
+- `''` → `-`
+- `0`、`false` **不得**视为空值
+
+**禁止**继续在列定义中手写 `value || '-'`，这会把 `0`、`false` 误显示为 `-`。
+
+统一复用 `src/utils/display.ts`：
+
+```tsx
+import { displayText, isEmptyDisplayValue } from '@/utils/display';
+
+{ title: t('user.phone'), dataIndex: 'phone', render: (value) => displayText(value) }
+
+{
+  title: t('log.costMs'),
+  dataIndex: 'costMs',
+  render: (value) => (isEmptyDisplayValue(value) ? '-' : `${value}ms`),
+}
+```
+
+**适用范围**：
+- 纯文本列 → 直接用 `displayText(value)`
+- 链接、Tag、图标、代码块、单位拼接等特殊列 → 保留自定义 `render`，但内部必须遵守同一空值规则
+
 ## 4. ProForm 系列
 
 ### 4.1 ModalForm（弹窗表单，最常用）

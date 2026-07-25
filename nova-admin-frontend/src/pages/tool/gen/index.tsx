@@ -6,6 +6,7 @@ import { useMutation } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { listGenTables, previewGen, downloadGen, type GenTable } from '@/api/gen';
 import { useTableScrollY } from '@/hooks/useTableScrollY';
+import { displayText } from '@/utils/display';
 
 export default function GenPage() {
   const { t } = useTranslation();
@@ -41,11 +42,16 @@ export default function GenPage() {
   });
 
   const columns: ProColumns<GenTable>[] = [
-    { title: t('gen.tableName'), dataIndex: 'tableName', ellipsis: true },
+    {
+      title: t('gen.tableName'),
+      dataIndex: 'tableName',
+      ellipsis: true,
+      render: (value) => displayText(value),
+    },
     {
       title: t('gen.tableComment'),
       dataIndex: 'tableComment',
-      render: (v) => (v as string) || '-',
+      render: (value) => displayText(value),
     },
     {
       title: t('common.action'),

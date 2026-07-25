@@ -23,13 +23,14 @@ import {
 import type { MenuInfo } from '@/types/api';
 import { toTreeSelectData } from '@/utils/tree';
 import { getIcon } from '@/components/IconPicker/icon-catalog';
+import { displayText, isEmptyDisplayValue } from '@/utils/display';
 import IconPicker from '@/components/IconPicker';
 
 const getTypeTag = (t: (k: string) => string, type?: string) => {
   if (type === 'M') return <Tag color="blue">{t('menu.typeDir')}</Tag>;
   if (type === 'C') return <Tag color="green">{t('menu.typeMenu')}</Tag>;
   if (type === 'F') return <Tag color="orange">{t('menu.typeButton')}</Tag>;
-  return <Tag>{type}</Tag>;
+  return isEmptyDisplayValue(type) ? '-' : <Tag>{type}</Tag>;
 };
 
 export default function MenuPage() {
@@ -131,22 +132,47 @@ export default function MenuPage() {
                 bordered
                 size="small"
                 columns={[
-                  { title: t('menu.menuName'), dataIndex: 'name' },
+                  {
+                    title: t('menu.menuName'),
+                    dataIndex: 'name',
+                    render: (value) => displayText(value),
+                  },
                   {
                     title: t('menu.menuType'),
                     dataIndex: 'type',
                     render: (_, r) => getTypeTag(t, r.type),
                   },
-                  { title: t('menu.perms'), dataIndex: 'perms', render: (v) => v || '-' },
-                  { title: t('menu.path'), dataIndex: 'path', render: (v) => v || '-' },
-                  { title: t('menu.component'), dataIndex: 'component', render: (v) => v || '-' },
-                  { title: t('menu.redirect'), dataIndex: 'redirect', render: (v) => v || '-' },
+                  {
+                    title: t('menu.perms'),
+                    dataIndex: 'perms',
+                    render: (value) => displayText(value),
+                  },
+                  {
+                    title: t('menu.path'),
+                    dataIndex: 'path',
+                    render: (value) => displayText(value),
+                  },
+                  {
+                    title: t('menu.component'),
+                    dataIndex: 'component',
+                    render: (value) => displayText(value),
+                  },
+                  {
+                    title: t('menu.redirect'),
+                    dataIndex: 'redirect',
+                    render: (value) => displayText(value),
+                  },
                   {
                     title: t('menu.icon'),
                     dataIndex: 'icon',
-                    render: (v) => (v ? getIcon(v as string) : '-'),
+                    render: (value) =>
+                      isEmptyDisplayValue(value) ? '-' : getIcon(value as string),
                   },
-                  { title: t('menu.sort'), dataIndex: 'sort' },
+                  {
+                    title: t('menu.sort'),
+                    dataIndex: 'sort',
+                    render: (value) => displayText(value),
+                  },
                   {
                     title: t('menu.visible'),
                     dataIndex: 'visible',

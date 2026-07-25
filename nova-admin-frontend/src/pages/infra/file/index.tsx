@@ -6,9 +6,10 @@ import { useMutation } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { getFilePage, uploadFile, deleteFile, type FileRecord } from '@/api/file';
 import { useTableScrollY } from '@/hooks/useTableScrollY';
+import { displayText, isEmptyDisplayValue } from '@/utils/display';
 
 function formatFileSize(size?: number): string {
-  if (size === undefined || size === null) return '-';
+  if (isEmptyDisplayValue(size)) return '-';
   if (size > 1024 * 1024) return `${(size / (1024 * 1024)).toFixed(2)} MB`;
   return `${(size / 1024).toFixed(2)} KB`;
 }
@@ -93,20 +94,20 @@ export default function FilePage() {
       dataIndex: 'originalName',
       width: 200,
       ellipsis: true,
-      render: (v, record) => (v as string) || record.name || '-',
+      render: (value, record) => displayText(displayText(value, record.name), '-'),
     },
     {
       title: 'URL',
       dataIndex: 'url',
       width: 260,
       ellipsis: true,
-      render: (v) =>
-        v ? (
-          <a href={v as string} target="_blank" rel="noopener noreferrer" className="break-all">
-            {v}
-          </a>
-        ) : (
+      render: (value) =>
+        isEmptyDisplayValue(value) ? (
           '-'
+        ) : (
+          <a href={value as string} target="_blank" rel="noopener noreferrer" className="break-all">
+            {value}
+          </a>
         ),
     },
     {
@@ -122,7 +123,7 @@ export default function FilePage() {
       width: 140,
       valueType: 'select',
       valueEnum: contentTypeEnum,
-      render: (v) => (v as string) || '-',
+      render: (value) => displayText(value),
     },
     {
       title: t('file.storageType'),
@@ -131,7 +132,7 @@ export default function FilePage() {
       search: false,
       render: (_, r) => {
         const label = storageTypeMap[r.storageType ?? ''] || r.storageType;
-        return r.storageType ? <Tag color="blue">{label}</Tag> : '-';
+        return isEmptyDisplayValue(r.storageType) ? '-' : <Tag color="blue">{label}</Tag>;
       },
     },
     {
@@ -139,7 +140,7 @@ export default function FilePage() {
       dataIndex: 'createTime',
       width: 180,
       search: false,
-      render: (v) => (v as string) || '-',
+      render: (value) => displayText(value),
     },
     {
       title: t('common.delete'),

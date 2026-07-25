@@ -3,6 +3,7 @@ import { EditOutlined, DeleteOutlined } from '@ant-design/icons';
 import type { ProColumns } from '@ant-design/pro-components';
 import { useTranslation } from 'react-i18next';
 import type { UserRecord } from '@/api/user';
+import { displayText } from '@/utils/display';
 
 export interface UserColumnDeps {
   onEdit: (record: UserRecord) => void;
@@ -18,21 +19,33 @@ export const useUserColumns = (deps: UserColumnDeps): ProColumns<UserRecord>[] =
   const { onEdit, onResetPwd, onDelete, toggleStatus, toggleLoading } = deps;
 
   return [
-    { title: t('user.account'), dataIndex: 'account', width: 120, ellipsis: true },
-    { title: t('user.nickname'), dataIndex: 'nickname', width: 120, ellipsis: true },
+    {
+      title: t('user.account'),
+      dataIndex: 'account',
+      width: 120,
+      ellipsis: true,
+      render: (value) => displayText(value),
+    },
+    {
+      title: t('user.nickname'),
+      dataIndex: 'nickname',
+      width: 120,
+      ellipsis: true,
+      render: (value) => displayText(value),
+    },
     {
       title: t('user.dept'),
       dataIndex: 'deptName',
       width: 140,
       search: false,
-      render: (v) => v || '-',
+      render: (value) => displayText(value),
     },
     {
       title: t('user.phone'),
       dataIndex: 'phone',
       width: 130,
       ellipsis: true,
-      render: (v) => v || '-',
+      render: (value) => displayText(value),
     },
     {
       title: t('user.status'),
@@ -59,7 +72,7 @@ export const useUserColumns = (deps: UserColumnDeps): ProColumns<UserRecord>[] =
       width: 180,
       valueType: 'dateTime',
       search: false,
-      render: (v) => v || '-',
+      render: (value) => displayText(value),
     },
     {
       title: t('user.action'),

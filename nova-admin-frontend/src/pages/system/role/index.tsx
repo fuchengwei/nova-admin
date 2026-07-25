@@ -29,6 +29,7 @@ import {
 } from '@/api/role';
 import { getMenuTree } from '@/api/menu';
 import { useTableScrollY } from '@/hooks/useTableScrollY';
+import { displayText } from '@/utils/display';
 
 const DATA_SCOPE_MAP: Record<number, string> = {
   1: 'dataScopeAll',
@@ -102,8 +103,20 @@ export default function RolePage() {
   }));
 
   const columns: ProColumns<RoleRecord>[] = [
-    { title: t('role.roleName'), dataIndex: 'name', width: 160, ellipsis: true },
-    { title: t('role.roleCode'), dataIndex: 'code', width: 160, ellipsis: true },
+    {
+      title: t('role.roleName'),
+      dataIndex: 'name',
+      width: 160,
+      ellipsis: true,
+      render: (value) => displayText(value),
+    },
+    {
+      title: t('role.roleCode'),
+      dataIndex: 'code',
+      width: 160,
+      ellipsis: true,
+      render: (value) => displayText(value),
+    },
     {
       title: t('role.dataScope'),
       dataIndex: 'dataScope',
@@ -121,7 +134,13 @@ export default function RolePage() {
         return key ? <Tag color="blue">{t(`role.${key}`)}</Tag> : '-';
       },
     },
-    { title: t('role.sort'), dataIndex: 'sort', width: 80, search: false },
+    {
+      title: t('role.sort'),
+      dataIndex: 'sort',
+      width: 80,
+      search: false,
+      render: (value) => displayText(value),
+    },
     {
       title: t('role.status'),
       dataIndex: 'status',
@@ -144,7 +163,7 @@ export default function RolePage() {
       width: 180,
       valueType: 'dateTime',
       search: false,
-      render: (v) => v || '-',
+      render: (value) => displayText(value),
     },
     {
       title: t('role.action'),

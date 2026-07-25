@@ -32,6 +32,7 @@ import {
   type JobPageQuery,
 } from '@/api/job';
 import { useTableScrollY } from '@/hooks/useTableScrollY';
+import { displayText, isEmptyDisplayValue } from '@/utils/display';
 
 const statusEnum = {
   1: { text: '运行中', status: 'Success' },
@@ -92,16 +93,32 @@ export default function JobPage() {
   });
 
   const columns: ProColumns<SysJob>[] = [
-    { title: t('job.jobName'), dataIndex: 'jobName', width: 160, ellipsis: true },
-    { title: t('job.jobGroup'), dataIndex: 'jobGroup', width: 100 },
+    {
+      title: t('job.jobName'),
+      dataIndex: 'jobName',
+      width: 160,
+      ellipsis: true,
+      render: (value) => displayText(value),
+    },
+    {
+      title: t('job.jobGroup'),
+      dataIndex: 'jobGroup',
+      width: 100,
+      render: (value) => displayText(value),
+    },
     {
       title: t('job.invokeTarget'),
       dataIndex: 'invokeTarget',
       width: 200,
       ellipsis: true,
-      render: (v) => <code>{v as string}</code>,
+      render: (value) => (isEmptyDisplayValue(value) ? '-' : <code>{displayText(value)}</code>),
     },
-    { title: t('job.cronExpression'), dataIndex: 'cronExpression', width: 150 },
+    {
+      title: t('job.cronExpression'),
+      dataIndex: 'cronExpression',
+      width: 150,
+      render: (value) => displayText(value),
+    },
     {
       title: t('job.status'),
       dataIndex: 'status',
@@ -120,21 +137,26 @@ export default function JobPage() {
       dataIndex: 'concurrent',
       width: 100,
       search: false,
-      render: (_, r) => (r.concurrent === 1 ? t('job.concurrentAllow') : t('job.concurrentForbid')),
+      render: (_, record) =>
+        isEmptyDisplayValue(record.concurrent)
+          ? '-'
+          : record.concurrent === 1
+            ? t('job.concurrentAllow')
+            : t('job.concurrentForbid'),
     },
     {
       title: t('job.remark'),
       dataIndex: 'remark',
       width: 160,
       search: false,
-      render: (v) => (v as string) || '-',
+      render: (value) => displayText(value),
     },
     {
       title: t('job.createTime'),
       dataIndex: 'createTime',
       width: 170,
       search: false,
-      render: (v) => (v as string) || '-',
+      render: (value) => displayText(value),
     },
     {
       title: t('common.action'),
