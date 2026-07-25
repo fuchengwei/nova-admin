@@ -11,6 +11,7 @@ import com.nova.admin.modules.auth.security.UserDetailsServiceImpl;
 import com.nova.admin.modules.system.dto.UserInfoDTO;
 import com.nova.admin.modules.system.entity.SysUser;
 import com.nova.admin.modules.system.mapper.SysUserMapper;
+import com.nova.admin.modules.system.service.SysLoginLogService;
 import io.jsonwebtoken.Claims;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -39,6 +40,7 @@ public class AuthService {
     private final SysUserMapper userMapper;
     private final UserDetailsServiceImpl userDetailsService;
     private final RedisTemplate<String, Object> redisTemplate;
+    private final SysLoginLogService loginLogService;
 
     /** 登录 */
     public LoginResponse login(LoginRequest req, HttpServletRequest httpReq) {
@@ -46,23 +48,30 @@ public class AuthService {
         captchaService.verify(req.getCaptchaKey(), req.getCaptchaCode());
 
         String account = req.getAccount();
+        String ip = resolveIp(httpReq);
+        String userAgent = httpReq.getHeader("User-Agent");
+
         // 1. 账号是否已锁定
         if (loginAttemptService.isLocked(account)) {
+            loginLogService.recordLoginLog(account, ip, userAgent, false, "账号已锁定");
             throw new BizException(ResultCode.USER_LOCKED);
         }
         // 2. 查用户
         SysUser user = userMapper.selectByAccount(account);
         if (user == null) {
             loginAttemptService.recordFailure(account);
+            loginLogService.recordLoginLog(account, ip, userAgent, false, "账号或密码错误");
             throw new BizException(ResultCode.USERNAME_OR_PASSWORD_INVALID);
         }
         if (user.getStatus() != null && user.getStatus() == 0) {
+            loginLogService.recordLoginLog(account, ip, userAgent, false, "账号已禁用");
             throw new BizException(ResultCode.USER_DISABLED);
         }
         // 3. 校验密码
         if (!passwordEncoder.matches(req.getPassword(), user.getPassword())) {
             long count = loginAttemptService.recordFailure(account);
             log.warn("登录失败: account={} attempts={}", account, count);
+            loginLogService.recordLoginLog(account, ip, userAgent, false, "账号或密码错误");
             throw new BizException(ResultCode.USERNAME_OR_PASSWORD_INVALID);
         }
         loginAttemptService.reset(account);
@@ -72,7 +81,6 @@ public class AuthService {
         String refresh = jwtUtil.generateRefreshToken(user.getId(), user.getAccount());
 
         // 5. 刷新登录用户缓存（含 loginIp/time）
-        String ip = resolveIp(httpReq);
         LoginUser loginUser = userDetailsService.refreshCache(user, ip);
 
         // 6. 写入 refresh_token 索引（用于注销/踢人）
@@ -85,6 +93,8 @@ public class AuthService {
         user.setLastLoginIp(ip);
         user.setLastLoginTime(LocalDateTime.now());
         userMapper.updateById(user);
+
+        loginLogService.recordLoginLog(account, ip, userAgent, true, "登录成功");
 
         // 8. 构造响应
         UserInfoDTO userInfo = UserInfoDTO.builder()
