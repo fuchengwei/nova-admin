@@ -233,9 +233,16 @@ export default function MenuPage() {
                     }
                     onConfirm={() => {
                       if (!selectedMenu) return;
-                      deleteMutation.mutate(selectedMenu.id);
-                      setSelectedMenu(null);
-                      queryClient.invalidateQueries({ queryKey: ['menuTree'] });
+                      deleteMutation.mutate(selectedMenu.id, {
+                        onSuccess: (res) => {
+                          if (res.code !== 0) {
+                            message.error(res.msg || t('common.error'));
+                            return;
+                          }
+                          setSelectedMenu(null);
+                          queryClient.invalidateQueries({ queryKey: ['menuTree'] });
+                        },
+                      });
                     }}
                     okText={t('common.confirm')}
                     cancelText={t('common.cancel')}
