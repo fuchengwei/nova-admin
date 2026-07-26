@@ -46,7 +46,6 @@ export default {
     dict: 'Dictionary',
     file: 'File Management',
     job: 'Scheduled Tasks',
-    gen: 'Code Generator',
     server: 'Server Monitor',
     // 菜单表单
     menuName: 'Menu Name',
@@ -282,13 +281,6 @@ export default {
     clean: 'Clean',
     cleanConfirm: 'Confirm clean all logs?',
     cleanSuccess: 'Cleaned successfully',
-  },
-  gen: {
-    tableName: 'Table Name',
-    tableComment: 'Table Comment',
-    preview: 'Preview',
-    download: 'Download',
-    downloadSuccess: 'Downloaded',
   },
   monitor: {
     tabServer: 'Server Monitor',

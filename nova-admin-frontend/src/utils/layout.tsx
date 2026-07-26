@@ -48,7 +48,6 @@ export function fallbackRoutes(t: (key: string) => string): LayoutRoute[] {
         { path: '/system/menu', name: t('menu.menu'), icon: getIcon('MenuOutlined') },
         { path: '/system/dict', name: t('menu.dict'), icon: getIcon('BookOutlined') },
         { path: '/system/log', name: t('menu.log'), icon: getIcon('FileOutlined') },
-        { path: '/tool/gen', name: t('menu.gen'), icon: getIcon('CodeOutlined') },
       ],
     },
     {

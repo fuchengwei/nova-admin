@@ -47,7 +47,6 @@ export default {
     log: '日志管理',
     file: '文件管理',
     job: '定时任务',
-    gen: '代码生成器',
     server: '服务监控',
     // 菜单表单
     menuName: '菜单名称',
@@ -283,13 +282,6 @@ export default {
     clean: '清空',
     cleanConfirm: '确认清空日志吗？',
     cleanSuccess: '清空成功',
-  },
-  gen: {
-    tableName: '表名称',
-    tableComment: '表描述',
-    preview: '预览',
-    download: '下载',
-    downloadSuccess: '下载成功',
   },
   monitor: {
     tabServer: '服务器监控',

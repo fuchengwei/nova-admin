@@ -280,51 +280,6 @@ COMMENT ON TABLE sys_job_log IS '任务执行日志';
 CREATE INDEX idx_joblog_job ON sys_job_log(job_id);
 
 -- =====================================================
--- 10. 代码生成
--- =====================================================
-DROP TABLE IF EXISTS gen_table CASCADE;
-CREATE TABLE gen_table (
-    id              BIGINT PRIMARY KEY,
-    table_name      VARCHAR(64) NOT NULL,
-    table_comment   VARCHAR(255),
-    class_name      VARCHAR(128),
-    tpl_category    VARCHAR(32),
-    module_name     VARCHAR(64),
-    business_name   VARCHAR(64),
-    function_name   VARCHAR(64),
-    author          VARCHAR(64),
-    gen_path        VARCHAR(255),
-    create_by       BIGINT,
-    create_time     TIMESTAMP,
-    update_by       BIGINT,
-    update_time     TIMESTAMP,
-    deleted         SMALLINT NOT NULL DEFAULT 0
-);
-COMMENT ON TABLE gen_table IS '代码生成-表配置';
-
-DROP TABLE IF EXISTS gen_table_column CASCADE;
-CREATE TABLE gen_table_column (
-    id              BIGINT PRIMARY KEY,
-    table_id        BIGINT NOT NULL,
-    column_name     VARCHAR(64) NOT NULL,
-    column_comment  VARCHAR(255),
-    column_type     VARCHAR(64),
-    java_type       VARCHAR(32),
-    java_field      VARCHAR(64),
-    is_pk           SMALLINT,
-    is_increment    SMALLINT,
-    is_required     SMALLINT,
-    is_list         SMALLINT,
-    is_query        SMALLINT,
-    query_type      VARCHAR(32),
-    html_type       VARCHAR(32),
-    dict_type       VARCHAR(128),
-    sort            INT
-);
-COMMENT ON TABLE gen_table_column IS '代码生成-字段配置';
-CREATE INDEX idx_gencol_table ON gen_table_column(table_id);
-
--- =====================================================
 -- 11. 初始化数据
 -- =====================================================
 -- 根部门
@@ -406,11 +361,6 @@ VALUES
     (52, 2,  '服务监控', 'C', 'monitor:server:list', '/monitor/server', 'monitor/server/index', 'DashboardOutlined', 1, 1, 1, NOW()),
     (53, 52, '在线用户', 'F', 'monitor:online:list', '', '', '', 0, 0, 1, NOW()),
     (54, 52, '缓存监控', 'F', 'monitor:cache:list', '', '', '', 1, 0, 1, NOW());
-
--- 系统工具-代码生成器菜单与权限
-INSERT INTO sys_menu (id, parent_id, name, type, perms, path, component, icon, sort, visible, status, create_time)
-VALUES
-    (51, 1,  '代码生成器', 'C', 'tool:gen:list', '/tool/gen', 'tool/gen/index', 'CodeOutlined', 6, 1, 1, NOW());
 
 -- 初始账号（密码均为 123456 的 BCrypt 哈希，cost=10）
 -- 如需重新生成：new BCryptPasswordEncoder().encode("123456")
