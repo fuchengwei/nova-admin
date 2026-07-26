@@ -30,11 +30,15 @@ export interface UserInfo {
   id: number;
   account: string;
   nickname: string;
+  realName?: string;
   avatar?: string;
   email?: string;
   phone?: string;
+  gender?: number;
   deptId?: number;
   deptName?: string;
+  lastLoginTime?: string;
+  lastLoginIp?: string;
   roles: string[];
   permissions: string[];
 }

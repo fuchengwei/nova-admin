@@ -13,6 +13,8 @@ import RolePage from '@/pages/system/role';
 import MenuPage from '@/pages/system/menu';
 import DictPage from '@/pages/system/dict';
 import LogPage from '@/pages/system/log';
+import ProfilePage from '@/pages/profile';
+import SystemSettingsPage from '@/pages/system/settings';
 
 // 基础设施
 import FilePage from '@/pages/infra/file';
@@ -30,6 +32,8 @@ const componentMap: Record<string, () => React.JSX.Element> = {
   '/system/menu': MenuPage,
   '/system/dict': DictPage,
   '/system/log': LogPage,
+  '/profile': ProfilePage,
+  '/system/settings': SystemSettingsPage,
   '/infra/file': FilePage,
   '/monitor/job': JobPage,
   '/monitor/server': ServerMonitorPage,
@@ -69,12 +73,15 @@ export const router = createBrowserRouter([
     children: [
       { index: true, element: <Navigate to="/dashboard" replace /> },
       { path: 'dashboard', element: <DashboardPage /> },
+      { path: 'system', element: <Navigate to="/system/settings" replace /> },
       { path: 'system/dept', element: <DeptPage /> },
       { path: 'system/user', element: <UserPage /> },
       { path: 'system/role', element: <RolePage /> },
       { path: 'system/menu', element: <MenuPage /> },
       { path: 'system/dict', element: <DictPage /> },
       { path: 'system/log', element: <LogPage /> },
+      { path: 'profile', element: <ProfilePage /> },
+      { path: 'system/settings', element: <SystemSettingsPage /> },
       { path: 'infra/file', element: <FilePage /> },
       { path: 'monitor/job', element: <JobPage /> },
       { path: 'monitor/server', element: <ServerMonitorPage /> },

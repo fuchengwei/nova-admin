@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo } from 'react';
 import { Dropdown, Avatar, Space, Button, theme as antdTheme, Spin } from 'antd';
-import { DashboardOutlined, UserOutlined, LogoutOutlined, GlobalOutlined } from '@ant-design/icons';
+import { DashboardOutlined, UserOutlined, LogoutOutlined, GlobalOutlined, SettingOutlined } from '@ant-design/icons';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { ProLayout } from '@ant-design/pro-components';
@@ -9,6 +9,12 @@ import { useUserStore } from '@/stores/userStore';
 import { clearTokens, getToken } from '@/utils/request';
 import { getUserInfo, getUserMenus, logout as apiLogout } from '@/api/auth';
 import { toLayoutRoutes, findRouteNode } from '@/utils/layout';
+
+const normalizeImageSrc = (value?: string | null) => {
+  if (typeof value !== 'string') return undefined;
+  const trimmed = value.trim();
+  return trimmed ? trimmed : undefined;
+};
 
 export default function AdminLayout() {
   const navigate = useNavigate();
@@ -64,13 +70,29 @@ export default function AdminLayout() {
     },
   };
 
+  const canOpenSettings =
+    userInfo?.roles?.includes('super_admin') ||
+    permissions.includes('system:settings:view') ||
+    permissions.includes('system:settings:edit');
+
   const userMenu = {
     items: [
       { key: 'profile', icon: <UserOutlined />, label: t('header.profile') },
+      ...(canOpenSettings
+        ? [{ key: 'settings', icon: <SettingOutlined />, label: t('menu.settings') }]
+        : []),
       { type: 'divider' as const },
       { key: 'logout', icon: <LogoutOutlined />, label: t('header.logout'), danger: true },
     ],
     onClick: async ({ key }: { key: string }) => {
+      if (key === 'profile') {
+        navigate('/profile');
+        return;
+      }
+      if (key === 'settings') {
+        navigate('/system/settings');
+        return;
+      }
       if (key === 'logout') {
         try {
           await apiLogout();
@@ -83,6 +105,8 @@ export default function AdminLayout() {
       }
     },
   };
+
+  const safeAvatarSrc = normalizeImageSrc(userInfo?.avatar);
 
   // 菜单未加载时显示加载器，避免 ProLayout 缓存空菜单树
   if (!menusLoaded) {
@@ -135,7 +159,7 @@ export default function AdminLayout() {
               </Dropdown>,
               <Dropdown key="user" menu={userMenu} placement="bottomRight">
                 <Space className="cursor-pointer">
-                  <Avatar src={userInfo?.avatar} icon={<UserOutlined />} />
+                  <Avatar src={safeAvatarSrc} icon={<UserOutlined />} />
                   <span>{userInfo?.nickname ?? userInfo?.account ?? 'Admin'}</span>
                 </Space>
               </Dropdown>,
