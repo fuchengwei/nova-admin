@@ -280,6 +280,28 @@ COMMENT ON TABLE sys_job_log IS '任务执行日志';
 CREATE INDEX idx_joblog_job ON sys_job_log(job_id);
 
 -- =====================================================
+-- 10. 系统配置
+-- =====================================================
+DROP TABLE IF EXISTS sys_config CASCADE;
+CREATE TABLE sys_config (
+    id              BIGINT PRIMARY KEY,
+    config_key      VARCHAR(128) NOT NULL,
+    config_value    TEXT,
+    config_group    VARCHAR(32) NOT NULL,
+    value_type      VARCHAR(32) NOT NULL DEFAULT 'string',
+    description     VARCHAR(255),
+    builtin         SMALLINT NOT NULL DEFAULT 1,
+    create_by       BIGINT,
+    create_time     TIMESTAMP,
+    update_by       BIGINT,
+    update_time     TIMESTAMP,
+    deleted         SMALLINT NOT NULL DEFAULT 0
+);
+COMMENT ON TABLE sys_config IS '系统配置表';
+CREATE UNIQUE INDEX uk_config_key ON sys_config(config_key) WHERE deleted = 0;
+CREATE INDEX idx_config_group ON sys_config(config_group);
+
+-- =====================================================
 -- 11. 初始化数据
 -- =====================================================
 -- 根部门
@@ -338,7 +360,43 @@ VALUES
     (34, 28, '删除字典', 'F', 'system:dict:remove', '', '', '', 2, 0, 1, NOW()),
     -- 日志管理
     (35, 1, '日志管理', 'C', 'system:log:list',    '/system/log', 'system/log/index', 'FileOutlined', 5, 1, 1, NOW()),
-    (36, 35, '删除日志', 'F', 'system:log:remove', '', '', '', 0, 0, 1, NOW());
+    (36, 35, '删除日志', 'F', 'system:log:remove', '', '', '', 0, 0, 1, NOW()),
+    -- 系统设置
+    (37, 1, '系统设置', 'C', 'system:settings:view', '/system/settings', 'system/settings/index', 'ControlOutlined', 6, 1, 1, NOW()),
+    (38, 37, '修改设置', 'F', 'system:settings:edit', '', '', '', 0, 0, 1, NOW());
+
+-- 系统配置默认值
+INSERT INTO sys_config (id, config_key, config_value, config_group, value_type, description, builtin, create_time, update_time, deleted)
+VALUES
+    (1001, 'site.name', 'Nova Admin', 'basic', 'string', '系统名称', 1, NOW(), NOW(), 0),
+    (1002, 'site.browser-title', 'Nova Admin', 'basic', 'string', '浏览器标题', 1, NOW(), NOW(), 0),
+    (1003, 'site.logo-url', '', 'basic', 'string', 'Logo URL', 1, NOW(), NOW(), 0),
+    (1004, 'site.default-language', 'zh_CN', 'basic', 'string', '默认语言', 1, NOW(), NOW(), 0),
+    (1005, 'site.theme-color', '#1677ff', 'basic', 'string', '主题色', 1, NOW(), NOW(), 0),
+    (1006, 'site.copyright', '© 2026 Nova Admin', 'basic', 'string', '版权文本', 1, NOW(), NOW(), 0),
+    (1101, 'security.password.min-length', '6', 'security', 'number', '密码最小长度', 1, NOW(), NOW(), 0),
+    (1102, 'security.password.require-number', 'false', 'security', 'boolean', '密码要求数字', 1, NOW(), NOW(), 0),
+    (1103, 'security.password.require-letter', 'false', 'security', 'boolean', '密码要求字母', 1, NOW(), NOW(), 0),
+    (1104, 'security.password.require-special', 'false', 'security', 'boolean', '密码要求特殊字符', 1, NOW(), NOW(), 0),
+    (1105, 'security.login.max-attempts', '5', 'security', 'number', '登录失败锁定次数', 1, NOW(), NOW(), 0),
+    (1106, 'security.login.lock-minutes', '10', 'security', 'number', '登录锁定分钟数', 1, NOW(), NOW(), 0),
+    (1107, 'security.captcha.enabled', 'true', 'security', 'boolean', '验证码开关', 1, NOW(), NOW(), 0),
+    (1108, 'security.token.access-minutes', '120', 'security', 'number', '访问 Token 有效期', 1, NOW(), NOW(), 0),
+    (1109, 'security.token.refresh-minutes', '10080', 'security', 'number', '刷新 Token 有效期', 1, NOW(), NOW(), 0),
+    (1201, 'upload.max-size-mb', '100', 'upload', 'number', '通用最大上传大小', 1, NOW(), NOW(), 0),
+    (1202, 'upload.allowed-types', '*', 'upload', 'string', '通用允许文件类型', 1, NOW(), NOW(), 0),
+    (1203, 'upload.avatar.max-size-mb', '5', 'upload', 'number', '头像最大上传大小', 1, NOW(), NOW(), 0),
+    (1204, 'upload.avatar.allowed-types', 'image/png,image/jpeg,image/gif,image/webp,.png,.jpg,.jpeg,.gif,.webp', 'upload', 'string', '头像允许文件类型', 1, NOW(), NOW(), 0),
+    (1301, 'notice.title', '', 'notice', 'string', '公告标题', 1, NOW(), NOW(), 0),
+    (1302, 'notice.content', '', 'notice', 'string', '公告内容', 1, NOW(), NOW(), 0),
+    (1303, 'notice.enabled', 'false', 'notice', 'boolean', '公告启用状态', 1, NOW(), NOW(), 0),
+    (1304, 'notice.level', 'info', 'notice', 'string', '公告级别', 1, NOW(), NOW(), 0),
+    (1305, 'notice.email.enabled', 'false', 'notice', 'boolean', '邮件通知开关', 1, NOW(), NOW(), 0),
+    (1306, 'notice.email.host', '', 'notice', 'string', '邮件服务器', 1, NOW(), NOW(), 0),
+    (1307, 'notice.email.port', '25', 'notice', 'number', '邮件端口', 1, NOW(), NOW(), 0),
+    (1308, 'notice.email.username', '', 'notice', 'string', '邮件账号', 1, NOW(), NOW(), 0),
+    (1309, 'notice.sms.enabled', 'false', 'notice', 'boolean', '短信通知开关', 1, NOW(), NOW(), 0),
+    (1310, 'notice.sms.provider', '', 'notice', 'string', '短信服务商', 1, NOW(), NOW(), 0);
 
 -- 定时任务示例数据（默认暂停，可在界面启动）
 INSERT INTO sys_job (id, job_name, job_group, invoke_target, cron_expression, status, misfire_policy, concurrent, remark, create_time)

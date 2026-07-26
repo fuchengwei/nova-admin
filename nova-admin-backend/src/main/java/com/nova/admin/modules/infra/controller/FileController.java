@@ -6,6 +6,7 @@ import com.nova.admin.common.base.BaseController;
 import com.nova.admin.modules.infra.dto.FilePageQuery;
 import com.nova.admin.modules.infra.entity.SysFile;
 import com.nova.admin.modules.infra.service.FileService;
+import com.nova.admin.modules.system.service.SysConfigService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -26,6 +27,7 @@ import org.springframework.web.multipart.MultipartFile;
 public class FileController extends BaseController {
 
     private final FileService fileService;
+    private final SysConfigService sysConfigService;
 
     @GetMapping("/page")
     @PreAuthorize("hasAuthority('infra:file:list')")
@@ -38,6 +40,7 @@ public class FileController extends BaseController {
     @PreAuthorize("hasAuthority('infra:file:upload')")
     @Operation(summary = "上传文件")
     public R<SysFile> upload(@RequestParam("file") MultipartFile file) {
+        sysConfigService.validateUpload(file, false);
         return ok(fileService.upload(file));
     }
 

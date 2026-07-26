@@ -3,6 +3,7 @@ package com.nova.admin.modules.system.controller;
 import com.nova.admin.common.api.PageResult;
 import com.nova.admin.common.api.R;
 import com.nova.admin.common.base.BaseController;
+import com.nova.admin.modules.system.dto.ResetPasswordRequest;
 import com.nova.admin.modules.system.dto.UserCreateRequest;
 import com.nova.admin.modules.system.dto.UserPageQuery;
 import com.nova.admin.modules.system.dto.UserUpdateRequest;
@@ -68,8 +69,8 @@ public class SysUserController extends BaseController {
     @PutMapping("/{id}/reset-password")
     @PreAuthorize("hasAuthority('system:user:reset-pwd')")
     @Operation(summary = "重置密码")
-    public R<Void> resetPassword(@PathVariable Long id, @RequestBody Map<String, String> body) {
-        sysUserService.resetPassword(id, body.get("password"));
+    public R<Void> resetPassword(@PathVariable Long id, @Valid @RequestBody ResetPasswordRequest body) {
+        sysUserService.resetPassword(id, body.getPassword());
         return ok();
     }
 

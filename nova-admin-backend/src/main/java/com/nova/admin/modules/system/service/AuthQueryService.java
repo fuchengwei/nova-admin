@@ -8,6 +8,8 @@ import com.nova.admin.modules.system.dto.MenuTreeDTO;
 import com.nova.admin.modules.system.dto.UserInfoDTO;
 import com.nova.admin.modules.system.entity.SysMenu;
 import com.nova.admin.modules.system.entity.SysUser;
+import com.nova.admin.modules.system.entity.SysDept;
+import com.nova.admin.modules.system.mapper.SysDeptMapper;
 import com.nova.admin.modules.system.mapper.SysMenuMapper;
 import com.nova.admin.modules.system.mapper.SysUserMapper;
 import lombok.RequiredArgsConstructor;
@@ -28,6 +30,7 @@ import static com.nova.admin.modules.system.service.impl.SysMenuServiceImpl.getM
 public class AuthQueryService {
 
     private final SysUserMapper userMapper;
+    private final SysDeptMapper deptMapper;
     private final SysMenuMapper menuMapper;
 
     public UserInfoDTO currentUserInfo(Long userId) {
@@ -42,11 +45,15 @@ public class AuthQueryService {
                 .id(user.getId())
                 .account(user.getAccount())
                 .nickname(user.getNickname())
+                .realName(user.getRealName())
                 .avatar(user.getAvatar())
                 .email(user.getEmail())
                 .phone(user.getPhone())
+                .gender(user.getGender())
                 .deptId(user.getDeptId())
-                .deptName(user.getDeptName())
+                .deptName(resolveDeptName(user))
+                .lastLoginTime(user.getLastLoginTime())
+                .lastLoginIp(user.getLastLoginIp())
                 .roles(lu.getRoles() == null ? List.of() : new ArrayList<>(lu.getRoles()))
                 .permissions(lu.getPermissions() == null ? List.of() : new ArrayList<>(lu.getPermissions()))
                 .build();
@@ -100,5 +107,13 @@ public class AuthQueryService {
 
     private MenuTreeDTO toDto(SysMenu m) {
         return getMenuTreeDTO(m);
+    }
+
+    private String resolveDeptName(SysUser user) {
+        if (user.getDeptName() != null || user.getDeptId() == null) {
+            return user.getDeptName();
+        }
+        SysDept dept = deptMapper.selectById(user.getDeptId());
+        return dept == null ? null : dept.getName();
     }
 }

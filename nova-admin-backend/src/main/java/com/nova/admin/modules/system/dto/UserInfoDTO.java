@@ -6,6 +6,7 @@ import lombok.Data;
 
 import java.io.Serial;
 import java.io.Serializable;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Data
@@ -25,6 +26,9 @@ public class UserInfoDTO implements Serializable {
     @Schema(description = "昵称")
     private String nickname;
 
+    @Schema(description = "真实姓名")
+    private String realName;
+
     @Schema(description = "头像")
     private String avatar;
 
@@ -34,11 +38,20 @@ public class UserInfoDTO implements Serializable {
     @Schema(description = "电话")
     private String phone;
 
+    @Schema(description = "性别: 0未知 1男 2女")
+    private Integer gender;
+
     @Schema(description = "部门 ID")
     private Long deptId;
 
     @Schema(description = "部门名称")
     private String deptName;
+
+    @Schema(description = "最近登录时间")
+    private LocalDateTime lastLoginTime;
+
+    @Schema(description = "最近登录 IP")
+    private String lastLoginIp;
 
     @Schema(description = "角色编码列表")
     private List<String> roles;

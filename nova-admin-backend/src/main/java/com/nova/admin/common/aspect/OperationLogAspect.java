@@ -18,8 +18,11 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 
 import java.lang.reflect.Method;
 import java.time.LocalDateTime;
+import org.springframework.web.multipart.MultipartFile;
+
 import java.util.Arrays;
 import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Aspect
@@ -80,7 +83,7 @@ public class OperationLogAspect {
         try {
             Object[] args = pjp.getArgs();
             if (args != null && args.length > 0) {
-                opLog.setJavaArgs(Arrays.toString(args));
+                opLog.setJavaArgs(sanitizeArgs(args));
             }
         } catch (Exception ignored) {
         }
@@ -111,5 +114,25 @@ public class OperationLogAspect {
             return ip;
         }
         return req.getRemoteAddr();
+    }
+
+    private String sanitizeArgs(Object[] args) {
+        return Arrays.stream(args)
+                .map(this::sanitizeArg)
+                .collect(Collectors.joining(", ", "[", "]"));
+    }
+
+    private String sanitizeArg(Object arg) {
+        if (arg == null) {
+            return "null";
+        }
+        if (arg instanceof MultipartFile file) {
+            return "MultipartFile{name=" + file.getOriginalFilename() + ", size=" + file.getSize() + "}";
+        }
+        String text = String.valueOf(arg);
+        if (text.contains("oldPassword") || text.contains("newPassword") || text.contains("password")) {
+            return "[MASKED]";
+        }
+        return text;
     }
 }

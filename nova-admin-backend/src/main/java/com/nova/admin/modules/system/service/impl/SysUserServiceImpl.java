@@ -15,6 +15,7 @@ import com.nova.admin.modules.system.entity.SysUserRole;
 import com.nova.admin.modules.system.mapper.SysDeptMapper;
 import com.nova.admin.modules.system.mapper.SysUserMapper;
 import com.nova.admin.modules.system.mapper.SysUserRoleMapper;
+import com.nova.admin.modules.system.service.SysConfigService;
 import com.nova.admin.modules.system.service.SysUserService;
 import com.nova.admin.security.SecurityUtils;
 import lombok.RequiredArgsConstructor;
@@ -40,6 +41,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
     private final SysUserRoleMapper userRoleMapper;
     private final SysDeptMapper deptMapper;
     private final PasswordEncoder passwordEncoder;
+    private final SysConfigService sysConfigService;
 
     @Override
     public PageResult<SysUser> getUserPage(UserPageQuery query) {
@@ -89,6 +91,8 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
     public Long createUser(UserCreateRequest req) {
         // 自动生成唯一账号
         String account = generateUniqueAccount();
+
+        sysConfigService.validatePassword(req.getPassword());
 
         SysUser user = new SysUser();
         user.setAccount(account);
@@ -167,6 +171,8 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
         if (existing == null) {
             throw new BizException(ResultCode.USER_NOT_FOUND);
         }
+
+        sysConfigService.validatePassword(newPassword);
 
         SysUser user = new SysUser();
         user.setId(id);

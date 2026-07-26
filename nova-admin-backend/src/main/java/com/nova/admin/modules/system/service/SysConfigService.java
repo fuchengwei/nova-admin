@@ -1,0 +1,32 @@
+package com.nova.admin.modules.system.service;
+
+import com.baomidou.mybatisplus.extension.service.IService;
+import com.nova.admin.modules.system.dto.BasicSettingsDTO;
+import com.nova.admin.modules.system.dto.NoticeSettingsDTO;
+import com.nova.admin.modules.system.dto.SecuritySettingsDTO;
+import com.nova.admin.modules.system.dto.UploadSettingsDTO;
+import com.nova.admin.modules.system.entity.SysConfig;
+import org.springframework.web.multipart.MultipartFile;
+
+public interface SysConfigService extends IService<SysConfig> {
+
+    BasicSettingsDTO getBasicSettings();
+
+    SecuritySettingsDTO getSecuritySettings();
+
+    UploadSettingsDTO getUploadSettings();
+
+    NoticeSettingsDTO getNoticeSettings();
+
+    void updateBasicSettings(BasicSettingsDTO settings);
+
+    void updateSecuritySettings(SecuritySettingsDTO settings);
+
+    void updateUploadSettings(UploadSettingsDTO settings);
+
+    void updateNoticeSettings(NoticeSettingsDTO settings);
+
+    void validatePassword(String rawPassword);
+
+    void validateUpload(MultipartFile file, boolean avatar);
+}
