@@ -45,17 +45,77 @@ body,
   display: flex;
   flex-direction: column;
 }
-.tabs-fill > .ant-tabs-content-holder {
+.tabs-fill > .ant-tabs-nav {
+  flex: 0 0 auto;
+}
+.tabs-fill > .ant-tabs-body-holder {
   flex: 1;
   min-height: 0;
 }
-.tabs-fill > .ant-tabs-content-holder > .ant-tabs-content {
+.tabs-fill > .ant-tabs-body-holder > .ant-tabs-body {
   height: 100%;
 }
-.tabs-fill > .ant-tabs-content-holder > .ant-tabs-content > .ant-tabs-tabpane {
+/* antd v6 Tabs：content 中间层承担高度/布局。需排除 hidden panel，
+   否则选择器优先级 (0,4,0) 会覆盖 antd 自身的 `display: none`，
+   导致非激活面板也以 flex 形式渲染、与激活面板叠加。 */
+.tabs-fill > .ant-tabs-body-holder > .ant-tabs-body > .ant-tabs-content:not(.ant-tabs-content-hidden) {
   height: 100%;
+  display: flex;
+  flex-direction: column;
 }
-.tabs-fill .ant-tabs-tabpane-active {
+.tabs-fill
+  > .ant-tabs-body-holder
+  > .ant-tabs-body
+  > .ant-tabs-content:not(.ant-tabs-content-hidden)
+  > .ant-tabs-tabpane-active {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
+/* ProTable 默认只在最外层 .ant-pro-table 设了 height: 100%，
+   内部 .ant-pro-card 仍按内容自然撑高，会撑爆父容器导致分页器被挤出视口。
+   这里强制 .ant-pro-table 内的卡片占满剩余空间并允许收缩。 */
+.tabs-fill .ant-pro-table {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+.tabs-fill .ant-pro-table > .ant-pro-card {
+  flex-shrink: 0;
+}
+.tabs-fill .ant-pro-table > .ant-pro-card:has(.ant-table) {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.tabs-fill .ant-pro-table > .ant-pro-card:has(.ant-table) > .ant-pro-card-body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+.tabs-fill
+  .ant-pro-table
+  > .ant-pro-card:has(.ant-table)
+  > .ant-pro-card-body
+  > .ant-table-wrapper {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+.tabs-fill
+  .ant-pro-table
+  > .ant-pro-card:has(.ant-table)
+  > .ant-pro-card-body
+  > .ant-table-wrapper
+  > .ant-spin-nested-loading {
+  flex: 1;
+  min-height: 0;
   display: flex;
   flex-direction: column;
 }

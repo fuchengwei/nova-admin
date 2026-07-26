@@ -19,8 +19,16 @@ export function useTableScrollY() {
     if (!wrapper) return;
 
     const compute = () => {
+      // ProTable 会渲染多个 .ant-pro-card：搜索区卡片 + 主表格卡片。
+      // 搜索区卡片高度较小（仅表单），主表格卡片包含 .ant-table 且通常更高。
+      // 选「包含 .ant-table 且 offsetHeight 最大」的卡片作为高度基准，
+      // 避免选到搜索区卡片导致算出过小的 scrollY，进而让表格不滚动、分页器被挤出视口。
       const cards = Array.from(wrapper.querySelectorAll<HTMLElement>('.ant-pro-card'));
-      const card = cards.find((el) => el.offsetHeight > 0) ?? cards[0];
+      const tableCards = cards.filter((el) => el.querySelector('.ant-table'));
+      const card =
+        tableCards.length > 0
+          ? tableCards.reduce((a, b) => (a.offsetHeight >= b.offsetHeight ? a : b))
+          : (cards.find((el) => el.offsetHeight > 0) ?? cards[0]);
       if (!card) return;
 
       const cardHeight = card.clientHeight;
@@ -38,8 +46,13 @@ export function useTableScrollY() {
         '.ant-table-pagination.ant-table-pagination',
       );
       const pagHeight = pagination ? pagination.offsetHeight + 16 : 0;
+      // antd v6 的 thead 是 sticky 元素，仍占布局空间；scroll.y 实际是给 .ant-table-content
+      // 设 max-height（其内部包含 thead + tbody），所以需从可用高度中扣除 thead，
+      // 否则会多算一份 thead 高度，导致表格超出 card 范围、把分页器挤出视口。
+      const thead = card.querySelector<HTMLElement>('.ant-table-thead')?.offsetHeight ?? 0;
 
-      const bodyHeight = cardHeight - padTop - padBottom - search - toolbar - alert - pagHeight;
+      const bodyHeight =
+        cardHeight - padTop - padBottom - search - toolbar - alert - pagHeight - thead - 16;
       setScrollY(bodyHeight > 100 ? bodyHeight : undefined);
     };
 

@@ -374,7 +374,8 @@ INSERT INTO sys_user_role (user_id, role_id) VALUES (1, 1), (2, 1);
 
 -- 角色菜单关联（全部菜单给超管）
 INSERT INTO sys_role_menu (role_id, menu_id)
-SELECT 1, id FROM sys_menu;
+SELECT 1, id FROM sys_menu
+ON CONFLICT DO NOTHING;
 
 -- =====================================================
 -- 常用字典数据
