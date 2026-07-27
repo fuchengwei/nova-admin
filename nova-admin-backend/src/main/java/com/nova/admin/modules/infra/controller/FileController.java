@@ -37,7 +37,7 @@ public class FileController extends BaseController {
     }
 
     @PostMapping("/upload")
-    @PreAuthorize("hasAuthority('infra:file:upload')")
+    @PreAuthorize("hasRole('super_admin') or hasAuthority('infra:file:upload') or hasAuthority('system:settings:edit')")
     @Operation(summary = "上传文件")
     public R<SysFile> upload(@RequestParam("file") MultipartFile file) {
         sysConfigService.validateUpload(file, false);

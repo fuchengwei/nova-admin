@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { Card, Button, Typography, message, theme as antdTheme, Form } from 'antd';
+import { Card, Button, Typography, theme as antdTheme, Form } from 'antd';
+import { message } from '@/utils/message';
 import { UserOutlined, LockOutlined, SafetyOutlined, ReloadOutlined } from '@ant-design/icons';
 import { ProForm, ProFormText } from '@ant-design/pro-components';
 import { useNavigate, useSearchParams } from 'react-router-dom';

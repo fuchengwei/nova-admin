@@ -17,6 +17,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
+import java.time.ZoneId;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -41,9 +42,24 @@ public class UserDetailsServiceImpl implements UserDetailsService {
         String cacheKey = Constants.REDIS_KEY_USER + account;
         Object cached = redisTemplate.opsForValue().get(cacheKey);
         if (cached instanceof LoginUser lu) {
+            if (lu.getLoginIp() == null || lu.getLoginTime() == null) {
+                SysUser user = getActiveUser(account);
+                lu.setLoginIp(user.getLastLoginIp());
+                lu.setLoginTime(toEpochMillis(user.getLastLoginTime()));
+                redisTemplate.opsForValue().set(cacheKey, lu, Duration.ofMinutes(30));
+            }
             return new SecurityUser(lu, "");
         }
         // 查数据库
+        SysUser user = getActiveUser(account);
+
+        LoginUser loginUser = buildLoginUser(user, user.getLastLoginIp(), toEpochMillis(user.getLastLoginTime()));
+        // 缓存 30 分钟
+        redisTemplate.opsForValue().set(cacheKey, loginUser, Duration.ofMinutes(30));
+        return new SecurityUser(loginUser, "");
+    }
+
+    private SysUser getActiveUser(String account) {
         SysUser user = userMapper.selectByAccount(account);
         if (user == null) {
             throw new BizException(ResultCode.USER_NOT_FOUND);
@@ -51,11 +67,11 @@ public class UserDetailsServiceImpl implements UserDetailsService {
         if (user.getStatus() != null && user.getStatus() == 0) {
             throw new BizException(ResultCode.USER_DISABLED);
         }
+        return user;
+    }
 
-        LoginUser loginUser = buildLoginUser(user, null, null);
-        // 缓存 30 分钟
-        redisTemplate.opsForValue().set(cacheKey, loginUser, Duration.ofMinutes(30));
-        return new SecurityUser(loginUser, "");
+    private Long toEpochMillis(java.time.LocalDateTime loginTime) {
+        return loginTime == null ? null : loginTime.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
     }
 
     /** 登录后重新建立缓存（包含 loginIp/loginTime） */

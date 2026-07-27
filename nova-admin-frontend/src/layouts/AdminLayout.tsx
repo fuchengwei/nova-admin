@@ -1,9 +1,17 @@
 import { useEffect, useState, useMemo } from 'react';
 import { Dropdown, Avatar, Space, Button, theme as antdTheme, Spin } from 'antd';
-import { DashboardOutlined, UserOutlined, LogoutOutlined, GlobalOutlined, SettingOutlined } from '@ant-design/icons';
+import {
+  DashboardOutlined,
+  UserOutlined,
+  LogoutOutlined,
+  GlobalOutlined,
+  SettingOutlined,
+} from '@ant-design/icons';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { ProLayout } from '@ant-design/pro-components';
+import { useQuery } from '@tanstack/react-query';
+import { getPublicBasicSettings } from '@/api/settings';
 import { useAppStore, type Locale } from '@/stores/appStore';
 import { useUserStore } from '@/stores/userStore';
 import { clearTokens, getToken } from '@/utils/request';
@@ -25,6 +33,13 @@ export default function AdminLayout() {
   const userInfo = useUserStore((s) => s.userInfo);
   const { token } = antdTheme.useToken();
   const [menusLoaded, setMenusLoaded] = useState(false);
+  const { data: basicSettings } = useQuery({
+    queryKey: ['settings', 'public-basic'],
+    queryFn: async () => {
+      const res = await getPublicBasicSettings();
+      return res.code === 0 ? res.data : undefined;
+    },
+  });
 
   // 挂载时并行拉取用户信息 + 菜单，保证 permissions 始终是服务端最新值
   useEffect(() => {
@@ -55,8 +70,9 @@ export default function AdminLayout() {
   useEffect(() => {
     const node = findRouteNode(route.routes ?? [], location.pathname);
     const title = node?.name;
-    document.title = title ? `${title} - Nova Admin` : 'Nova Admin';
-  }, [location.pathname, route]);
+    const browserTitle = basicSettings?.browserTitle || basicSettings?.systemName || 'Nova Admin';
+    document.title = title ? `${title} - ${browserTitle}` : browserTitle;
+  }, [basicSettings?.browserTitle, basicSettings?.systemName, location.pathname, route]);
 
   const langMenu = {
     items: [
@@ -107,6 +123,8 @@ export default function AdminLayout() {
   };
 
   const safeAvatarSrc = normalizeImageSrc(userInfo?.avatar);
+  const safeLogoSrc = normalizeImageSrc(basicSettings?.logoUrl);
+  const systemName = basicSettings?.systemName || 'Nova Admin';
 
   // 菜单未加载时显示加载器，避免 ProLayout 缓存空菜单树
   if (!menusLoaded) {
@@ -121,9 +139,21 @@ export default function AdminLayout() {
     <ProLayout
       title={false}
       logo={
-        <span className="text-base font-bold" style={{ color: token.colorPrimary }}>
-          Nova Admin
-        </span>
+        <div className="flex items-center gap-3 whitespace-nowrap">
+          {safeLogoSrc ? (
+            <img src={safeLogoSrc} alt={systemName} className="h-10 w-10 object-contain" />
+          ) : (
+            <span
+              className="flex h-10 w-10 items-center justify-center rounded-xl text-lg font-bold"
+              style={{ backgroundColor: token.colorPrimary, color: token.colorWhite }}
+            >
+              {systemName.slice(0, 1)}
+            </span>
+          )}
+          <span className="text-lg font-bold" style={{ color: token.colorPrimary }}>
+            {systemName}
+          </span>
+        </div>
       }
       // mix 布局下顶部 Header 正常渲染，actionsRender 生效（side 布局会被库强制 return null）
       // 不启用 splitMenus：完整菜单常驻侧栏，顶部仅放品牌 + 操作区

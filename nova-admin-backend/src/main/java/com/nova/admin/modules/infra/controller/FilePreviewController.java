@@ -3,6 +3,8 @@ package com.nova.admin.modules.infra.controller;
 import com.nova.admin.config.NovaProperties;
 import com.nova.admin.modules.infra.entity.SysFile;
 import com.nova.admin.modules.infra.mapper.SysFileMapper;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
@@ -23,6 +25,7 @@ import java.nio.file.Paths;
  * 文件预览/下载（公开接口，无需鉴权，objectKey 不可猜测）
  */
 @Slf4j
+@Tag(name = "文件管理")
 @RestController
 @RequestMapping("/file/preview")
 public class FilePreviewController {
@@ -36,6 +39,7 @@ public class FilePreviewController {
     }
 
     @GetMapping("/**")
+    @Operation(summary = "预览文件")
     public ResponseEntity<Resource> preview(HttpServletRequest request) {
         String requestUri = request.getRequestURI();
         String prefix = request.getContextPath() + "/file/preview/";

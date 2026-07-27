@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Avatar, Button, Descriptions, Tag, Upload, message } from 'antd';
+import { Avatar, Button, Descriptions, Tag, Upload } from 'antd';
+import { message } from '@/utils/message';
 import type { UploadProps } from 'antd';
 import { EditOutlined, LockOutlined, UploadOutlined, UserOutlined } from '@ant-design/icons';
 import { PageContainer, ProCard } from '@ant-design/pro-components';

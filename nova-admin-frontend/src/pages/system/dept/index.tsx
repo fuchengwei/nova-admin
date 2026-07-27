@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react';
-import { Button, Tree, Space, Popconfirm, message } from 'antd';
+import { Button, Tree, Space, Popconfirm } from 'antd';
+import { message } from '@/utils/message';
 import type { DataNode } from 'antd/es/tree';
 import { PlusOutlined, EditOutlined, DeleteOutlined, ApartmentOutlined } from '@ant-design/icons';
 import { ProCard, ProDescriptions } from '@ant-design/pro-components';

@@ -1,5 +1,5 @@
 import { request } from '@/utils/request';
-import type { R } from '@/types/api';
+import type { PageResult, R } from '@/types/api';
 
 export interface ServerInfo {
   cpu: { cpuNum: number; sys: number; used: number; free: number };
@@ -43,6 +43,14 @@ export interface OnlineUser {
   loginTime?: string;
 }
 
+export interface OnlineUserPageQuery {
+  current: number;
+  size: number;
+  account?: string;
+  nickname?: string;
+  loginIp?: string;
+}
+
 export interface CacheInfo {
   commandStats: Array<{ name: string; value: string }>;
   server: {
@@ -63,6 +71,9 @@ export function getServerInfo() {
 }
 export function getOnlineUsers() {
   return request<R<OnlineUser[]>>({ url: '/monitor/online', method: 'GET' });
+}
+export function getOnlineUserPage(params: OnlineUserPageQuery) {
+  return request<R<PageResult<OnlineUser>>>({ url: '/monitor/online/page', method: 'GET', params });
 }
 export function getCacheInfo() {
   return request<R<CacheInfo>>({ url: '/monitor/cache', method: 'GET' });

@@ -49,7 +49,8 @@ public class SecurityConfig {
             "/actuator/health",
             "/favicon.ico",
             "/error",
-            "/file/preview/**"
+            "/file/preview/**",
+            "/system/config/basic"
     };
 
     @Bean

@@ -1,7 +1,7 @@
 import { Avatar, Button, Upload } from 'antd';
 import type { UploadProps } from 'antd';
 import { SettingOutlined, UploadOutlined } from '@ant-design/icons';
-import { ModalForm, ProFormRadio, ProFormText } from '@ant-design/pro-components';
+import { ModalForm, ProFormRadio, ProFormSelect, ProFormText } from '@ant-design/pro-components';
 import { useTranslation } from 'react-i18next';
 import type { BasicSettings } from '@/api/settings';
 
@@ -71,7 +71,34 @@ export default function BasicSettingsFormModal({
               { label: 'English', value: 'en_US' },
             ]}
           />
-          <ProFormText name="themeColor" label={t('settings.themeColor')} />
+          <ProFormSelect
+            name="themeColor"
+            label={t('settings.themeColor')}
+            options={[
+              { label: t('settings.themeBlue'), value: '#1677ff' },
+              { label: t('settings.themeIndigo'), value: '#4f46e5' },
+              { label: t('settings.themeEmerald'), value: '#10b981' },
+              { label: t('settings.themeOrange'), value: '#f97316' },
+              { label: t('settings.themeRose'), value: '#e11d48' },
+            ]}
+            fieldProps={{
+              optionRender: (option) => (
+                <span className="flex items-center gap-2">
+                  <span
+                    className="h-3 w-3 rounded-full"
+                    style={{ backgroundColor: String(option.value) }}
+                  />
+                  {option.label}
+                </span>
+              ),
+              labelRender: ({ label, value }) => (
+                <span className="flex items-center gap-2">
+                  <span className="h-3 w-3 rounded-full" style={{ backgroundColor: String(value) }} />
+                  {label}
+                </span>
+              ),
+            }}
+          />
           <div className="md:col-span-2">
             <ProFormText name="copyrightText" label={t('settings.copyrightText')} />
           </div>

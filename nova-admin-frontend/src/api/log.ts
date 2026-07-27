@@ -2,7 +2,7 @@ import { request } from '@/utils/request';
 import type { R, PageResult } from '@/types/api';
 
 export interface OperationLogRecord {
-  id: number;
+  id: string;
   module?: string;
   action?: string;
   description?: string;
@@ -19,7 +19,7 @@ export interface OperationLogRecord {
 }
 
 export interface LoginLogRecord {
-  id: number;
+  id: string;
   account?: string;
   ip?: string;
   os?: string;
@@ -29,7 +29,23 @@ export interface LoginLogRecord {
   loginTime?: string;
 }
 
-export const getOperationLogPage = (params: any) =>
+export interface OperationLogPageQuery {
+  current?: number;
+  size?: number;
+  module?: string;
+  action?: string;
+  account?: string;
+  status?: number;
+}
+
+export interface LoginLogPageQuery {
+  current?: number;
+  size?: number;
+  account?: string;
+  status?: number;
+}
+
+export const getOperationLogPage = (params: OperationLogPageQuery) =>
   request<R<PageResult<OperationLogRecord>>>({
     url: '/system/operation-log/page',
     method: 'GET',
@@ -39,7 +55,7 @@ export const getOperationLogPage = (params: any) =>
 export const cleanOperationLog = () =>
   request<R<void>>({ url: '/system/operation-log/clean', method: 'DELETE' });
 
-export const getLoginLogPage = (params: any) =>
+export const getLoginLogPage = (params: LoginLogPageQuery) =>
   request<R<PageResult<LoginLogRecord>>>({ url: '/system/login-log/page', method: 'GET', params });
 
 export const cleanLoginLog = () =>

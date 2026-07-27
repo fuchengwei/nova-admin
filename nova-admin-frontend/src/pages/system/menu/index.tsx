@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react';
-import { Button, Tree, Space, Tag, Popconfirm, message, Form } from 'antd';
+import { Button, Tree, Space, Tag, Popconfirm, Form } from 'antd';
+import { message } from '@/utils/message';
 import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
 import {
   ProCard,

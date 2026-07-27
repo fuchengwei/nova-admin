@@ -1,5 +1,6 @@
 import { useRef } from 'react';
-import { Button, Tag, Tabs, Popconfirm, message } from 'antd';
+import { Button, Tag, Tabs, Popconfirm } from 'antd';
+import { message } from '@/utils/message';
 import { DeleteOutlined } from '@ant-design/icons';
 import { ProTable, type ProColumns, type ActionType } from '@ant-design/pro-components';
 import { useMutation } from '@tanstack/react-query';

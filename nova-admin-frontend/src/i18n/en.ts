@@ -373,7 +373,8 @@ export default {
   },
   settings: {
     title: 'System Settings',
-    subtitle: 'Manage brand presentation, security, upload policy, and notification channels in one place.',
+    subtitle:
+      'Manage brand presentation, security, upload policy, and notification channels in one place.',
     overviewLabel: 'Control Center',
     detailsLabel: 'Detailed Policy',
     basicTab: 'Basic',
@@ -385,7 +386,8 @@ export default {
     uploadDesc: 'Set limits for general files and avatar uploads from one policy surface.',
     noticeDesc: 'Manage announcement content together with email and SMS channels.',
     saveSuccess: 'Settings saved successfully',
-    readonlyHint: 'This account does not have permission to edit system settings. The content below is read-only.',
+    readonlyHint:
+      'This account does not have permission to edit system settings. The content below is read-only.',
     basicSummary: 'Basic Settings Overview',
     securitySummary: 'Security Policy Overview',
     uploadSummary: 'Upload Policy Overview',
@@ -399,6 +401,11 @@ export default {
     logoUrl: 'Logo URL',
     defaultLanguage: 'Default Language',
     themeColor: 'Theme Color',
+    themeBlue: 'Sky Blue',
+    themeIndigo: 'Indigo',
+    themeEmerald: 'Emerald',
+    themeOrange: 'Orange',
+    themeRose: 'Rose',
     copyrightText: 'Copyright Text',
     passwordPolicy: 'Password Policy',
     loginProtection: 'Login Protection',

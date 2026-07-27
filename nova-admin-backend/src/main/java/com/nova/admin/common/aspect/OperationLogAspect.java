@@ -42,8 +42,7 @@ public class OperationLogAspect {
 
         try {
             fillRequestInfo(pjp, opLog);
-            Object result = pjp.proceed();
-            return result;
+            return pjp.proceed();
         } catch (Throwable t) {
             success = false;
             errorMsg = t.getMessage();

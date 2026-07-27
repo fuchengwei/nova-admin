@@ -5,6 +5,8 @@ import com.nova.admin.common.base.BaseController;
 import com.nova.admin.modules.job.dto.JobPageQuery;
 import com.nova.admin.modules.job.entity.SysJob;
 import com.nova.admin.modules.job.service.JobService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -22,30 +24,35 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/monitor/job")
 @RequiredArgsConstructor
 @Validated
+@Tag(name = "定时任务")
 public class JobController extends BaseController {
 
     private final JobService jobService;
 
     @GetMapping("/page")
     @PreAuthorize("hasAuthority('monitor:job:list')")
+    @Operation(summary = "定时任务分页列表")
     public R<com.nova.admin.common.api.PageResult<SysJob>> page(JobPageQuery query) {
         return ok(jobService.getJobPage(query));
     }
 
     @GetMapping("/{id}")
     @PreAuthorize("hasAuthority('monitor:job:list')")
+    @Operation(summary = "定时任务详情")
     public R<SysJob> detail(@PathVariable Long id) {
         return ok(jobService.getById(id));
     }
 
     @PostMapping
     @PreAuthorize("hasAuthority('monitor:job:add')")
+    @Operation(summary = "创建定时任务")
     public R<Long> create(@Valid @RequestBody SysJob job) {
         return ok(jobService.create(job));
     }
 
     @PutMapping
     @PreAuthorize("hasAuthority('monitor:job:edit')")
+    @Operation(summary = "更新定时任务")
     public R<Void> update(@Valid @RequestBody SysJob job) {
         jobService.update(job);
         return ok();
@@ -53,6 +60,7 @@ public class JobController extends BaseController {
 
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAuthority('monitor:job:remove')")
+    @Operation(summary = "删除定时任务")
     public R<Void> delete(@PathVariable Long id) {
         jobService.delete(id);
         return ok();
@@ -60,6 +68,7 @@ public class JobController extends BaseController {
 
     @PutMapping("/pause/{id}")
     @PreAuthorize("hasAuthority('monitor:job:pause')")
+    @Operation(summary = "暂停定时任务")
     public R<Void> pause(@PathVariable Long id) {
         jobService.pause(id);
         return ok();
@@ -67,6 +76,7 @@ public class JobController extends BaseController {
 
     @PutMapping("/resume/{id}")
     @PreAuthorize("hasAuthority('monitor:job:resume')")
+    @Operation(summary = "恢复定时任务")
     public R<Void> resume(@PathVariable Long id) {
         jobService.resume(id);
         return ok();
@@ -74,6 +84,7 @@ public class JobController extends BaseController {
 
     @PutMapping("/run/{id}")
     @PreAuthorize("hasAuthority('monitor:job:run')")
+    @Operation(summary = "执行一次定时任务")
     public R<Void> run(@PathVariable Long id) {
         jobService.runOnce(id);
         return ok();

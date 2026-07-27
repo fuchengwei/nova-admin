@@ -1,12 +1,16 @@
 import axios, { AxiosHeaders, type AxiosInstance, type AxiosRequestConfig } from 'axios';
-import { message } from 'antd';
 import { useAppStore } from '@/stores/appStore';
 import { useUserStore } from '@/stores/userStore';
 import i18n from '@/i18n';
+import { message } from '@/utils/message';
 import type { R, LoginResult } from '@/types/api';
 
 const TOKEN_KEY = 'nova_access_token';
 const REFRESH_KEY = 'nova_refresh_token';
+
+function showError(content: string): void {
+  message.error(content);
+}
 
 export const getToken = () => localStorage.getItem(TOKEN_KEY);
 export const getRefreshToken = () => localStorage.getItem(REFRESH_KEY);
@@ -120,7 +124,7 @@ function forceLogout(reason: 'noToken' | 'refreshFailed'): void {
 
   const text =
     reason === 'noToken' ? httpConfig.authExpiredMessage : httpConfig.refreshFailedMessage;
-  message.error(resolveText(text));
+  showError(resolveText(text));
 
   clearTokens();
   useUserStore.getState().reset();
@@ -239,11 +243,11 @@ service.interceptors.response.use(
     }
 
     if (status === 403 || code === 403) {
-      message.error(resolveText(httpConfig.forbiddenMessage));
+      showError(resolveText(httpConfig.forbiddenMessage));
     } else if (code && code !== 0) {
-      message.error(msg);
+      showError(msg);
     } else if (status >= 500) {
-      message.error(resolveText(httpConfig.serverErrorMessage));
+      showError(resolveText(httpConfig.serverErrorMessage));
     }
     return Promise.reject(error);
   },

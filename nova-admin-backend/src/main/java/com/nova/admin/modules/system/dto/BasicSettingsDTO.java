@@ -2,6 +2,7 @@ package com.nova.admin.modules.system.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.Pattern;
 import lombok.Data;
 
 import java.io.Serial;
@@ -27,9 +28,11 @@ public class BasicSettingsDTO implements Serializable {
     private String logoUrl;
 
     @Schema(description = "默认语言：zh_CN/en_US")
+    @Pattern(regexp = "^(zh_CN|en_US)$", message = "默认语言仅支持 zh_CN 或 en_US")
     private String defaultLanguage;
 
     @Size(max = 32, message = "主题色长度不能超过32")
+    @Pattern(regexp = "^#[0-9A-Fa-f]{6}$", message = "主题色必须为六位十六进制颜色值")
     @Schema(description = "主题色")
     private String themeColor;
 

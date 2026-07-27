@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react';
-import { Button, Popconfirm, Tag, Typography, message } from 'antd';
+import { Button, Popconfirm, Tag, Typography } from 'antd';
+import { message } from '@/utils/message';
 import { DeleteOutlined, EditOutlined, PlusOutlined } from '@ant-design/icons';
 import {
   ModalForm,

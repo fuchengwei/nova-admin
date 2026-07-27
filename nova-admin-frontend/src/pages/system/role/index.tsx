@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
-import { Button, Tag, Tree, Popconfirm, message, Form } from 'antd';
+import { Button, Tag, Tree, Popconfirm, Form } from 'antd';
+import { message } from '@/utils/message';
 import type { DataNode } from 'antd/es/tree';
 import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
 import {

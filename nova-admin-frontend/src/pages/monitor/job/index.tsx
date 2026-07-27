@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react';
-import { Button, Tag, Space, Popconfirm, message } from 'antd';
+import { Button, Tag, Space, Popconfirm } from 'antd';
+import { message } from '@/utils/message';
 import {
   PlusOutlined,
   DeleteOutlined,

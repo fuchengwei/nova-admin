@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react';
-import { Button, message } from 'antd';
+import { Button } from 'antd';
+import { message } from '@/utils/message';
 import { PlusOutlined } from '@ant-design/icons';
 import { PageContainer, ProTable, type ActionType } from '@ant-design/pro-components';
 import { useMutation, useQuery } from '@tanstack/react-query';

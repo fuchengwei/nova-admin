@@ -51,6 +51,8 @@ export const updateSettingsGroup = <T>(group: SettingsGroup, data: T) =>
   request<R<void>>({ url: `/system/config/group/${group}`, method: 'PUT', data });
 
 export const getBasicSettings = () => getSettingsGroup<BasicSettings>('basic');
+export const getPublicBasicSettings = () =>
+  request<R<BasicSettings>>({ url: '/system/config/basic', method: 'GET' });
 export const updateBasicSettings = (data: BasicSettings) => updateSettingsGroup('basic', data);
 
 export const getSecuritySettings = () => getSettingsGroup<SecuritySettings>('security');

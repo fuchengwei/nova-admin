@@ -1,9 +1,9 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button, Descriptions, Progress, Tabs, Tag } from 'antd';
 import { ReloadOutlined } from '@ant-design/icons';
-import { ProCard, ProTable, type ProColumns } from '@ant-design/pro-components';
-import { getServerInfo, getOnlineUsers, getCacheInfo } from '@/api/monitor';
+import { ProCard, ProTable, type ActionType, type ProColumns } from '@ant-design/pro-components';
+import { getServerInfo, getOnlineUserPage, getCacheInfo } from '@/api/monitor';
 import type { CacheInfo, OnlineUser, ServerInfo } from '@/api/monitor';
 import { displayText, isEmptyDisplayValue } from '@/utils/display';
 
@@ -60,15 +60,14 @@ export default function ServerMonitorPage() {
   const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
   const [server, setServer] = useState<ServerInfo | null>(null);
-  const [online, setOnline] = useState<OnlineUser[]>([]);
   const [cache, setCache] = useState<CacheInfo | null>(null);
+  const onlineActionRef = useRef<ActionType>(null);
 
   const load = async () => {
     setLoading(true);
     try {
-      const [s, o, c] = await Promise.all([getServerInfo(), getOnlineUsers(), getCacheInfo()]);
+      const [s, c] = await Promise.all([getServerInfo(), getCacheInfo()]);
       setServer(s.data);
-      setOnline(o.data ?? []);
       setCache(c.data);
     } finally {
       setLoading(false);
@@ -82,9 +81,21 @@ export default function ServerMonitorPage() {
   const onlineColumns: ProColumns<OnlineUser>[] = [
     { title: t('monitor.account'), dataIndex: 'account', key: 'account', render: (v) => displayText(v) },
     { title: t('monitor.nickname'), dataIndex: 'nickname', key: 'nickname', render: (v) => displayText(v) },
-    { title: t('monitor.deptId'), dataIndex: 'deptId', key: 'deptId', render: (v) => displayText(v) },
+    {
+      title: t('monitor.deptId'),
+      dataIndex: 'deptId',
+      key: 'deptId',
+      search: false,
+      render: (v) => displayText(v),
+    },
     { title: t('monitor.loginIp'), dataIndex: 'loginIp', key: 'loginIp', render: (v) => displayText(v) },
-    { title: t('monitor.loginTime'), dataIndex: 'loginTime', key: 'loginTime', render: (v) => displayText(v) },
+    {
+      title: t('monitor.loginTime'),
+      dataIndex: 'loginTime',
+      key: 'loginTime',
+      valueType: 'dateTime',
+      search: false,
+    },
   ];
 
   const diskColumns: ProColumns<ServerInfo['disks'][number]>[] = [
@@ -181,16 +192,27 @@ export default function ServerMonitorPage() {
             key: 'online',
             label: t('monitor.tabOnline'),
             children: (
-              <ProTable<OnlineUser>
-                rowKey="tokenKey"
-                loading={loading}
-                size="small"
-                search={false}
-                options={false}
-                pagination={{ pageSize: 10 }}
-                columns={onlineColumns}
-                dataSource={online}
-              />
+              <ProCard>
+                <ProTable<OnlineUser>
+                  actionRef={onlineActionRef}
+                  rowKey="tokenKey"
+                  columns={onlineColumns}
+                  request={async (params) => {
+                    const res = await getOnlineUserPage({
+                      current: params.current ?? 1,
+                      size: params.pageSize ?? 10,
+                      account: params.account,
+                      nickname: params.nickname,
+                      loginIp: params.loginIp,
+                    });
+                    if (res.code !== 0) return { data: [], success: false, total: 0 };
+                    return { data: res.data.records, success: true, total: res.data.total };
+                  }}
+                  pagination={{ pageSize: 10, showSizeChanger: true }}
+                  search={{ labelWidth: 'auto' }}
+                  options={{ reload: true, density: true, setting: true }}
+                />
+              </ProCard>
             ),
           },
           {

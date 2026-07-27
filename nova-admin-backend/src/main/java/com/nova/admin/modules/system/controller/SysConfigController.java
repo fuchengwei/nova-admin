@@ -30,6 +30,12 @@ public class SysConfigController extends BaseController {
 
     private final SysConfigService sysConfigService;
 
+    @GetMapping("/basic")
+    @Operation(summary = "获取公开基础设置")
+    public R<BasicSettingsDTO> getPublicBasicSettings() {
+        return ok(sysConfigService.getBasicSettings());
+    }
+
     @GetMapping("/group/{group}")
     @PreAuthorize("hasRole('super_admin') or hasAuthority('system:settings:view')")
     @Operation(summary = "按分组获取系统设置")

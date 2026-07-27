@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react';
-import { Button, Tag, Modal, Popconfirm, message, Image, Upload, type UploadProps } from 'antd';
+import { Button, Tag, Modal, Popconfirm, Image, Upload, type UploadProps } from 'antd';
+import { message } from '@/utils/message';
 import { DeleteOutlined, ReloadOutlined, EyeOutlined, UploadOutlined } from '@ant-design/icons';
 import { ProTable, type ProColumns, type ActionType } from '@ant-design/pro-components';
 import { useMutation } from '@tanstack/react-query';
@@ -26,6 +27,22 @@ const contentTypeEnum = {
   'application/pdf': { text: 'application/pdf' },
   'text/plain': { text: 'text/plain' },
   'application/json': { text: 'application/json' },
+  'application/msword': { text: 'application/msword' },
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document': {
+    text: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  },
+  'application/vnd.ms-excel': { text: 'application/vnd.ms-excel' },
+  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': {
+    text: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  },
+  'application/vnd.ms-powerpoint': { text: 'application/vnd.ms-powerpoint' },
+  'application/vnd.openxmlformats-officedocument.presentationml.presentation': {
+    text: 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+  },
+  'application/zip': { text: 'application/zip' },
+  'application/x-zip-compressed': { text: 'application/x-zip-compressed' },
+  'application/x-rar-compressed': { text: 'application/x-rar-compressed' },
+  'application/x-7z-compressed': { text: 'application/x-7z-compressed' },
 };
 
 export default function FilePage() {
@@ -139,8 +156,8 @@ export default function FilePage() {
       title: t('file.uploadTime'),
       dataIndex: 'createTime',
       width: 180,
+      valueType: 'dateTime',
       search: false,
-      render: (value) => displayText(value),
     },
     {
       title: t('common.delete'),

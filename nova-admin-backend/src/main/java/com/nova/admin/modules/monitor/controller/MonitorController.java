@@ -1,9 +1,11 @@
 package com.nova.admin.modules.monitor.controller;
 
 import com.nova.admin.common.api.R;
+import com.nova.admin.common.api.PageResult;
 import com.nova.admin.common.base.BaseController;
 import com.nova.admin.modules.monitor.dto.CacheInfo;
 import com.nova.admin.modules.monitor.dto.OnlineUser;
+import com.nova.admin.modules.monitor.dto.OnlineUserPageQuery;
 import com.nova.admin.modules.monitor.dto.ServerInfo;
 import com.nova.admin.modules.monitor.service.MonitorService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -36,6 +38,13 @@ public class MonitorController extends BaseController {
     @PreAuthorize("hasAuthority('monitor:online:list')")
     public R<List<OnlineUser>> onlineUsers() {
         return ok(monitorService.getOnlineUsers());
+    }
+
+    @Operation(summary = "分页查询在线用户")
+    @GetMapping("/online/page")
+    @PreAuthorize("hasAuthority('monitor:online:list')")
+    public R<PageResult<OnlineUser>> onlineUserPage(OnlineUserPageQuery query) {
+        return ok(monitorService.getOnlineUserPage(query));
     }
 
     @Operation(summary = "获取缓存信息")

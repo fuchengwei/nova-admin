@@ -1,8 +1,10 @@
 package com.nova.admin.modules.monitor.service;
 
 import com.nova.admin.common.constant.Constants;
+import com.nova.admin.common.api.PageResult;
 import com.nova.admin.modules.monitor.dto.CacheInfo;
 import com.nova.admin.modules.monitor.dto.OnlineUser;
+import com.nova.admin.modules.monitor.dto.OnlineUserPageQuery;
 import com.nova.admin.modules.monitor.dto.ServerInfo;
 import com.nova.admin.security.LoginUser;
 import lombok.RequiredArgsConstructor;
@@ -10,6 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisCallback;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 import java.io.File;
 import java.lang.management.ManagementFactory;
@@ -19,6 +22,7 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import java.util.Properties;
@@ -162,6 +166,31 @@ public class MonitorService {
             list.add(o);
         }
         return list;
+    }
+
+    public PageResult<OnlineUser> getOnlineUserPage(OnlineUserPageQuery query) {
+        return pageOnlineUsers(getOnlineUsers(), query);
+    }
+
+    PageResult<OnlineUser> pageOnlineUsers(List<OnlineUser> users, OnlineUserPageQuery query) {
+        List<OnlineUser> filtered = users.stream()
+                .filter(user -> contains(user.getAccount(), query.getAccount()))
+                .filter(user -> contains(user.getNickname(), query.getNickname()))
+                .filter(user -> contains(user.getLoginIp(), query.getLoginIp()))
+                .sorted(Comparator.comparing(OnlineUser::getLoginTime,
+                        Comparator.nullsLast(Comparator.reverseOrder())))
+                .toList();
+
+        long total = filtered.size();
+        long current = Math.max(query.getCurrent(), 1L);
+        long size = Math.max(query.getSize(), 1L);
+        long start = Math.min((current - 1) * size, total);
+        long end = Math.min(start + size, total);
+        return PageResult.of(total, current, size, filtered.subList((int) start, (int) end));
+    }
+
+    private boolean contains(String value, String keyword) {
+        return !StringUtils.hasText(keyword) || (value != null && value.contains(keyword.trim()));
     }
 
     /** 缓存（Redis）信息 */
