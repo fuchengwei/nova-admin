@@ -1,69 +1,73 @@
-import { Tag, Typography } from 'antd';
-import {
-  UserOutlined,
-  TeamOutlined,
-  SafetyCertificateOutlined,
-  RocketOutlined,
-} from '@ant-design/icons';
-import { ProCard, StatisticCard } from '@ant-design/pro-components';
+import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { Button, Result, Skeleton } from 'antd';
 import { useTranslation } from 'react-i18next';
-import { ping } from '@/api/auth';
-
-const { Title, Paragraph } = Typography;
+import { getDashboardOverview, type DashboardRange } from '@/api/dashboard';
+import ActivityTrendChart from './components/ActivityTrendChart';
+import DashboardHeader from './components/DashboardHeader';
+import DashboardStatCards from './components/DashboardStatCards';
+import RecentActivities from './components/RecentActivities';
 
 export default function DashboardPage() {
   const { t } = useTranslation();
-  const { data, isLoading } = useQuery({
-    queryKey: ['ping'],
-    queryFn: ping,
+  const [range, setRange] = useState<DashboardRange>('7d');
+  const { data, isLoading, isFetching, isError, refetch } = useQuery({
+    queryKey: ['dashboard', 'overview', range],
+    queryFn: async () => {
+      const response = await getDashboardOverview(range);
+      if (response.code !== 0) throw new Error(response.msg);
+      return response.data;
+    },
     refetchInterval: 30_000,
   });
 
+  if (isLoading) {
+    return (
+      <div className="h-full overflow-auto p-6">
+        <Skeleton active paragraph={{ rows: 14 }} />
+      </div>
+    );
+  }
+
+  if (isError || !data) {
+    return (
+      <div className="flex h-full items-center justify-center p-6">
+        <Result
+          status="error"
+          title={t('dashboard.loadFailed')}
+          extra={
+            <Button type="primary" onClick={() => refetch()}>
+              {t('dashboard.retry')}
+            </Button>
+          }
+        />
+      </div>
+    );
+  }
+
   return (
-    <div className="h-full space-y-4 overflow-auto p-6">
-      <ProCard>
-        <Title level={3} className="!mb-2">
-          {t('menu.dashboard')}
-        </Title>
-        <Paragraph type="secondary" className="!mb-0">
-          Nova Admin 初始化完成。后续 Phase 将逐步完善用户/角色/菜单/数据权限等模块。
-        </Paragraph>
-      </ProCard>
-
-      <ProCard gutter={16} wrap>
-        <StatisticCard
-          colSpan={6}
-          title="用户"
-          statistic={{ value: 0, prefix: <UserOutlined /> }}
+    <div className="h-full overflow-auto">
+      <div className="flex w-full flex-col gap-5 pb-6">
+        <DashboardHeader runtime={data.runtime.data} updatedAt={data.updatedAt} />
+        <DashboardStatCards
+          available={data.stats.available}
+          runtime={data.runtime.available ? data.runtime.data : undefined}
+          stats={data.stats.data}
         />
-        <StatisticCard
-          colSpan={6}
-          title="角色"
-          statistic={{ value: 0, prefix: <TeamOutlined /> }}
-        />
-        <StatisticCard
-          colSpan={6}
-          title="菜单"
-          statistic={{ value: 3, prefix: <SafetyCertificateOutlined /> }}
-        />
-        <StatisticCard
-          colSpan={6}
-          title="当前 Phase"
-          statistic={{ value: 'Phase 0', prefix: <RocketOutlined /> }}
-        />
-      </ProCard>
-
-      <ProCard title="后端连通性" loading={isLoading}>
-        {data && data.code === 0 ? (
-          <div>
-            <Tag color="success">ONLINE</Tag> {data.data.app} v{data.data.version}
-            <div className="mt-2 text-xs text-gray-500">心跳: {data.data.ts}</div>
-          </div>
-        ) : (
-          <Tag color="warning">OFFLINE</Tag>
-        )}
-      </ProCard>
+        <div className="grid items-stretch gap-5 xl:grid-cols-[minmax(0,1.7fr)_minmax(340px,0.9fr)]">
+          <ActivityTrendChart
+            available={data.trend.available}
+            data={data.trend.data}
+            loading={isFetching}
+            range={range}
+            onRangeChange={setRange}
+          />
+          <RecentActivities
+            available={data.activities.available}
+            activities={data.activities.data}
+          />
+        </div>
+      </div>
     </div>
   );
 }
