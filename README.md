@@ -15,6 +15,13 @@
 - Vite 8 + React 19 + TypeScript 7.0
 - Ant Design 6.5 + **ProComponents 3.x**（`@ant-design/pro-components`）+ Tailwind CSS 4
 - Zustand 5 + TanStack Query 5
+- `@ant-design/charts` 2.6（首页活动趋势图）
+
+## 首页仪表盘
+
+登录后访问首页可查看真实系统概览：用户、角色、部门、文件和定时任务规模；最近 7 天或 30 天的登录/操作趋势；运行资源、在线用户及最近动态。
+
+接口为 `GET /api/dashboard/overview?range=7d|30d`。该接口仅要求已登录，不受既有用户、日志和监控页面的资源级权限限制；原有页面权限不变。
 
 ## 项目结构
 
