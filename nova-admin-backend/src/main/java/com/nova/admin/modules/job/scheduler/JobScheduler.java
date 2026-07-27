@@ -60,6 +60,10 @@ public class JobScheduler implements ApplicationContextAware {
 
     /** 取消（暂停）任务 */
     public synchronized void cancel(Long jobId) {
+        if (jobId == null) {
+            log.warn("忽略缺少任务 ID 的取消请求");
+            return;
+        }
         ScheduledFuture<?> future = futures.remove(jobId);
         if (future != null && !future.isDone()) {
             future.cancel(false);

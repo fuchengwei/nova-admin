@@ -4,6 +4,8 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.nova.admin.common.api.PageResult;
+import com.nova.admin.common.api.ResultCode;
+import com.nova.admin.common.exception.BizException;
 import com.nova.admin.modules.job.dto.JobPageQuery;
 import com.nova.admin.modules.job.entity.SysJob;
 import com.nova.admin.modules.job.mapper.SysJobMapper;
@@ -59,6 +61,12 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void update(SysJob job) {
+        if (job.getId() == null) {
+            throw new BizException(ResultCode.BAD_REQUEST, "任务 ID 不能为空");
+        }
+        if (jobMapper.selectById(job.getId()) == null) {
+            throw new BizException(ResultCode.DATA_NOT_FOUND, "定时任务不存在");
+        }
         applyDefaults(job);
         job.setUpdateBy(SecurityUtils.requireUserId());
         jobMapper.updateById(job);
