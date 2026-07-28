@@ -9,9 +9,11 @@ export interface OperationLogRecord {
   requestMethod?: string;
   requestUrl?: string;
   javaMethod?: string;
+  javaArgs?: string;
   userId?: number;
   account?: string;
   ip?: string;
+  userAgent?: string;
   costMs?: number;
   status?: number;
   errorMsg?: string;
@@ -22,6 +24,7 @@ export interface LoginLogRecord {
   id: string;
   account?: string;
   ip?: string;
+  userAgent?: string;
   os?: string;
   browser?: string;
   status?: number;
@@ -52,11 +55,15 @@ export const getOperationLogPage = (params: OperationLogPageQuery) =>
     params,
   });
 
-export const cleanOperationLog = () =>
-  request<R<void>>({ url: '/system/operation-log/clean', method: 'DELETE' });
+export const cleanOperationLog = (retentionDays: number) =>
+  request<R<void>>({
+    url: '/system/operation-log/clean',
+    method: 'DELETE',
+    params: { retentionDays },
+  });
 
 export const getLoginLogPage = (params: LoginLogPageQuery) =>
   request<R<PageResult<LoginLogRecord>>>({ url: '/system/login-log/page', method: 'GET', params });
 
-export const cleanLoginLog = () =>
-  request<R<void>>({ url: '/system/login-log/clean', method: 'DELETE' });
+export const cleanLoginLog = (retentionDays: number) =>
+  request<R<void>>({ url: '/system/login-log/clean', method: 'DELETE', params: { retentionDays } });

@@ -13,6 +13,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
+
 /**
  * 操作日志 Service 实现
  */
@@ -20,6 +22,8 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @RequiredArgsConstructor
 public class SysOperationLogServiceImpl extends ServiceImpl<SysOperationLogMapper, SysOperationLog> implements SysOperationLogService {
+
+    private final SysOperationLogMapper operationLogMapper;
 
     @Override
     public PageResult<SysOperationLog> getOperationLogPage(OperationLogPageQuery query) {
@@ -40,9 +44,10 @@ public class SysOperationLogServiceImpl extends ServiceImpl<SysOperationLogMappe
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void cleanOperationLog() {
-        // 物理删除：清空所有操作日志
-        baseMapper.delete(new LambdaQueryWrapper<>());
-        log.info("清空操作日志成功");
+    public void purgeOperationLogs(int retentionDays) {
+        LocalDateTime cutoff = LocalDateTime.now().minusDays(retentionDays);
+        operationLogMapper.delete(new LambdaQueryWrapper<SysOperationLog>()
+                .lt(SysOperationLog::getCreateTime, cutoff));
+        log.info("清理操作日志成功，retentionDays={}", retentionDays);
     }
 }

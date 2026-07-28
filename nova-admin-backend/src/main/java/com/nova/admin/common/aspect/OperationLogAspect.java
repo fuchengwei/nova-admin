@@ -1,5 +1,6 @@
 package com.nova.admin.common.aspect;
 
+import com.nova.admin.common.audit.AuditArgumentSanitizer;
 import com.nova.admin.modules.system.entity.SysOperationLog;
 import com.nova.admin.modules.system.service.SysOperationLogService;
 import com.nova.admin.security.SecurityUtils;
@@ -20,9 +21,7 @@ import java.lang.reflect.Method;
 import java.time.LocalDateTime;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.Arrays;
 import java.util.concurrent.CompletableFuture;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Aspect
@@ -31,6 +30,7 @@ import java.util.stream.Collectors;
 public class OperationLogAspect {
 
     private final SysOperationLogService operationLogService;
+    private final AuditArgumentSanitizer auditArgumentSanitizer;
 
     @Around("within(@org.springframework.web.bind.annotation.RestController *) && " +
             "execution(* com.nova.admin.modules..*(..))")
@@ -78,11 +78,12 @@ public class OperationLogAspect {
         }
 
         opLog.setJavaMethod(clazz.getSimpleName() + "." + method.getName());
+        opLog.setAction(method.getName());
 
         try {
             Object[] args = pjp.getArgs();
             if (args != null && args.length > 0) {
-                opLog.setJavaArgs(sanitizeArgs(args));
+                opLog.setJavaArgs(auditArgumentSanitizer.sanitizeArgs(args));
             }
         } catch (Exception ignored) {
         }
@@ -115,23 +116,4 @@ public class OperationLogAspect {
         return req.getRemoteAddr();
     }
 
-    private String sanitizeArgs(Object[] args) {
-        return Arrays.stream(args)
-                .map(this::sanitizeArg)
-                .collect(Collectors.joining(", ", "[", "]"));
-    }
-
-    private String sanitizeArg(Object arg) {
-        if (arg == null) {
-            return "null";
-        }
-        if (arg instanceof MultipartFile file) {
-            return "MultipartFile{name=" + file.getOriginalFilename() + ", size=" + file.getSize() + "}";
-        }
-        String text = String.valueOf(arg);
-        if (text.contains("oldPassword") || text.contains("newPassword") || text.contains("password")) {
-            return "[MASKED]";
-        }
-        return text;
-    }
 }

@@ -7,12 +7,17 @@ import com.nova.admin.modules.system.dto.LoginLogPageQuery;
 import com.nova.admin.modules.system.entity.SysLoginLog;
 import com.nova.admin.modules.system.service.SysLoginLogService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
@@ -21,6 +26,7 @@ import org.springframework.web.bind.annotation.RestController;
 @Tag(name = "登录日志")
 @RestController
 @RequestMapping("/system/login-log")
+@Validated
 @RequiredArgsConstructor
 public class SysLoginLogController extends BaseController {
 
@@ -35,9 +41,11 @@ public class SysLoginLogController extends BaseController {
 
     @DeleteMapping("/clean")
     @PreAuthorize("hasAuthority('system:log:remove')")
-    @Operation(summary = "清空登录日志")
-    public R<Void> cleanLoginLog() {
-        sysLoginLogService.cleanLoginLog();
+    @Operation(summary = "按保留期清理登录日志")
+    public R<Void> cleanLoginLog(
+            @Parameter(description = "日志保留天数", required = true)
+            @RequestParam @Min(1) @Max(3650) int retentionDays) {
+        sysLoginLogService.purgeLoginLogs(retentionDays);
         return ok();
     }
 }

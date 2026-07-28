@@ -25,6 +25,8 @@ import java.time.LocalDateTime;
 @RequiredArgsConstructor
 public class SysLoginLogServiceImpl extends ServiceImpl<SysLoginLogMapper, SysLoginLog> implements SysLoginLogService {
 
+    private final SysLoginLogMapper loginLogMapper;
+
     @Override
     public PageResult<SysLoginLog> getLoginLogPage(LoginLogPageQuery query) {
         Page<SysLoginLog> page = new Page<>(query.getCurrent(), query.getSize());
@@ -42,10 +44,11 @@ public class SysLoginLogServiceImpl extends ServiceImpl<SysLoginLogMapper, SysLo
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void cleanLoginLog() {
-        // 物理删除：清空所有登录日志
-        baseMapper.delete(new LambdaQueryWrapper<>());
-        log.info("清空登录日志成功");
+    public void purgeLoginLogs(int retentionDays) {
+        LocalDateTime cutoff = LocalDateTime.now().minusDays(retentionDays);
+        loginLogMapper.delete(new LambdaQueryWrapper<SysLoginLog>()
+                .lt(SysLoginLog::getLoginTime, cutoff));
+        log.info("清理登录日志成功，retentionDays={}", retentionDays);
     }
 
     @Override

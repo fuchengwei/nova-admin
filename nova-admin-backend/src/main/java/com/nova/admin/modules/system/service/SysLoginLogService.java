@@ -16,9 +16,9 @@ public interface SysLoginLogService extends IService<SysLoginLog> {
     PageResult<SysLoginLog> getLoginLogPage(LoginLogPageQuery query);
 
     /**
-     * 清空登录日志
+     * 清理早于指定保留期的登录日志。
      */
-    void cleanLoginLog();
+    void purgeLoginLogs(int retentionDays);
 
     /**
      * 记录登录日志

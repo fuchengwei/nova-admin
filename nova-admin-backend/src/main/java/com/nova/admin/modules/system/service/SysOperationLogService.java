@@ -16,7 +16,7 @@ public interface SysOperationLogService extends IService<SysOperationLog> {
     PageResult<SysOperationLog> getOperationLogPage(OperationLogPageQuery query);
 
     /**
-     * 清空操作日志
+     * 清理早于指定保留期的操作日志。
      */
-    void cleanOperationLog();
+    void purgeOperationLogs(int retentionDays);
 }
