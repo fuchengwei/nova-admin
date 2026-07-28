@@ -482,6 +482,7 @@ export default {
     passwordRequireNumber: 'Require Numbers',
     passwordRequireLetter: 'Require Letters',
     passwordRequireSpecial: 'Require Special Characters',
+    securitySaveSuccess: 'Security policy saved and applies to subsequent authentication requests',
     loginLockMaxAttempts: 'Max Failed Attempts',
     loginLockMinutes: 'Lock Minutes',
     captchaEnabled: 'Enable Captcha',

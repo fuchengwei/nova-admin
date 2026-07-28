@@ -19,6 +19,9 @@ public class CaptchaResponse implements Serializable {
     @Serial
     private static final long serialVersionUID = 1L;
 
+    @Schema(description = "是否启用图形验证码")
+    private Boolean enabled;
+
     @Schema(description = "验证码 key（用于提交时校验）")
     private String captchaKey;
 

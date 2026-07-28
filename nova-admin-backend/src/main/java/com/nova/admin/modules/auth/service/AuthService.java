@@ -9,9 +9,11 @@ import com.nova.admin.modules.auth.dto.LoginRequest;
 import com.nova.admin.modules.auth.dto.LoginResponse;
 import com.nova.admin.modules.auth.security.UserDetailsServiceImpl;
 import com.nova.admin.modules.system.dto.UserInfoDTO;
+import com.nova.admin.modules.system.dto.SecuritySettingsDTO;
 import com.nova.admin.modules.system.entity.SysUser;
 import com.nova.admin.modules.system.mapper.SysUserMapper;
 import com.nova.admin.modules.system.service.SysLoginLogService;
+import com.nova.admin.modules.system.service.SysConfigService;
 import io.jsonwebtoken.Claims;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -39,6 +41,7 @@ public class AuthService {
     private final UserDetailsServiceImpl userDetailsService;
     private final AuthSessionService authSessionService;
     private final SysLoginLogService loginLogService;
+    private final SysConfigService sysConfigService;
 
     /** 登录 */
     public LoginResponse login(LoginRequest req, HttpServletRequest httpReq) {
@@ -122,12 +125,17 @@ public class AuthService {
     }
 
     private LoginResponse issueTokens(SysUser user, LoginUser loginUser, String userAgent) {
-        String access = jwtUtil.generateAccessToken(user.getId(), user.getAccount());
-        String refresh = jwtUtil.generateRefreshToken(user.getId(), user.getAccount());
+        SecuritySettingsDTO settings = sysConfigService.getSecuritySettings();
+        long accessExpireMinutes = settings.getAccessTokenExpireMinutes();
+        long refreshExpireMinutes = settings.getRefreshTokenExpireMinutes();
+        String access = jwtUtil.generateAccessToken(user.getId(), user.getAccount(), accessExpireMinutes);
+        String refresh = jwtUtil.generateRefreshToken(user.getId(), user.getAccount(), refreshExpireMinutes);
         String accessJti = jwtUtil.parse(access).get("jti", String.class);
         String refreshJti = jwtUtil.parse(refresh).get("jti", String.class);
+        long accessExpireSeconds = jwtUtil.getExpireSeconds(accessExpireMinutes);
+        long refreshExpireSeconds = jwtUtil.getExpireSeconds(refreshExpireMinutes);
         authSessionService.register(AuthSessionService.of(loginUser, accessJti, refreshJti, userAgent),
-                jwtUtil.getAccessExpireSeconds(), jwtUtil.getRefreshExpireSeconds());
+                accessExpireSeconds, refreshExpireSeconds);
 
         UserInfoDTO userInfo = UserInfoDTO.builder()
                 .id(user.getId())
@@ -149,7 +157,7 @@ public class AuthService {
                 .tokenType("Bearer")
                 .accessToken(access)
                 .refreshToken(refresh)
-                .expiresIn(jwtUtil.getAccessExpireSeconds())
+                .expiresIn(accessExpireSeconds)
                 .userInfo(userInfo)
                 .build();
     }

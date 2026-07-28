@@ -481,6 +481,7 @@ export default {
     passwordRequireNumber: '要求包含数字',
     passwordRequireLetter: '要求包含字母',
     passwordRequireSpecial: '要求包含特殊字符',
+    securitySaveSuccess: '安全策略已保存，对后续认证请求生效',
     loginLockMaxAttempts: '登录失败锁定次数',
     loginLockMinutes: '锁定分钟数',
     captchaEnabled: '启用验证码',

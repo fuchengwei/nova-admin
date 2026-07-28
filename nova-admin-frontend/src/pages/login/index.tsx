@@ -7,20 +7,20 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { getCaptcha, login } from '@/api/auth';
 import { getToken } from '@/utils/request';
-import type { R } from '@/types/api';
 
 const { Title, Text } = Typography;
 
 interface LoginForm {
   account: string;
   password: string;
-  captchaCode: string;
+  captchaCode?: string;
 }
 
 export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [captchaKey, setCaptchaKey] = useState('');
   const [captchaImg, setCaptchaImg] = useState('');
+  const [captchaEnabled, setCaptchaEnabled] = useState(true);
   const [form] = Form.useForm<LoginForm>();
   const navigate = useNavigate();
   const [params] = useSearchParams();
@@ -38,13 +38,12 @@ export default function LoginPage() {
     if (loadingRef.current) return;
     loadingRef.current = true;
     try {
-      const res = (await getCaptcha()) as unknown as R<{
-        captchaKey: string;
-        captchaImage: string;
-      }>;
+      const res = await getCaptcha();
       if (res.code === 0 && res.data) {
-        setCaptchaKey(res.data.captchaKey);
-        setCaptchaImg(res.data.captchaImage);
+        const enabled = res.data.enabled !== false;
+        setCaptchaEnabled(enabled);
+        setCaptchaKey(enabled ? (res.data.captchaKey ?? '') : '');
+        setCaptchaImg(enabled ? (res.data.captchaImage ?? '') : '');
         form.setFieldValue('captchaCode', '');
       } else {
         message.error(res.msg || '验证码加载失败');
@@ -61,7 +60,7 @@ export default function LoginPage() {
   }, [loadCaptcha]);
 
   const onSubmit = async (values: LoginForm) => {
-    if (!captchaKey) {
+    if (captchaEnabled && !captchaKey) {
       message.error('验证码未就绪');
       return;
     }
@@ -70,8 +69,7 @@ export default function LoginPage() {
       const res = await login({
         account: values.account,
         password: values.password,
-        captchaKey,
-        captchaCode: values.captchaCode,
+        ...(captchaEnabled ? { captchaKey, captchaCode: values.captchaCode } : {}),
       });
       if (res.code === 0) {
         message.success(t('login.welcome'));
@@ -137,38 +135,40 @@ export default function LoginPage() {
               autoComplete: 'current-password',
             }}
           />
-          <ProFormText
-            name="captchaCode"
-            label={t('login.captcha')}
-            rules={[
-              { required: true, message: `${t('login.captcha')} 不能为空` },
-              { len: 4, message: '请输入 4 位验证码' },
-            ]}
-            fieldProps={{
-              prefix: <SafetyOutlined />,
-              size: 'large',
-              maxLength: 4,
-              autoComplete: 'off',
-              suffix: (
-                <div
-                  className="flex cursor-pointer items-center"
-                  onClick={loadCaptcha}
-                  title="点击刷新"
-                >
-                  {captchaImg ? (
-                    <img
-                      src={captchaImg}
-                      alt="captcha"
-                      className="h-9 rounded border border-gray-200"
-                      style={{ minWidth: 120 }}
-                    />
-                  ) : (
-                    <ReloadOutlined className="text-lg" />
-                  )}
-                </div>
-              ),
-            }}
-          />
+          {captchaEnabled && (
+            <ProFormText
+              name="captchaCode"
+              label={t('login.captcha')}
+              rules={[
+                { required: true, message: `${t('login.captcha')} 不能为空` },
+                { len: 4, message: '请输入 4 位验证码' },
+              ]}
+              fieldProps={{
+                prefix: <SafetyOutlined />,
+                size: 'large',
+                maxLength: 4,
+                autoComplete: 'off',
+                suffix: (
+                  <div
+                    className="flex cursor-pointer items-center"
+                    onClick={loadCaptcha}
+                    title="点击刷新"
+                  >
+                    {captchaImg ? (
+                      <img
+                        src={captchaImg}
+                        alt="captcha"
+                        className="h-9 rounded border border-gray-200"
+                        style={{ minWidth: 120 }}
+                      />
+                    ) : (
+                      <ReloadOutlined className="text-lg" />
+                    )}
+                  </div>
+                ),
+              }}
+            />
+          )}
         </ProForm>
         <div className="mt-4 text-center text-xs text-gray-400">
           Default: superAdmin or admin / 123456

@@ -8,6 +8,7 @@ import com.nova.admin.common.constant.Constants;
 import com.nova.admin.common.exception.BizException;
 import com.nova.admin.common.api.ResultCode;
 import com.nova.admin.modules.auth.dto.CaptchaResponse;
+import com.nova.admin.modules.system.service.SysConfigService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
@@ -22,12 +23,13 @@ import java.time.Duration;
 public class CaptchaService {
 
     private final NovaProperties novaProperties;
+    private final SysConfigService sysConfigService;
     private final RedisTemplate<String, Object> redisTemplate;
 
     /** 生成图形验证码 */
     public CaptchaResponse generate() {
-        if (!novaProperties.getSecurity().getCaptcha().isEnabled()) {
-            throw new BizException(ResultCode.FAIL, "验证码未启用");
+        if (!Boolean.TRUE.equals(sysConfigService.getSecuritySettings().getCaptchaEnabled())) {
+            return CaptchaResponse.builder().enabled(false).build();
         }
         LineCaptcha captcha = CaptchaUtil.createLineCaptcha(120, 40, 4, 30);
         String key = IdUtil.fastSimpleUUID();
@@ -39,6 +41,7 @@ public class CaptchaService {
                 Duration.ofSeconds(expireSeconds));
 
         return CaptchaResponse.builder()
+                .enabled(true)
                 .captchaKey(key)
                 .captchaImage("data:image/png;base64," + captcha.getImageBase64())
                 .expireSeconds((long) expireSeconds)
@@ -47,7 +50,7 @@ public class CaptchaService {
 
     /** 校验图形验证码（校验后立即删除） */
     public void verify(String key, String input) {
-        if (!novaProperties.getSecurity().getCaptcha().isEnabled()) {
+        if (!Boolean.TRUE.equals(sysConfigService.getSecuritySettings().getCaptchaEnabled())) {
             return;
         }
         if (key == null || input == null) {

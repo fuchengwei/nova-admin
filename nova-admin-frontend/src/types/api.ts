@@ -62,7 +62,8 @@ export interface MenuInfo {
 }
 
 export interface CaptchaResult {
-  captchaKey: string;
-  captchaImage: string;
-  expireSeconds: number;
+  enabled: boolean;
+  captchaKey?: string;
+  captchaImage?: string;
+  expireSeconds?: number;
 }

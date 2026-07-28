@@ -156,7 +156,7 @@ export default function SystemSettingsPage() {
     mutationFn: updateSecuritySettings,
     onSuccess: async (res) => {
       if (res.code === 0) {
-        message.success(t('settings.saveSuccess'));
+        message.success(t('settings.securitySaveSuccess'));
         setSecurityModalOpen(false);
         await refetchSecurity();
       } else {

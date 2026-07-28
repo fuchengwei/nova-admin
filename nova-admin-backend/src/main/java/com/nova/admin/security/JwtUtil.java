@@ -36,7 +36,10 @@ public class JwtUtil {
     }
 
     public String generateAccessToken(Long userId, String account) {
-        NovaProperties.Jwt jwt = novaProperties.getSecurity().getJwt();
+        return generateAccessToken(userId, account, novaProperties.getSecurity().getJwt().getAccessTokenExpireMinutes());
+    }
+
+    public String generateAccessToken(Long userId, String account, long expireMinutes) {
         long now = System.currentTimeMillis();
         return Jwts.builder()
                 .id(UUID.randomUUID().toString())
@@ -44,13 +47,16 @@ public class JwtUtil {
                 .claim("account", account)
                 .claim("type", "access")
                 .issuedAt(new Date(now))
-                .expiration(new Date(now + jwt.getAccessTokenExpireMinutes() * 60_000L))
+                .expiration(new Date(now + expireMinutes * 60_000L))
                 .signWith(key)
                 .compact();
     }
 
     public String generateRefreshToken(Long userId, String account) {
-        NovaProperties.Jwt jwt = novaProperties.getSecurity().getJwt();
+        return generateRefreshToken(userId, account, novaProperties.getSecurity().getJwt().getRefreshTokenExpireMinutes());
+    }
+
+    public String generateRefreshToken(Long userId, String account, long expireMinutes) {
         long now = System.currentTimeMillis();
         return Jwts.builder()
                 .id(UUID.randomUUID().toString())
@@ -58,7 +64,7 @@ public class JwtUtil {
                 .claim("account", account)
                 .claim("type", "refresh")
                 .issuedAt(new Date(now))
-                .expiration(new Date(now + jwt.getRefreshTokenExpireMinutes() * 60_000L))
+                .expiration(new Date(now + expireMinutes * 60_000L))
                 .signWith(key)
                 .compact();
     }
@@ -76,11 +82,15 @@ public class JwtUtil {
     }
 
     public long getAccessExpireSeconds() {
-        return novaProperties.getSecurity().getJwt().getAccessTokenExpireMinutes() * 60L;
+        return getExpireSeconds(novaProperties.getSecurity().getJwt().getAccessTokenExpireMinutes());
     }
 
     public long getRefreshExpireSeconds() {
-        return novaProperties.getSecurity().getJwt().getRefreshTokenExpireMinutes() * 60L;
+        return getExpireSeconds(novaProperties.getSecurity().getJwt().getRefreshTokenExpireMinutes());
+    }
+
+    public long getExpireSeconds(long expireMinutes) {
+        return expireMinutes * 60L;
     }
 
     public Map<String, Object> getTokenConfig() {

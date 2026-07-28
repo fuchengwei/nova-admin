@@ -30,6 +30,8 @@
 个人中心还提供当前账号的登录设备管理：`GET /api/auth/sessions` 查看会话，
 `DELETE /api/auth/sessions/{accessJti}` 退出指定设备，`POST /api/auth/sessions/revoke-others`
 退出其他设备。认证失败和权限不足分别使用 HTTP `401`、`403`，响应体仍保持统一 `R<T>` 格式。
+系统设置中的验证码、登录失败锁定和 Token 有效期会在保存后用于后续认证请求；
+`GET /api/auth/captcha` 会通过 `enabled` 字段告知登录页是否需要验证码。
 
 ## 项目结构
 
