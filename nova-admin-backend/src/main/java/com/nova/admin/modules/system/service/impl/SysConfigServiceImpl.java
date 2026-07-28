@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.nova.admin.common.api.ResultCode;
 import com.nova.admin.common.exception.BizException;
+import com.nova.admin.modules.system.dto.ActiveNoticeDTO;
 import com.nova.admin.modules.system.dto.BasicSettingsDTO;
 import com.nova.admin.modules.system.dto.NoticeSettingsDTO;
 import com.nova.admin.modules.system.dto.SecuritySettingsDTO;
@@ -94,6 +95,20 @@ public class SysConfigServiceImpl extends ServiceImpl<SysConfigMapper, SysConfig
         dto.setEmailUsername(getString(values, "notice.email.username", dto.getEmailUsername()));
         dto.setSmsEnabled(getBool(values, "notice.sms.enabled", dto.getSmsEnabled()));
         dto.setSmsProvider(getString(values, "notice.sms.provider", dto.getSmsProvider()));
+        return dto;
+    }
+
+    @Override
+    public ActiveNoticeDTO getActiveNotice() {
+        NoticeSettingsDTO settings = getNoticeSettings();
+        if (!Boolean.TRUE.equals(settings.getEnabled())
+                || (isBlank(settings.getTitle()) && isBlank(settings.getContent()))) {
+            return null;
+        }
+
+        ActiveNoticeDTO dto = new ActiveNoticeDTO();
+        dto.setTitle(settings.getTitle());
+        dto.setContent(settings.getContent());
         return dto;
     }
 
@@ -240,6 +255,10 @@ public class SysConfigServiceImpl extends ServiceImpl<SysConfigMapper, SysConfig
     private String getString(Map<String, String> values, String key, String defaultValue) {
         String value = values.get(key);
         return value == null ? defaultValue : value;
+    }
+
+    private boolean isBlank(String value) {
+        return value == null || value.isBlank();
     }
 
     private Integer getInt(Map<String, String> values, String key, Integer defaultValue) {

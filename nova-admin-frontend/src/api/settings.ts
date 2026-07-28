@@ -2,6 +2,7 @@ import { request } from '@/utils/request';
 import type { R } from '@/types/api';
 
 export type SettingsGroup = 'basic' | 'security' | 'upload' | 'notice';
+export type NoticeLevel = 'info' | 'success' | 'warning' | 'error';
 
 export interface BasicSettings {
   systemName?: string;
@@ -35,13 +36,18 @@ export interface NoticeSettings {
   title?: string;
   content?: string;
   enabled?: boolean;
-  level?: string;
+  level?: NoticeLevel;
   emailEnabled?: boolean;
   emailHost?: string;
   emailPort?: number;
   emailUsername?: string;
   smsEnabled?: boolean;
   smsProvider?: string;
+}
+
+export interface ActiveNotice {
+  title?: string;
+  content?: string;
 }
 
 export const getSettingsGroup = <T>(group: SettingsGroup) =>
@@ -53,6 +59,8 @@ export const updateSettingsGroup = <T>(group: SettingsGroup, data: T) =>
 export const getBasicSettings = () => getSettingsGroup<BasicSettings>('basic');
 export const getPublicBasicSettings = () =>
   request<R<BasicSettings>>({ url: '/system/config/basic', method: 'GET' });
+export const getActiveNotice = () =>
+  request<R<ActiveNotice>>({ url: '/system/config/notice', method: 'GET' });
 export const updateBasicSettings = (data: BasicSettings) => updateSettingsGroup('basic', data);
 
 export const getSecuritySettings = () => getSettingsGroup<SecuritySettings>('security');

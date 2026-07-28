@@ -4,6 +4,7 @@ import com.nova.admin.common.api.R;
 import com.nova.admin.common.base.BaseController;
 import com.nova.admin.common.exception.BizException;
 import com.nova.admin.common.api.ResultCode;
+import com.nova.admin.modules.system.dto.ActiveNoticeDTO;
 import com.nova.admin.modules.system.dto.BasicSettingsDTO;
 import com.nova.admin.modules.system.dto.NoticeSettingsDTO;
 import com.nova.admin.modules.system.dto.SecuritySettingsDTO;
@@ -34,6 +35,12 @@ public class SysConfigController extends BaseController {
     @Operation(summary = "获取公开基础设置")
     public R<BasicSettingsDTO> getPublicBasicSettings() {
         return ok(sysConfigService.getBasicSettings());
+    }
+
+    @GetMapping("/notice")
+    @Operation(summary = "获取当前生效公告")
+    public R<ActiveNoticeDTO> getActiveNotice() {
+        return ok(sysConfigService.getActiveNotice());
     }
 
     @GetMapping("/group/{group}")

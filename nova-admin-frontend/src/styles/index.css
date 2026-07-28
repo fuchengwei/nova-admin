@@ -58,7 +58,10 @@ body,
 /* antd v6 Tabs：content 中间层承担高度/布局。需排除 hidden panel，
    否则选择器优先级 (0,4,0) 会覆盖 antd 自身的 `display: none`，
    导致非激活面板也以 flex 形式渲染、与激活面板叠加。 */
-.tabs-fill > .ant-tabs-body-holder > .ant-tabs-body > .ant-tabs-content:not(.ant-tabs-content-hidden) {
+.tabs-fill
+  > .ant-tabs-body-holder
+  > .ant-tabs-body
+  > .ant-tabs-content:not(.ant-tabs-content-hidden) {
   height: 100%;
   display: flex;
   flex-direction: column;
@@ -97,6 +100,193 @@ body,
   min-height: 0;
   display: flex;
   flex-direction: column;
+}
+
+/* 系统公告编辑器和预览共用的正文排版，确保发布前后阅读体验一致。 */
+.notice-rich-content {
+  color: #475569;
+  font-size: 14px;
+  line-height: 1.8;
+}
+.notice-rich-content > :first-child {
+  margin-top: 0;
+}
+.notice-rich-content > :last-child {
+  margin-bottom: 0;
+}
+.notice-rich-content h2,
+.notice-rich-content h3 {
+  color: #1e293b;
+  font-weight: 650;
+  line-height: 1.35;
+}
+.notice-rich-content h2 {
+  margin: 20px 0 8px;
+  font-size: 18px;
+}
+.notice-rich-content h3 {
+  margin: 16px 0 8px;
+  font-size: 16px;
+}
+.notice-rich-content p,
+.notice-rich-content ul,
+.notice-rich-content ol {
+  margin: 0 0 12px;
+}
+.notice-rich-content ul,
+.notice-rich-content ol {
+  padding-left: 20px;
+}
+.notice-rich-content blockquote {
+  margin: 14px 0;
+  border-left: 3px solid #f59e0b;
+  padding-left: 12px;
+  color: #64748b;
+}
+.notice-rich-content a {
+  color: #1677ff;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.notice-rich-content hr {
+  margin: 18px 0;
+  border: 0;
+  border-top: 1px solid #e2e8f0;
+}
+.notice-publish-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 24px;
+  border-bottom: 1px solid #e2e8f0;
+  padding-bottom: 18px;
+}
+.notice-publish-kicker {
+  color: #b45309;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0;
+}
+.notice-publish-intro {
+  margin-top: 6px;
+  color: #64748b;
+  font-size: 14px;
+}
+.notice-editor-shell {
+  overflow: hidden;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  background: #ffffff;
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease;
+}
+.notice-editor-shell:focus-within {
+  border-color: #d97706;
+  box-shadow: 0 0 0 3px rgb(217 119 6 / 12%);
+}
+.notice-editor-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+  border-bottom: 1px solid #e2e8f0;
+  background: #f8fafc;
+  padding: 7px 8px;
+}
+.notice-editor-toolbar-button.ant-btn {
+  min-width: 30px;
+  padding-inline: 7px;
+  font-weight: 650;
+}
+.notice-editor-toolbar-separator {
+  width: 1px;
+  height: 20px;
+  margin: 1px 4px;
+  background: #dbe3ee;
+}
+.notice-editor-content {
+  min-height: 290px;
+  padding: 18px;
+  color: #334155;
+  font-size: 14px;
+  line-height: 1.8;
+  outline: none;
+}
+.notice-editor-content p.is-editor-empty:first-child::before {
+  float: left;
+  height: 0;
+  color: #94a3b8;
+  content: attr(data-placeholder);
+  pointer-events: none;
+}
+.notice-editor-content h2,
+.notice-editor-content h3 {
+  color: #1e293b;
+  line-height: 1.35;
+}
+.notice-editor-content h2 {
+  font-size: 18px;
+}
+.notice-editor-content h3 {
+  font-size: 16px;
+}
+.notice-editor-content ul,
+.notice-editor-content ol {
+  padding-left: 22px;
+}
+.notice-editor-content blockquote {
+  margin: 14px 0;
+  border-left: 3px solid #f59e0b;
+  padding-left: 12px;
+  color: #64748b;
+}
+.notice-channel-collapse {
+  margin-top: 24px;
+  border-color: #e2e8f0;
+  background: #f8fafc;
+}
+.notice-channel-collapse .ant-collapse-header {
+  color: #475569;
+  font-size: 14px;
+  font-weight: 600;
+}
+@media (max-width: 768px) {
+  .notice-publish-header {
+    display: block;
+  }
+  .notice-publish-header .ant-form-item {
+    margin-top: 16px;
+    margin-bottom: 0;
+  }
+  .notice-editor-content {
+    min-height: 220px;
+  }
+}
+.announcement-dialog {
+  padding: 28px 30px 22px;
+}
+.announcement-dialog-header {
+  padding-right: 34px;
+}
+.announcement-dialog h2 {
+  margin: 0;
+  color: #0f172a;
+  font-size: 22px;
+  font-weight: 650;
+  line-height: 1.4;
+}
+.announcement-dialog-content {
+  margin-top: 22px;
+  color: #475569;
+}
+.announcement-dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 26px;
+}
+.announcement-dialog-actions .ant-btn {
+  min-width: 88px;
 }
 .tabs-fill
   .ant-pro-table

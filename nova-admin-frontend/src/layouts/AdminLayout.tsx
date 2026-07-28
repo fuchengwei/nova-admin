@@ -12,6 +12,7 @@ import { useTranslation } from 'react-i18next';
 import { ProLayout } from '@ant-design/pro-components';
 import { useQuery } from '@tanstack/react-query';
 import { getPublicBasicSettings } from '@/api/settings';
+import SystemNotice from '@/components/SystemNotice';
 import { useAppStore, type Locale } from '@/stores/appStore';
 import { useUserStore } from '@/stores/userStore';
 import { clearTokens, getToken } from '@/utils/request';
@@ -214,6 +215,7 @@ export default function AdminLayout() {
             ]
       }
     >
+      <SystemNotice />
       <div className="flex h-full flex-col overflow-hidden">
         <Outlet />
       </div>

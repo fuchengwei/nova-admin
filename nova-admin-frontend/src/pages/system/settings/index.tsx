@@ -27,6 +27,7 @@ import {
   type UploadSettings,
 } from '@/api/settings';
 import { uploadFile } from '@/api/file';
+import RichTextContent from '@/components/RichTextContent';
 import { useUserStore } from '@/stores/userStore';
 import { useAppStore, type Locale } from '@/stores/appStore';
 import { hasPermission } from '@/utils/layout';
@@ -309,7 +310,10 @@ export default function SystemSettingsPage() {
                   label: t('settings.defaultLanguage'),
                   value: displayText(basicData?.defaultLanguage),
                 },
-                { label: t('settings.themeColor'), value: themeColorDisplay(basicData?.themeColor, t) },
+                {
+                  label: t('settings.themeColor'),
+                  value: themeColorDisplay(basicData?.themeColor, t),
+                },
                 {
                   label: t('settings.logoPreview'),
                   value: safeBasicLogoSrc ? t('menu.enabled') : '-',
@@ -630,10 +634,6 @@ export default function SystemSettingsPage() {
                     value={displayText(noticeData?.title)}
                   />
                   <MetaRow
-                    label={t('settings.noticeLevel')}
-                    value={noticeData?.level ? <Tag color="blue">{noticeData.level}</Tag> : '-'}
-                  />
-                  <MetaRow
                     label={t('settings.noticeEnabled')}
                     value={badge(
                       Boolean(noticeData?.enabled),
@@ -641,8 +641,12 @@ export default function SystemSettingsPage() {
                       t('menu.disabled'),
                     )}
                   />
-                  <div className="rounded-2xl border border-slate-200/70 bg-white px-4 py-3 text-sm leading-7 text-slate-600">
-                    {displayText(noticeData?.content)}
+                  <div className="rounded-2xl border border-slate-200/70 bg-white px-4 py-3 text-sm text-slate-600">
+                    {noticeData?.content ? (
+                      <RichTextContent content={noticeData.content} />
+                    ) : (
+                      displayText(noticeData?.content)
+                    )}
                   </div>
                 </MetaPanel>
                 <div className="grid gap-4">

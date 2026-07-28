@@ -20,8 +20,8 @@ public class NoticeSettingsDTO implements Serializable {
     @Schema(description = "公告标题")
     private String title;
 
-    @Size(max = 2000, message = "公告内容长度不能超过2000")
-    @Schema(description = "公告内容")
+    @Size(max = 10000, message = "公告内容长度不能超过10000")
+    @Schema(description = "公告内容（安全 HTML）")
     private String content;
 
     @Schema(description = "是否启用公告")

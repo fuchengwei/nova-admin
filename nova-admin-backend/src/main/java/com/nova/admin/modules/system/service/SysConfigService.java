@@ -1,6 +1,7 @@
 package com.nova.admin.modules.system.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.nova.admin.modules.system.dto.ActiveNoticeDTO;
 import com.nova.admin.modules.system.dto.BasicSettingsDTO;
 import com.nova.admin.modules.system.dto.NoticeSettingsDTO;
 import com.nova.admin.modules.system.dto.SecuritySettingsDTO;
@@ -17,6 +18,8 @@ public interface SysConfigService extends IService<SysConfig> {
     UploadSettingsDTO getUploadSettings();
 
     NoticeSettingsDTO getNoticeSettings();
+
+    ActiveNoticeDTO getActiveNotice();
 
     void updateBasicSettings(BasicSettingsDTO settings);
 
