@@ -1,9 +1,9 @@
 package com.nova.admin.modules.auth.service;
 
 import com.nova.admin.common.api.ResultCode;
-import com.nova.admin.common.constant.Constants;
 import com.nova.admin.common.exception.BizException;
 import com.nova.admin.security.JwtUtil;
+import com.nova.admin.security.LoginSession;
 import com.nova.admin.security.LoginUser;
 import com.nova.admin.modules.auth.dto.LoginRequest;
 import com.nova.admin.modules.auth.dto.LoginResponse;
@@ -16,11 +16,9 @@ import io.jsonwebtoken.Claims;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -39,7 +37,7 @@ public class AuthService {
     private final LoginAttemptService loginAttemptService;
     private final SysUserMapper userMapper;
     private final UserDetailsServiceImpl userDetailsService;
-    private final RedisTemplate<String, Object> redisTemplate;
+    private final AuthSessionService authSessionService;
     private final SysLoginLogService loginLogService;
 
     /** 登录 */
@@ -76,27 +74,61 @@ public class AuthService {
         }
         loginAttemptService.reset(account);
 
-        // 4. 生成 token
-        String access = jwtUtil.generateAccessToken(user.getId(), user.getAccount());
-        String refresh = jwtUtil.generateRefreshToken(user.getId(), user.getAccount());
-
-        // 5. 刷新登录用户缓存（含 loginIp/time）
+        // 4. 刷新登录用户缓存（含 loginIp/time）
         LoginUser loginUser = userDetailsService.refreshCache(user, ip);
 
-        // 6. 写入 refresh_token 索引（用于注销/踢人）
-        redisTemplate.opsForValue().set(
-                Constants.REDIS_KEY_AUTH + "refresh:" + user.getId(),
-                refresh,
-                Duration.ofSeconds(jwtUtil.getRefreshExpireSeconds()));
-
-        // 7. 更新最后登录信息
+        // 5. 更新最后登录信息
         user.setLastLoginIp(ip);
         user.setLastLoginTime(LocalDateTime.now());
         userMapper.updateById(user);
 
         loginLogService.recordLoginLog(account, ip, userAgent, true, "登录成功");
 
-        // 8. 构造响应
+        return issueTokens(user, loginUser);
+    }
+
+    /** 注销当前设备会话。 */
+    public void logout(String jti) {
+        authSessionService.revokeSession(jti);
+    }
+
+    /** 刷新 token */
+    public LoginResponse refresh(String refreshToken) {
+        Claims claims;
+        try {
+            claims = jwtUtil.parse(refreshToken);
+        } catch (Exception e) {
+            throw new BizException(ResultCode.REFRESH_TOKEN_INVALID);
+        }
+        if (!"refresh".equals(claims.get("type", String.class))) {
+            throw new BizException(ResultCode.REFRESH_TOKEN_INVALID);
+        }
+        Long userId = Long.valueOf(claims.getSubject());
+        String refreshJti = claims.get("jti", String.class);
+        LoginSession session = authSessionService.consumeRefreshSession(refreshJti);
+        if (session == null || !userId.equals(session.getUserId())) {
+            throw new BizException(ResultCode.REFRESH_TOKEN_INVALID);
+        }
+        SysUser user = userMapper.selectById(userId);
+        if (user == null) {
+            throw new BizException(ResultCode.USER_NOT_FOUND);
+        }
+        if (user.getStatus() != null && user.getStatus() == 0) {
+            throw new BizException(ResultCode.USER_DISABLED);
+        }
+
+        LoginUser loginUser = userDetailsService.refreshCache(user, session.getLoginIp());
+        return issueTokens(user, loginUser);
+    }
+
+    private LoginResponse issueTokens(SysUser user, LoginUser loginUser) {
+        String access = jwtUtil.generateAccessToken(user.getId(), user.getAccount());
+        String refresh = jwtUtil.generateRefreshToken(user.getId(), user.getAccount());
+        String accessJti = jwtUtil.parse(access).get("jti", String.class);
+        String refreshJti = jwtUtil.parse(refresh).get("jti", String.class);
+        authSessionService.register(AuthSessionService.of(loginUser, accessJti, refreshJti),
+                jwtUtil.getAccessExpireSeconds(), jwtUtil.getRefreshExpireSeconds());
+
         UserInfoDTO userInfo = UserInfoDTO.builder()
                 .id(user.getId())
                 .account(user.getAccount())
@@ -113,70 +145,10 @@ public class AuthService {
                 .roles(new ArrayList<>(loginUser.getRoles() == null ? List.of() : loginUser.getRoles()))
                 .permissions(new ArrayList<>(loginUser.getPermissions() == null ? List.of() : loginUser.getPermissions()))
                 .build();
-
         return LoginResponse.builder()
                 .tokenType("Bearer")
                 .accessToken(access)
                 .refreshToken(refresh)
-                .expiresIn(jwtUtil.getAccessExpireSeconds())
-                .userInfo(userInfo)
-                .build();
-    }
-
-    /** 注销（将当前 access token 的 jti 加入黑名单，并清除 refresh 索引） */
-    public void logout(String jti, Long userId) {
-        redisTemplate.opsForValue().set(
-                Constants.REDIS_KEY_TOKEN_BLACKLIST + jti,
-                System.currentTimeMillis(),
-                Duration.ofSeconds(jwtUtil.getAccessExpireSeconds()));
-        redisTemplate.delete(Constants.REDIS_KEY_AUTH + "refresh:" + userId);
-    }
-
-    /** 刷新 token */
-    public LoginResponse refresh(String refreshToken) {
-        Claims claims;
-        try {
-            claims = jwtUtil.parse(refreshToken);
-        } catch (Exception e) {
-            throw new BizException(ResultCode.REFRESH_TOKEN_INVALID);
-        }
-        if (!"refresh".equals(claims.get("type", String.class))) {
-            throw new BizException(ResultCode.REFRESH_TOKEN_INVALID);
-        }
-        Long userId = Long.valueOf(claims.getSubject());
-        String stored = (String) redisTemplate.opsForValue().get(Constants.REDIS_KEY_AUTH + "refresh:" + userId);
-        if (stored == null || !stored.equals(refreshToken)) {
-            throw new BizException(ResultCode.REFRESH_TOKEN_INVALID);
-        }
-        SysUser user = userMapper.selectById(userId);
-        if (user == null) {
-            throw new BizException(ResultCode.USER_NOT_FOUND);
-        }
-        String newAccess = jwtUtil.generateAccessToken(userId, user.getAccount());
-        String newRefresh = jwtUtil.generateRefreshToken(userId, user.getAccount());
-        redisTemplate.opsForValue().set(
-                Constants.REDIS_KEY_AUTH + "refresh:" + userId,
-                newRefresh,
-                Duration.ofSeconds(jwtUtil.getRefreshExpireSeconds()));
-
-        UserInfoDTO userInfo = UserInfoDTO.builder()
-                .id(user.getId())
-                .account(user.getAccount())
-                .nickname(user.getNickname())
-                .realName(user.getRealName())
-                .avatar(user.getAvatar())
-                .email(user.getEmail())
-                .phone(user.getPhone())
-                .gender(user.getGender())
-                .deptId(user.getDeptId())
-                .deptName(user.getDeptName())
-                .lastLoginTime(user.getLastLoginTime())
-                .lastLoginIp(user.getLastLoginIp())
-                .build();
-        return LoginResponse.builder()
-                .tokenType("Bearer")
-                .accessToken(newAccess)
-                .refreshToken(newRefresh)
                 .expiresIn(jwtUtil.getAccessExpireSeconds())
                 .userInfo(userInfo)
                 .build();

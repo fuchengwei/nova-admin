@@ -9,12 +9,16 @@ import com.nova.admin.modules.auth.dto.LoginResponse;
 import com.nova.admin.modules.auth.dto.RefreshTokenRequest;
 import com.nova.admin.modules.auth.service.AuthService;
 import com.nova.admin.modules.auth.service.CaptchaService;
+import com.nova.admin.modules.auth.service.AuthSessionEventService;
+import com.nova.admin.security.LoginUser;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.http.MediaType;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 /**
  * 认证 Controller
@@ -27,6 +31,7 @@ public class AuthController extends BaseController {
 
     private final AuthService authService;
     private final CaptchaService captchaService;
+    private final AuthSessionEventService authSessionEventService;
 
     @Operation(summary = "获取图形验证码")
     @GetMapping("/captcha")
@@ -49,7 +54,15 @@ public class AuthController extends BaseController {
     @Operation(summary = "注销（踢下线）")
     @PostMapping("/logout")
     public R<Void> logout() {
-        SecurityUtils.getLoginUser().ifPresent(u -> authService.logout(u.getJti(), u.getUserId()));
+        SecurityUtils.getLoginUser().ifPresent(u -> authService.logout(u.getJti()));
         return ok();
+    }
+
+    @Operation(summary = "订阅当前会话撤销通知")
+    @GetMapping(value = "/session-events", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    public SseEmitter sessionEvents() {
+        LoginUser loginUser = SecurityUtils.getLoginUser()
+                .orElseThrow(() -> new IllegalStateException("未登录"));
+        return authSessionEventService.subscribe(loginUser.getJti());
     }
 }

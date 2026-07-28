@@ -3,6 +3,7 @@ package com.nova.admin.config;
 import com.nova.admin.common.api.R;
 import com.nova.admin.common.api.ResultCode;
 import com.nova.admin.security.JwtAuthFilter;
+import jakarta.servlet.DispatcherType;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
@@ -60,6 +61,9 @@ public class SecurityConfig {
                 .cors(c -> c.configurationSource(corsConfigurationSource()))
                 .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
+                        // SseEmitter.complete() triggers an async redispatch after the original
+                        // request was already authenticated; do not re-check the revoked token.
+                        .dispatcherTypeMatchers(DispatcherType.ASYNC).permitAll()
                         .requestMatchers(WHITELIST).permitAll()
                         .anyRequest().authenticated())
                 .exceptionHandling(e -> e

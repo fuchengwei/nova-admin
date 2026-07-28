@@ -7,6 +7,7 @@ import type { R, LoginResult } from '@/types/api';
 
 const TOKEN_KEY = 'nova_access_token';
 const REFRESH_KEY = 'nova_refresh_token';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
 
 function showError(content: string): void {
   message.error(content);
@@ -14,6 +15,7 @@ function showError(content: string): void {
 
 export const getToken = () => localStorage.getItem(TOKEN_KEY);
 export const getRefreshToken = () => localStorage.getItem(REFRESH_KEY);
+export const getApiBaseUrl = () => API_BASE_URL;
 export const setToken = (access: string, refresh: string) => {
   localStorage.setItem(TOKEN_KEY, access);
   localStorage.setItem(REFRESH_KEY, refresh);
@@ -66,7 +68,7 @@ function resolveText(value: string): string {
 }
 
 const service: AxiosInstance = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || '/api',
+  baseURL: API_BASE_URL,
   timeout: 30_000,
 });
 

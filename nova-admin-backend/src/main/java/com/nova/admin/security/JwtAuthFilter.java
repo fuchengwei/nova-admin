@@ -2,8 +2,8 @@ package com.nova.admin.security;
 
 import com.nova.admin.config.NovaProperties;
 import com.nova.admin.common.api.ResultCode;
-import com.nova.admin.common.constant.Constants;
 import com.nova.admin.common.exception.BizException;
+import com.nova.admin.modules.auth.service.AuthSessionService;
 import com.nova.admin.modules.auth.security.UserDetailsServiceImpl;
 import io.jsonwebtoken.Claims;
 import jakarta.servlet.FilterChain;
@@ -13,7 +13,6 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.NonNull;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -33,7 +32,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
     private final JwtUtil jwtUtil;
     private final NovaProperties novaProperties;
-    private final RedisTemplate<String, Object> redisTemplate;
+    private final AuthSessionService authSessionService;
     private final UserDetailsServiceImpl userDetailsService;
 
     @Override
@@ -51,10 +50,8 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                 String jti = claims.get("jti", String.class);
                 String account = claims.get("account", String.class);
 
-                // 黑名单校验（被踢下线 / 主动注销）：按 token 唯一标识 jti 精确判断，
-                // 避免按 userId 拉黑导致注销后短时间内重新登录也被拦截
-                Boolean blacklisted = redisTemplate.hasKey(Constants.REDIS_KEY_TOKEN_BLACKLIST + jti);
-                if (Boolean.TRUE.equals(blacklisted)) {
+                // JWT 仅用于防篡改和过期校验，服务端会话存在才代表令牌仍可使用。
+                if (!authSessionService.isActive(jti)) {
                     throw new BizException(ResultCode.TOKEN_EXPIRED);
                 }
 

@@ -1,11 +1,13 @@
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Button, Descriptions, Progress, Tabs, Tag } from 'antd';
-import { ReloadOutlined } from '@ant-design/icons';
+import { Button, Descriptions, Popconfirm, Progress, Tabs, Tag } from 'antd';
+import { DeleteOutlined, ReloadOutlined } from '@ant-design/icons';
 import { ProCard, ProTable, type ActionType, type ProColumns } from '@ant-design/pro-components';
-import { getServerInfo, getOnlineUserPage, getCacheInfo } from '@/api/monitor';
+import { getServerInfo, getOnlineUserPage, getCacheInfo, kickOnlineUser } from '@/api/monitor';
 import type { CacheInfo, OnlineUser, ServerInfo } from '@/api/monitor';
 import { displayText, isEmptyDisplayValue } from '@/utils/display';
+import { message } from '@/utils/message';
+import { useUserStore } from '@/stores/userStore';
 
 const usageColor = (v: number) => (v > 80 ? '#ff4d4f' : v > 60 ? '#faad14' : '#52c41a');
 const fmt = (value: unknown, suffix: string) =>
@@ -62,6 +64,8 @@ export default function ServerMonitorPage() {
   const [server, setServer] = useState<ServerInfo | null>(null);
   const [cache, setCache] = useState<CacheInfo | null>(null);
   const onlineActionRef = useRef<ActionType>(null);
+  const permissions = useUserStore((state) => state.permissions);
+  const canKickOnlineUser = permissions.includes('monitor:online:remove');
 
   const load = async () => {
     setLoading(true);
@@ -78,9 +82,48 @@ export default function ServerMonitorPage() {
     load();
   }, []);
 
+  const kickColumn: ProColumns<OnlineUser> = {
+    title: t('common.action'),
+    valueType: 'option',
+    key: 'option',
+    width: 96,
+    render: (_, record) => [
+      <Popconfirm
+        key="kick"
+        title={t('monitor.kickConfirm')}
+        onConfirm={async () => {
+          const res = await kickOnlineUser(record.tokenKey);
+          if (res.code !== 0) {
+            message.error(res.msg || t('common.error'));
+            return;
+          }
+          message.success(t('monitor.kickSuccess'));
+          onlineActionRef.current?.reload();
+        }}
+        okText={t('common.confirm')}
+        cancelText={t('common.cancel')}
+        okButtonProps={{ danger: true }}
+      >
+        <Button type="link" danger size="small" icon={<DeleteOutlined />}>
+          {t('monitor.kick')}
+        </Button>
+      </Popconfirm>,
+    ],
+  };
+
   const onlineColumns: ProColumns<OnlineUser>[] = [
-    { title: t('monitor.account'), dataIndex: 'account', key: 'account', render: (v) => displayText(v) },
-    { title: t('monitor.nickname'), dataIndex: 'nickname', key: 'nickname', render: (v) => displayText(v) },
+    {
+      title: t('monitor.account'),
+      dataIndex: 'account',
+      key: 'account',
+      render: (v) => displayText(v),
+    },
+    {
+      title: t('monitor.nickname'),
+      dataIndex: 'nickname',
+      key: 'nickname',
+      render: (v) => displayText(v),
+    },
     {
       title: t('monitor.deptId'),
       dataIndex: 'deptId',
@@ -88,7 +131,12 @@ export default function ServerMonitorPage() {
       search: false,
       render: (v) => displayText(v),
     },
-    { title: t('monitor.loginIp'), dataIndex: 'loginIp', key: 'loginIp', render: (v) => displayText(v) },
+    {
+      title: t('monitor.loginIp'),
+      dataIndex: 'loginIp',
+      key: 'loginIp',
+      render: (v) => displayText(v),
+    },
     {
       title: t('monitor.loginTime'),
       dataIndex: 'loginTime',
@@ -96,11 +144,22 @@ export default function ServerMonitorPage() {
       valueType: 'dateTime',
       search: false,
     },
+    ...(canKickOnlineUser ? [kickColumn] : []),
   ];
 
   const diskColumns: ProColumns<ServerInfo['disks'][number]>[] = [
-    { title: t('monitor.diskPath'), dataIndex: 'dirName', key: 'dirName', render: (v) => displayText(v) },
-    { title: t('monitor.diskType'), dataIndex: 'sysTypeName', key: 'sysTypeName', render: (v) => displayText(v) },
+    {
+      title: t('monitor.diskPath'),
+      dataIndex: 'dirName',
+      key: 'dirName',
+      render: (v) => displayText(v),
+    },
+    {
+      title: t('monitor.diskType'),
+      dataIndex: 'sysTypeName',
+      key: 'sysTypeName',
+      render: (v) => displayText(v),
+    },
     { title: t('monitor.total'), dataIndex: 'total', key: 'total', render: (v) => fmt(v, ' GB') },
     { title: t('monitor.used'), dataIndex: 'used', key: 'used', render: (v) => fmt(v, ' GB') },
     { title: t('monitor.free'), dataIndex: 'free', key: 'free', render: (v) => fmt(v, ' GB') },
@@ -149,28 +208,55 @@ export default function ServerMonitorPage() {
                     <StatRow label={t('monitor.cpuUsed')} value={fmt(server?.cpu.used, '%')} />
                   </MetricCard>
 
-                  <MetricCard title={t('monitor.mem')} percent={server?.mem.usage} loading={loading}>
+                  <MetricCard
+                    title={t('monitor.mem')}
+                    percent={server?.mem.usage}
+                    loading={loading}
+                  >
                     <StatRow label={t('monitor.total')} value={fmt(server?.mem.total, ' GB')} />
                     <StatRow label={t('monitor.used')} value={fmt(server?.mem.used, ' GB')} />
                     <StatRow label={t('monitor.free')} value={fmt(server?.mem.free, ' GB')} />
                   </MetricCard>
 
-                  <MetricCard title={t('monitor.jvm')} percent={server?.jvm.usage} loading={loading}>
+                  <MetricCard
+                    title={t('monitor.jvm')}
+                    percent={server?.jvm.usage}
+                    loading={loading}
+                  >
                     <StatRow label={t('monitor.jvmName')} value={displayText(server?.jvm.name)} />
-                    <StatRow label={t('monitor.jvmVersion')} value={displayText(server?.jvm.version)} />
+                    <StatRow
+                      label={t('monitor.jvmVersion')}
+                      value={displayText(server?.jvm.version)}
+                    />
                     <StatRow label={t('monitor.jvmUsed')} value={fmt(server?.jvm.used, ' GB')} />
-                    <StatRow label={t('monitor.jvmStartTime')} value={displayText(server?.jvm.startTime)} />
-                    <StatRow label={t('monitor.jvmRunTime')} value={displayText(server?.jvm.runTime)} />
+                    <StatRow
+                      label={t('monitor.jvmStartTime')}
+                      value={displayText(server?.jvm.startTime)}
+                    />
+                    <StatRow
+                      label={t('monitor.jvmRunTime')}
+                      value={displayText(server?.jvm.runTime)}
+                    />
                   </MetricCard>
                 </div>
 
                 <ProCard title={t('monitor.sysInfo')} loading={loading}>
                   <Descriptions size="small" column={2}>
-                    <Descriptions.Item label={t('monitor.computerName')}>{displayText(server?.sys.computerName)}</Descriptions.Item>
-                    <Descriptions.Item label={t('monitor.computerIp')}>{displayText(server?.sys.computerIp)}</Descriptions.Item>
-                    <Descriptions.Item label={t('monitor.osName')}>{displayText(server?.sys.osName)}</Descriptions.Item>
-                    <Descriptions.Item label={t('monitor.osArch')}>{displayText(server?.sys.osArch)}</Descriptions.Item>
-                    <Descriptions.Item label={t('monitor.userDir')} span={2}>{displayText(server?.sys.userDir)}</Descriptions.Item>
+                    <Descriptions.Item label={t('monitor.computerName')}>
+                      {displayText(server?.sys.computerName)}
+                    </Descriptions.Item>
+                    <Descriptions.Item label={t('monitor.computerIp')}>
+                      {displayText(server?.sys.computerIp)}
+                    </Descriptions.Item>
+                    <Descriptions.Item label={t('monitor.osName')}>
+                      {displayText(server?.sys.osName)}
+                    </Descriptions.Item>
+                    <Descriptions.Item label={t('monitor.osArch')}>
+                      {displayText(server?.sys.osArch)}
+                    </Descriptions.Item>
+                    <Descriptions.Item label={t('monitor.userDir')} span={2}>
+                      {displayText(server?.sys.userDir)}
+                    </Descriptions.Item>
                   </Descriptions>
                 </ProCard>
 
@@ -223,19 +309,33 @@ export default function ServerMonitorPage() {
                 {/* Top: 4 key metric cards */}
                 <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
                   <ProCard loading={loading}>
-                    <div className="text-xs text-[color:var(--ant-color-text-secondary)]">{t('monitor.cacheUsedMem')}</div>
-                    <div className="mt-1 text-xl font-semibold">{displayText(cache?.server?.usedMemoryHuman)}</div>
+                    <div className="text-xs text-[color:var(--ant-color-text-secondary)]">
+                      {t('monitor.cacheUsedMem')}
+                    </div>
+                    <div className="mt-1 text-xl font-semibold">
+                      {displayText(cache?.server?.usedMemoryHuman)}
+                    </div>
                   </ProCard>
                   <ProCard loading={loading}>
-                    <div className="text-xs text-[color:var(--ant-color-text-secondary)]">{t('monitor.cacheMaxMem')}</div>
-                    <div className="mt-1 text-xl font-semibold">{displayText(cache?.server?.maxMemoryHuman)}</div>
+                    <div className="text-xs text-[color:var(--ant-color-text-secondary)]">
+                      {t('monitor.cacheMaxMem')}
+                    </div>
+                    <div className="mt-1 text-xl font-semibold">
+                      {displayText(cache?.server?.maxMemoryHuman)}
+                    </div>
                   </ProCard>
                   <ProCard loading={loading}>
-                    <div className="text-xs text-[color:var(--ant-color-text-secondary)]">{t('monitor.cacheClients')}</div>
-                    <div className="mt-1 text-xl font-semibold">{displayText(cache?.server?.connectedClients)}</div>
+                    <div className="text-xs text-[color:var(--ant-color-text-secondary)]">
+                      {t('monitor.cacheClients')}
+                    </div>
+                    <div className="mt-1 text-xl font-semibold">
+                      {displayText(cache?.server?.connectedClients)}
+                    </div>
                   </ProCard>
                   <ProCard loading={loading}>
-                    <div className="text-xs text-[color:var(--ant-color-text-secondary)]">{t('monitor.cacheDbSize')}</div>
+                    <div className="text-xs text-[color:var(--ant-color-text-secondary)]">
+                      {t('monitor.cacheDbSize')}
+                    </div>
                     <div className="mt-1 text-xl font-semibold">{cache?.dbSize ?? '-'}</div>
                   </ProCard>
                 </div>
@@ -243,10 +343,18 @@ export default function ServerMonitorPage() {
                 {/* Middle: Redis server info */}
                 <ProCard title={t('monitor.cacheBase')} loading={loading}>
                   <Descriptions size="small" column={{ xs: 1, sm: 2, lg: 4 }}>
-                    <Descriptions.Item label={t('monitor.cacheVersion')}>{displayText(cache?.server?.version)}</Descriptions.Item>
-                    <Descriptions.Item label={t('monitor.cacheMode')}>{displayText(cache?.server?.mode)}</Descriptions.Item>
-                    <Descriptions.Item label={t('monitor.cacheOs')}>{displayText(cache?.server?.os)}</Descriptions.Item>
-                    <Descriptions.Item label={t('monitor.cacheUptime')}>{fmt(cache?.server?.uptime, ' d')}</Descriptions.Item>
+                    <Descriptions.Item label={t('monitor.cacheVersion')}>
+                      {displayText(cache?.server?.version)}
+                    </Descriptions.Item>
+                    <Descriptions.Item label={t('monitor.cacheMode')}>
+                      {displayText(cache?.server?.mode)}
+                    </Descriptions.Item>
+                    <Descriptions.Item label={t('monitor.cacheOs')}>
+                      {displayText(cache?.server?.os)}
+                    </Descriptions.Item>
+                    <Descriptions.Item label={t('monitor.cacheUptime')}>
+                      {fmt(cache?.server?.uptime, ' d')}
+                    </Descriptions.Item>
                     <Descriptions.Item label={t('monitor.cachePolicy')}>
                       {isEmptyDisplayValue(cache?.server?.maxMemoryPolicy) ? (
                         '-'

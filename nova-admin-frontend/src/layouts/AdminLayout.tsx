@@ -1,5 +1,5 @@
-import { useEffect, useState, useMemo } from 'react';
-import { Dropdown, Avatar, Space, Button, theme as antdTheme, Spin } from 'antd';
+import { useEffect, useState, useMemo, useRef } from 'react';
+import { Dropdown, Avatar, Space, Button, App as AntdApp, theme as antdTheme, Spin } from 'antd';
 import {
   DashboardOutlined,
   UserOutlined,
@@ -17,6 +17,7 @@ import { useUserStore } from '@/stores/userStore';
 import { clearTokens, getToken } from '@/utils/request';
 import { getUserInfo, getUserMenus, logout as apiLogout } from '@/api/auth';
 import { toLayoutRoutes, findRouteNode } from '@/utils/layout';
+import { useSessionEvents } from '@/hooks/useSessionEvents';
 
 const normalizeImageSrc = (value?: string | null) => {
   if (typeof value !== 'string') return undefined;
@@ -31,8 +32,10 @@ export default function AdminLayout() {
   const { locale, sidebarCollapsed, setLocale, theme } = useAppStore();
   const { setUserInfo, menus, setMenus, permissions, reset } = useUserStore();
   const userInfo = useUserStore((s) => s.userInfo);
+  const { modal } = AntdApp.useApp();
   const { token } = antdTheme.useToken();
   const [menusLoaded, setMenusLoaded] = useState(false);
+  const ignoreSessionRevocationRef = useRef(false);
   const { data: basicSettings } = useQuery({
     queryKey: ['settings', 'public-basic'],
     queryFn: async () => {
@@ -52,6 +55,20 @@ export default function AdminLayout() {
       .catch(() => undefined)
       .finally(() => setMenusLoaded(true));
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useSessionEvents({
+    onSessionRevoked: () => {
+      if (ignoreSessionRevocationRef.current || !getToken()) return;
+      clearTokens();
+      reset();
+      modal.warning({
+        title: t('request.sessionRevokedTitle'),
+        content: t('request.sessionRevoked'),
+        okText: t('common.confirm'),
+      });
+      navigate('/login', { replace: true });
+    },
+  });
 
   // 构建 ProLayout 路由树：Dashboard 根 + 后端菜单
   // menus 初始为 []，加载完成后由 setMenus 触发重渲染，严格按后端排序展示
@@ -110,6 +127,7 @@ export default function AdminLayout() {
         return;
       }
       if (key === 'logout') {
+        ignoreSessionRevocationRef.current = true;
         try {
           await apiLogout();
         } catch {

@@ -20,6 +20,8 @@ export default {
   request: {
     authExpired: 'Session expired, please log in again',
     refreshFailed: 'Session invalid, please log in again',
+    sessionRevokedTitle: 'Session ended',
+    sessionRevoked: 'Your session was revoked by an administrator. Please sign in again.',
     forbidden: 'Access denied',
     serverError: 'Service error, please try again later',
   },
@@ -331,6 +333,9 @@ export default {
     deptId: 'Dept ID',
     loginIp: 'Login IP',
     loginTime: 'Login Time',
+    kick: 'Kick out',
+    kickConfirm: 'Kick this session out?',
+    kickSuccess: 'Session ended',
     cacheBase: 'Base Info',
     cacheVersion: 'Version',
     cacheMode: 'Mode',

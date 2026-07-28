@@ -75,6 +75,9 @@ export function getOnlineUsers() {
 export function getOnlineUserPage(params: OnlineUserPageQuery) {
   return request<R<PageResult<OnlineUser>>>({ url: '/monitor/online/page', method: 'GET', params });
 }
+export function kickOnlineUser(accessJti: string) {
+  return request<R<void>>({ url: `/monitor/online/${accessJti}`, method: 'DELETE' });
+}
 export function getCacheInfo() {
   return request<R<CacheInfo>>({ url: '/monitor/cache', method: 'GET' });
 }

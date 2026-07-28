@@ -6,6 +6,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.nova.admin.common.api.PageResult;
 import com.nova.admin.common.api.ResultCode;
 import com.nova.admin.common.exception.BizException;
+import com.nova.admin.modules.auth.event.AuthorizationChangedEvent;
 import com.nova.admin.modules.system.dto.UserCreateRequest;
 import com.nova.admin.modules.system.dto.UserPageQuery;
 import com.nova.admin.modules.system.dto.UserUpdateRequest;
@@ -21,6 +22,7 @@ import com.nova.admin.security.SecurityUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -42,6 +44,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
     private final SysDeptMapper deptMapper;
     private final PasswordEncoder passwordEncoder;
     private final SysConfigService sysConfigService;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Override
     public PageResult<SysUser> getUserPage(UserPageQuery query) {
@@ -140,6 +143,8 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
             saveUserRoles(req.getId(), req.getRoleIds());
         }
 
+        eventPublisher.publishEvent(AuthorizationChangedEvent.of(req.getId()));
+
         log.info("更新用户成功，id={}, operator={}", req.getId(), operatorId);
     }
 
@@ -158,6 +163,8 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
         // 删除用户角色关联
         userRoleMapper.delete(new LambdaQueryWrapper<SysUserRole>()
                 .eq(SysUserRole::getUserId, id));
+
+        eventPublisher.publishEvent(AuthorizationChangedEvent.of(id));
 
         Long operatorId = SecurityUtils.requireUserId();
         log.info("删除用户成功，id={}, operator={}", id, operatorId);
@@ -182,6 +189,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
         user.setUpdateBy(operatorId);
 
         updateById(user);
+        eventPublisher.publishEvent(AuthorizationChangedEvent.of(id));
         log.info("重置用户密码成功，id={}, operator={}", id, operatorId);
     }
 
@@ -202,6 +210,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
         user.setUpdateBy(operatorId);
 
         updateById(user);
+        eventPublisher.publishEvent(AuthorizationChangedEvent.of(id));
         log.info("更新用户状态成功，id={}, status={}, operator={}", id, status, operatorId);
     }
 

@@ -9,10 +9,13 @@ import com.nova.admin.modules.monitor.dto.OnlineUserPageQuery;
 import com.nova.admin.modules.monitor.dto.ServerInfo;
 import com.nova.admin.modules.monitor.service.MonitorService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -45,6 +48,16 @@ public class MonitorController extends BaseController {
     @PreAuthorize("hasAuthority('monitor:online:list')")
     public R<PageResult<OnlineUser>> onlineUserPage(OnlineUserPageQuery query) {
         return ok(monitorService.getOnlineUserPage(query));
+    }
+
+    @Operation(summary = "踢出在线用户会话")
+    @DeleteMapping("/online/{accessJti}")
+    @PreAuthorize("hasAuthority('monitor:online:remove')")
+    public R<Void> kickOnlineUser(
+            @Parameter(description = "access token 会话标识", required = true)
+            @PathVariable String accessJti) {
+        monitorService.kickSession(accessJti);
+        return ok();
     }
 
     @Operation(summary = "获取缓存信息")

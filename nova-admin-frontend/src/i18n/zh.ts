@@ -20,6 +20,8 @@ export default {
   request: {
     authExpired: '登录已过期，请重新登录',
     refreshFailed: '登录状态已失效，请重新登录',
+    sessionRevokedTitle: '登录已失效',
+    sessionRevoked: '你的登录会话已被管理员撤销，请重新登录。',
     forbidden: '没有访问权限',
     serverError: '服务异常，请稍后重试',
   },
@@ -332,6 +334,9 @@ export default {
     deptId: '部门ID',
     loginIp: '登录IP',
     loginTime: '登录时间',
+    kick: '踢下线',
+    kickConfirm: '确认踢出该会话吗？',
+    kickSuccess: '已踢下线',
     cacheBase: '基础信息',
     cacheVersion: '版本',
     cacheMode: '运行模式',

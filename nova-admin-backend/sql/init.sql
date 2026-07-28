@@ -418,7 +418,8 @@ INSERT INTO sys_menu (id, parent_id, name, type, perms, path, component, icon, s
 VALUES
     (52, 2,  '服务监控', 'C', 'monitor:server:list', '/monitor/server', 'monitor/server/index', 'DashboardOutlined', 1, 1, 1, NOW()),
     (53, 52, '在线用户', 'F', 'monitor:online:list', '', '', '', 0, 0, 1, NOW()),
-    (54, 52, '缓存监控', 'F', 'monitor:cache:list', '', '', '', 1, 0, 1, NOW());
+    (54, 52, '缓存监控', 'F', 'monitor:cache:list', '', '', '', 1, 0, 1, NOW()),
+    (55, 52, '踢出用户', 'F', 'monitor:online:remove', '', '', '', 2, 0, 1, NOW());
 
 -- 初始账号（密码均为 123456 的 BCrypt 哈希，cost=10）
 -- 如需重新生成：new BCryptPasswordEncoder().encode("123456")

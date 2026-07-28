@@ -6,6 +6,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.nova.admin.common.api.PageResult;
 import com.nova.admin.common.api.ResultCode;
 import com.nova.admin.common.exception.BizException;
+import com.nova.admin.modules.auth.event.AuthorizationChangedEvent;
 import com.nova.admin.modules.system.dto.RoleCreateRequest;
 import com.nova.admin.modules.system.dto.RoleDetailDTO;
 import com.nova.admin.modules.system.dto.RolePageQuery;
@@ -23,9 +24,12 @@ import com.nova.admin.security.SecurityUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * 角色 Service 实现
@@ -38,6 +42,7 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impl
     private final SysRoleMenuMapper roleMenuMapper;
     private final SysRoleDeptMapper roleDeptMapper;
     private final SysUserRoleMapper userRoleMapper;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Override
     public PageResult<SysRole> getRolePage(RolePageQuery query) {
@@ -109,6 +114,8 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impl
         roleMenuMapper.delete(new LambdaQueryWrapper<SysRoleMenu>()
                 .eq(SysRoleMenu::getRoleId, req.getId()));
         saveRoleMenus(req.getId(), req.getMenuIds());
+
+        publishRoleUserInvalidation(req.getId());
 
         log.info("更新角色成功，id={}, operator={}", req.getId(), operatorId);
     }
@@ -213,6 +220,17 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impl
                 roleMenu.setMenuId(menuId);
                 roleMenuMapper.insert(roleMenu);
             }
+        }
+    }
+
+    private void publishRoleUserInvalidation(Long roleId) {
+        Set<Long> userIds = userRoleMapper.selectList(new LambdaQueryWrapper<SysUserRole>()
+                        .eq(SysUserRole::getRoleId, roleId))
+                .stream()
+                .map(SysUserRole::getUserId)
+                .collect(Collectors.toSet());
+        if (!userIds.isEmpty()) {
+            eventPublisher.publishEvent(new AuthorizationChangedEvent(userIds));
         }
     }
 }

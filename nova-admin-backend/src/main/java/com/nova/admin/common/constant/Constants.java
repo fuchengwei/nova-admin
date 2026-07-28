@@ -15,11 +15,13 @@ public final class Constants {
 
     /** Redis Key */
     public static final String REDIS_KEY_AUTH = "nova:auth:";
+    public static final String REDIS_KEY_AUTH_SESSION = REDIS_KEY_AUTH + "session:";
+    public static final String REDIS_KEY_AUTH_REFRESH = REDIS_KEY_AUTH + "refresh:";
+    public static final String REDIS_KEY_AUTH_USER_SESSIONS = REDIS_KEY_AUTH + "user-sessions:";
     public static final String REDIS_KEY_CAPTCHA = "nova:captcha:";
     public static final String REDIS_KEY_LOGIN_FAIL = "nova:login:fail:";
     public static final String REDIS_KEY_USER = "nova:user:";
     public static final String REDIS_KEY_DICT = "nova:dict:";
-    public static final String REDIS_KEY_TOKEN_BLACKLIST = "nova:token:blacklist:";
 
     /** Header */
     public static final String HEADER_AUTHORIZATION = "Authorization";

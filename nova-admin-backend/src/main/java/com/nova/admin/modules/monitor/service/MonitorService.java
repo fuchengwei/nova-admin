@@ -1,12 +1,12 @@
 package com.nova.admin.modules.monitor.service;
 
-import com.nova.admin.common.constant.Constants;
 import com.nova.admin.common.api.PageResult;
+import com.nova.admin.modules.auth.service.AuthSessionService;
 import com.nova.admin.modules.monitor.dto.CacheInfo;
 import com.nova.admin.modules.monitor.dto.OnlineUser;
 import com.nova.admin.modules.monitor.dto.OnlineUserPageQuery;
 import com.nova.admin.modules.monitor.dto.ServerInfo;
-import com.nova.admin.security.LoginUser;
+import com.nova.admin.security.LoginSession;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisCallback;
@@ -37,6 +37,7 @@ import java.util.Set;
 public class MonitorService {
 
     private final RedisTemplate<String, Object> redisTemplate;
+    private final AuthSessionService authSessionService;
 
     private static final double GB = 1024.0 * 1024.0 * 1024.0;
     private static final long KB = 1024L;
@@ -143,29 +144,24 @@ public class MonitorService {
         return disks;
     }
 
-    /** 在线用户：扫描 Redis 中登录用户缓存 */
+    /** 在线用户：读取仍持有有效 access token 的服务端会话。 */
     public List<OnlineUser> getOnlineUsers() {
         List<OnlineUser> list = new ArrayList<>();
-        String pattern = Constants.REDIS_KEY_USER + "*";
-        Set<String> keys = redisTemplate.keys(pattern);
-        if (keys == null) {
-            return list;
-        }
-        for (String key : keys) {
-            Object value = redisTemplate.opsForValue().get(key);
-            if (!(value instanceof LoginUser lu)) {
-                continue;
-            }
+        for (LoginSession session : authSessionService.getActiveSessions()) {
             OnlineUser o = new OnlineUser();
-            o.setTokenKey(key);
-            o.setAccount(lu.getAccount());
-            o.setNickname(lu.getNickname());
-            o.setDeptId(lu.getDeptId());
-            o.setLoginIp(lu.getLoginIp());
-            o.setLoginTime(lu.getLoginTime() == null ? null : SDF.format(new Date(lu.getLoginTime())));
+            o.setTokenKey(session.getAccessJti());
+            o.setAccount(session.getAccount());
+            o.setNickname(session.getNickname());
+            o.setDeptId(session.getDeptId());
+            o.setLoginIp(session.getLoginIp());
+            o.setLoginTime(session.getLoginTime() == null ? null : SDF.format(new Date(session.getLoginTime())));
             list.add(o);
         }
         return list;
+    }
+
+    public void kickSession(String accessJti) {
+        authSessionService.revokeSession(accessJti);
     }
 
     public PageResult<OnlineUser> getOnlineUserPage(OnlineUserPageQuery query) {
@@ -199,6 +195,8 @@ public class MonitorService {
         CacheInfo info = new CacheInfo();
         Properties props = redisTemplate.execute((RedisCallback<Properties>) connection ->
                 connection.serverCommands().info());
+        Properties commandStatsProps = redisTemplate.execute((RedisCallback<Properties>) connection ->
+                connection.serverCommands().info("commandstats"));
         if (props != null) {
             CacheInfo.Server server = new CacheInfo.Server();
             server.setVersion(props.getProperty("redis_version"));
@@ -210,21 +208,28 @@ public class MonitorService {
             server.setConnectedClients(props.getProperty("connected_clients"));
             server.setMaxMemoryPolicy(props.getProperty("maxmemory_policy"));
             info.setServer(server);
-
-            List<CacheInfo.CommandStat> stats = new ArrayList<>();
-            props.stringPropertyNames().stream()
-                    .filter(name -> name.startsWith("cmdstat_"))
-                    .forEach(name -> {
-                        CacheInfo.CommandStat stat = new CacheInfo.CommandStat();
-                        stat.setName(name.substring("cmdstat_".length()));
-                        stat.setValue(props.getProperty(name));
-                        stats.add(stat);
-                    });
-            info.setCommandStats(stats);
         }
+        info.setCommandStats(parseCommandStats(commandStatsProps));
         Long dbSize = redisTemplate.execute((RedisCallback<Long>) connection -> connection.serverCommands().dbSize());
         info.setDbSize(dbSize == null ? 0L : dbSize);
         return info;
+    }
+
+    List<CacheInfo.CommandStat> parseCommandStats(Properties props) {
+        if (props == null) {
+            return List.of();
+        }
+        List<CacheInfo.CommandStat> stats = new ArrayList<>();
+        props.stringPropertyNames().stream()
+                .filter(name -> name.startsWith("cmdstat_"))
+                .sorted()
+                .forEach(name -> {
+                    CacheInfo.CommandStat stat = new CacheInfo.CommandStat();
+                    stat.setName(name.substring("cmdstat_".length()));
+                    stat.setValue(props.getProperty(name));
+                    stats.add(stat);
+                });
+        return stats;
     }
 
     private static double round2(double v) {

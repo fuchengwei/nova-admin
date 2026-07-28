@@ -4,6 +4,7 @@ import com.nova.admin.common.api.R;
 import com.nova.admin.common.base.BaseController;
 import com.nova.admin.common.exception.BizException;
 import com.nova.admin.common.api.ResultCode;
+import com.nova.admin.modules.auth.service.AuthSessionService;
 import com.nova.admin.security.SecurityUtils;
 import com.nova.admin.modules.infra.entity.SysFile;
 import com.nova.admin.modules.infra.service.FileService;
@@ -44,6 +45,7 @@ public class UserInfoController extends BaseController {
     private final SysConfigService sysConfigService;
     private final FileService fileService;
     private final PasswordEncoder passwordEncoder;
+    private final AuthSessionService authSessionService;
 
     @Operation(summary = "获取当前登录用户信息")
     @GetMapping("/user/me")
@@ -103,6 +105,7 @@ public class UserInfoController extends BaseController {
         update.setPassword(passwordEncoder.encode(req.getNewPassword()));
         update.setUpdateBy(userId);
         sysUserService.updateById(update);
+        authSessionService.revokeAllByUserId(userId);
         return ok();
     }
 

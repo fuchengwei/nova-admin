@@ -136,7 +136,7 @@ class DashboardServiceImplTest {
         private final RuntimeException exception;
 
         TestMonitorService(ServerInfo serverInfo, List<OnlineUser> onlineUsers, RuntimeException exception) {
-            super(null);
+            super(null, null);
             this.serverInfo = serverInfo;
             this.onlineUsers = onlineUsers;
             this.exception = exception;

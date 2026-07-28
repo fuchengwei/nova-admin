@@ -4,23 +4,28 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.nova.admin.common.api.ResultCode;
 import com.nova.admin.common.exception.BizException;
+import com.nova.admin.modules.auth.event.AuthorizationChangedEvent;
 import com.nova.admin.modules.system.dto.MenuCreateRequest;
 import com.nova.admin.modules.system.dto.MenuTreeDTO;
 import com.nova.admin.modules.system.dto.MenuUpdateRequest;
 import com.nova.admin.modules.system.entity.SysMenu;
 import com.nova.admin.modules.system.entity.SysRoleMenu;
+import com.nova.admin.modules.system.entity.SysUserRole;
 import com.nova.admin.modules.system.mapper.SysMenuMapper;
 import com.nova.admin.modules.system.mapper.SysRoleMenuMapper;
+import com.nova.admin.modules.system.mapper.SysUserRoleMapper;
 import com.nova.admin.modules.system.service.SysMenuService;
 import com.nova.admin.security.SecurityUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -32,6 +37,8 @@ import java.util.stream.Collectors;
 public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu> implements SysMenuService {
 
     private final SysRoleMenuMapper roleMenuMapper;
+    private final SysUserRoleMapper userRoleMapper;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Override
     public List<MenuTreeDTO> getMenuTree() {
@@ -76,6 +83,7 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu> impl
         menu.setUpdateBy(operatorId);
 
         updateById(menu);
+        publishMenuUserInvalidation(req.getId());
         log.info("更新菜单成功，id={}, operator={}", req.getId(), operatorId);
     }
 
@@ -185,5 +193,24 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu> impl
                 .keepAlive(menu.getKeepAlive())
                 .alwaysShow(menu.getAlwaysShow())
                 .build();
+    }
+
+    private void publishMenuUserInvalidation(Long menuId) {
+        Set<Long> roleIds = roleMenuMapper.selectList(new LambdaQueryWrapper<SysRoleMenu>()
+                        .eq(SysRoleMenu::getMenuId, menuId))
+                .stream()
+                .map(SysRoleMenu::getRoleId)
+                .collect(Collectors.toSet());
+        if (roleIds.isEmpty()) {
+            return;
+        }
+        Set<Long> userIds = userRoleMapper.selectList(new LambdaQueryWrapper<SysUserRole>()
+                        .in(SysUserRole::getRoleId, roleIds))
+                .stream()
+                .map(SysUserRole::getUserId)
+                .collect(Collectors.toSet());
+        if (!userIds.isEmpty()) {
+            eventPublisher.publishEvent(new AuthorizationChangedEvent(userIds));
+        }
     }
 }
