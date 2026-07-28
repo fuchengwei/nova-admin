@@ -27,6 +27,10 @@
 
 登录会创建独立的服务端会话，JWT 必须对应有效会话才能访问受保护接口。用户被禁用、密码被修改、角色或菜单权限变更后，受影响用户会收到服务端 SSE 撤销事件、立即清除本地凭据并看到重新登录提示。服务监控的在线用户页支持持有 `monitor:online:remove` 权限的管理员踢出单个会话。
 
+个人中心还提供当前账号的登录设备管理：`GET /api/auth/sessions` 查看会话，
+`DELETE /api/auth/sessions/{accessJti}` 退出指定设备，`POST /api/auth/sessions/revoke-others`
+退出其他设备。认证失败和权限不足分别使用 HTTP `401`、`403`，响应体仍保持统一 `R<T>` 格式。
+
 ## 项目结构
 
 ```

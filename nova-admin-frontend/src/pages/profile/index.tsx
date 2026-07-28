@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Avatar, Button, Descriptions, Tag, Upload } from 'antd';
+import { Button, Descriptions, Tag } from 'antd';
 import { message } from '@/utils/message';
 import type { UploadProps } from 'antd';
-import { EditOutlined, LockOutlined, UploadOutlined, UserOutlined } from '@ant-design/icons';
+import { EditOutlined, LockOutlined } from '@ant-design/icons';
 import { PageContainer, ProCard } from '@ant-design/pro-components';
 import { useMutation } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
@@ -19,6 +19,8 @@ import {
 import { getUserInfo } from '@/api/auth';
 import ProfileFormModal from './components/ProfileFormModal';
 import PasswordFormModal from './components/PasswordFormModal';
+import ProfileSummary from './components/ProfileSummary';
+import SessionList from './components/SessionList';
 
 const normalizeImageSrc = (value?: string | null) => {
   if (typeof value !== 'string') return undefined;
@@ -126,54 +128,43 @@ export default function ProfilePage() {
   }, [userInfo?.lastLoginTime]);
 
   return (
-    <PageContainer title={t('header.profile')} className="page-fill">
+    <PageContainer title={t('header.profile')} className="page-fill min-h-0 overflow-y-auto">
       <div className="grid gap-6 xl:grid-cols-[360px_1fr]">
-        <ProCard className="overflow-hidden shadow-sm">
-          <div className="rounded-2xl bg-gradient-to-br from-blue-500 via-indigo-500 to-violet-600 p-6 text-white">
-            <div className="flex flex-col items-center gap-4 text-center">
-              <Avatar size={104} src={safeAvatarSrc} icon={<UserOutlined />} className="ring-4 ring-white/20" />
-              <div>
-                <div className="text-xl font-semibold">{userInfo?.nickname ?? userInfo?.account ?? '-'}</div>
-                <div className="mt-1 text-sm text-white/80">{userInfo?.realName || userInfo?.account || '-'}</div>
-              </div>
-              <Upload {...uploadProps}>
-                <Button ghost icon={<UploadOutlined />} loading={avatarMutation.isPending}>
-                  {t('profile.uploadAvatar')}
-                </Button>
-              </Upload>
-            </div>
-          </div>
-
-          <div className="mt-5 space-y-4">
-            <Descriptions column={1} size="small" bordered>
-              <Descriptions.Item label={t('profile.account')}>{userInfo?.account ?? '-'}</Descriptions.Item>
-              <Descriptions.Item label={t('profile.department')}>{userInfo?.deptName ?? '-'}</Descriptions.Item>
-              <Descriptions.Item label={t('profile.roles')}>
-                <div className="flex flex-wrap gap-2">
-                  {roleTags.length > 0 ? roleTags.map((role) => <Tag key={role}>{role}</Tag>) : '-'}
-                </div>
-              </Descriptions.Item>
-              <Descriptions.Item label={t('profile.statusSummary')}>{t('profile.profileReady')}</Descriptions.Item>
-              <Descriptions.Item label={t('profile.lastLoginTime')}>{loginTimeText}</Descriptions.Item>
-              <Descriptions.Item label={t('profile.lastLoginIp')}>{userInfo?.lastLoginIp ?? '-'}</Descriptions.Item>
-            </Descriptions>
-          </div>
-        </ProCard>
+        <ProfileSummary
+          userInfo={userInfo}
+          avatarSrc={safeAvatarSrc}
+          roleTags={roleTags}
+          loginTimeText={loginTimeText}
+          uploadProps={uploadProps}
+          avatarLoading={avatarMutation.isPending}
+        />
 
         <div className="grid gap-6">
           <ProCard
             title={t('profile.basicInfo')}
             extra={
-              <Button type="primary" icon={<EditOutlined />} onClick={() => setProfileModalOpen(true)}>
+              <Button
+                type="primary"
+                icon={<EditOutlined />}
+                onClick={() => setProfileModalOpen(true)}
+              >
                 {t('profile.editProfile')}
               </Button>
             }
           >
             <Descriptions column={2} bordered>
-              <Descriptions.Item label={t('profile.nickname')}>{userInfo?.nickname ?? '-'}</Descriptions.Item>
-              <Descriptions.Item label={t('profile.realName')}>{userInfo?.realName ?? '-'}</Descriptions.Item>
-              <Descriptions.Item label={t('profile.email')}>{userInfo?.email ?? '-'}</Descriptions.Item>
-              <Descriptions.Item label={t('profile.phone')}>{userInfo?.phone ?? '-'}</Descriptions.Item>
+              <Descriptions.Item label={t('profile.nickname')}>
+                {userInfo?.nickname ?? '-'}
+              </Descriptions.Item>
+              <Descriptions.Item label={t('profile.realName')}>
+                {userInfo?.realName ?? '-'}
+              </Descriptions.Item>
+              <Descriptions.Item label={t('profile.email')}>
+                {userInfo?.email ?? '-'}
+              </Descriptions.Item>
+              <Descriptions.Item label={t('profile.phone')}>
+                {userInfo?.phone ?? '-'}
+              </Descriptions.Item>
               <Descriptions.Item label={t('profile.gender')}>
                 {userInfo?.gender === 1
                   ? t('profile.genderMale')
@@ -181,7 +172,9 @@ export default function ProfilePage() {
                     ? t('profile.genderFemale')
                     : t('profile.genderUnknown')}
               </Descriptions.Item>
-              <Descriptions.Item label={t('profile.avatar')}>{safeAvatarSrc ? t('common.success') : '-'}</Descriptions.Item>
+              <Descriptions.Item label={t('profile.avatar')}>
+                {safeAvatarSrc ? t('common.success') : '-'}
+              </Descriptions.Item>
             </Descriptions>
           </ProCard>
 
@@ -194,19 +187,33 @@ export default function ProfilePage() {
             }
           >
             <Descriptions column={2} bordered>
-              <Descriptions.Item label={t('profile.account')}>{userInfo?.account ?? '-'}</Descriptions.Item>
-              <Descriptions.Item label={t('profile.department')}>{userInfo?.deptName ?? '-'}</Descriptions.Item>
+              <Descriptions.Item label={t('profile.account')}>
+                {userInfo?.account ?? '-'}
+              </Descriptions.Item>
+              <Descriptions.Item label={t('profile.department')}>
+                {userInfo?.deptName ?? '-'}
+              </Descriptions.Item>
               <Descriptions.Item label={t('profile.roles')}>
                 <div className="flex flex-wrap gap-2">
                   {roleTags.length > 0 ? roleTags.map((role) => <Tag key={role}>{role}</Tag>) : '-'}
                 </div>
               </Descriptions.Item>
-              <Descriptions.Item label={t('profile.statusSummary')}>{t('profile.profileReady')}</Descriptions.Item>
-              <Descriptions.Item label={t('profile.lastLoginTime')}>{loginTimeText}</Descriptions.Item>
-              <Descriptions.Item label={t('profile.lastLoginIp')}>{userInfo?.lastLoginIp ?? '-'}</Descriptions.Item>
+              <Descriptions.Item label={t('profile.statusSummary')}>
+                {t('profile.profileReady')}
+              </Descriptions.Item>
+              <Descriptions.Item label={t('profile.lastLoginTime')}>
+                {loginTimeText}
+              </Descriptions.Item>
+              <Descriptions.Item label={t('profile.lastLoginIp')}>
+                {userInfo?.lastLoginIp ?? '-'}
+              </Descriptions.Item>
             </Descriptions>
           </ProCard>
         </div>
+      </div>
+
+      <div className="mt-6">
+        <SessionList />
       </div>
 
       <ProfileFormModal

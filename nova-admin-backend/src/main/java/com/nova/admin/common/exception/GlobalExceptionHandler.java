@@ -28,10 +28,11 @@ public class GlobalExceptionHandler {
 
     /** 业务异常 */
     @ExceptionHandler(BizException.class)
-    public R<Void> handleBiz(BizException ex, HttpServletRequest req) {
+    public Object handleBiz(BizException ex, HttpServletRequest req) {
         log.warn("[BizException] {} {} -> code={}, msg={}",
                 req.getMethod(), req.getRequestURI(), ex.getCode(), ex.getMessage());
-        return R.fail(ex.getCode(), ex.getMessage());
+        R<Void> body = R.fail(ex.getCode(), ex.getMessage());
+        return statusResponse(ex.getCode(), body);
     }
 
     /** 校验失败 */
@@ -76,16 +77,18 @@ public class GlobalExceptionHandler {
 
     /** Spring Security 认证失败 */
     @ExceptionHandler(AuthenticationException.class)
-    public R<Void> handleAuthentication(AuthenticationException ex) {
-        return R.fail(ResultCode.UNAUTHORIZED.getCode(),
-                ex.getMessage() == null ? ResultCode.UNAUTHORIZED.getMsg() : ex.getMessage());
+    public ResponseEntity<R<Void>> handleAuthentication(AuthenticationException ex) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(R.fail(ResultCode.UNAUTHORIZED.getCode(),
+                        ex.getMessage() == null ? ResultCode.UNAUTHORIZED.getMsg() : ex.getMessage()));
     }
 
     /** Spring Security 权限不足 */
     @ExceptionHandler(AccessDeniedException.class)
-    public R<Void> handleAccessDenied(AccessDeniedException ex) {
-        return R.fail(ResultCode.FORBIDDEN.getCode(),
-                ex.getMessage() == null ? ResultCode.FORBIDDEN.getMsg() : ex.getMessage());
+    public ResponseEntity<R<Void>> handleAccessDenied(AccessDeniedException ex) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body(R.fail(ResultCode.FORBIDDEN.getCode(),
+                        ex.getMessage() == null ? ResultCode.FORBIDDEN.getMsg() : ex.getMessage()));
     }
 
     /** 兜底 */
@@ -98,5 +101,15 @@ public class GlobalExceptionHandler {
 
     private String formatFieldError(FieldError fe) {
         return fe.getField() + ": " + fe.getDefaultMessage();
+    }
+
+    private Object statusResponse(int code, R<Void> body) {
+        if (code == ResultCode.UNAUTHORIZED.getCode()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(body);
+        }
+        if (code == ResultCode.FORBIDDEN.getCode()) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(body);
+        }
+        return body;
     }
 }

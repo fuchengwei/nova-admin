@@ -10,6 +10,7 @@ import org.springframework.data.redis.core.SetOperations;
 import org.springframework.data.redis.core.ValueOperations;
 
 import java.time.Duration;
+import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.BDDMockito.given;
@@ -86,5 +87,39 @@ class AuthSessionServiceTest {
         verify(redisTemplate).delete("nova:auth:session:access-jti");
         verify(redisTemplate).delete("nova:auth:refresh:refresh-jti");
         verify(setOperations).remove("nova:auth:user-sessions:1", "refresh-jti");
+    }
+
+    @Test
+    void getActiveSessionsByUserId_readsOnlySessionsOwnedByUser() {
+        given(redisTemplate.opsForValue()).willReturn(valueOperations);
+        given(redisTemplate.opsForSet()).willReturn(setOperations);
+        LoginSession own = LoginSession.builder().userId(1L).accessJti("access-1").refreshJti("refresh-1").build();
+        LoginSession stale = LoginSession.builder().userId(2L).accessJti("access-2").refreshJti("refresh-2").build();
+        given(setOperations.members("nova:auth:user-sessions:1"))
+                .willReturn(Set.of("refresh-1", "refresh-2"));
+        given(valueOperations.get("nova:auth:refresh:refresh-1")).willReturn(own);
+        given(valueOperations.get("nova:auth:refresh:refresh-2")).willReturn(stale);
+        AuthSessionService service = new AuthSessionService(redisTemplate, authSessionEventService);
+
+        assertThat(service.getActiveSessionsByUserId(1L)).containsExactly(own);
+    }
+
+    @Test
+    void revokeOtherSessions_keepsCurrentSessionAndRevokesOthers() {
+        given(redisTemplate.opsForValue()).willReturn(valueOperations);
+        given(redisTemplate.opsForSet()).willReturn(setOperations);
+        LoginSession current = LoginSession.builder().userId(1L).accessJti("access-current").refreshJti("refresh-current").build();
+        LoginSession other = LoginSession.builder().userId(1L).accessJti("access-other").refreshJti("refresh-other").build();
+        given(setOperations.members("nova:auth:user-sessions:1"))
+                .willReturn(Set.of("refresh-current", "refresh-other"));
+        given(valueOperations.get("nova:auth:refresh:refresh-current")).willReturn(current);
+        given(valueOperations.get("nova:auth:refresh:refresh-other")).willReturn(other);
+        AuthSessionService service = new AuthSessionService(redisTemplate, authSessionEventService);
+
+        service.revokeOtherSessions(1L, "access-current");
+
+        verify(authSessionEventService).notifyRevoked("access-other");
+        verify(redisTemplate).delete("nova:auth:session:access-other");
+        verify(redisTemplate).delete("nova:auth:refresh:refresh-other");
     }
 }

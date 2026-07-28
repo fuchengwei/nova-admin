@@ -10,6 +10,22 @@ import static org.assertj.core.api.Assertions.assertThat;
 class LoginSessionTest {
 
     @Test
+    void copyWithJti_preservesUserDetailsWithoutMutatingOriginal() {
+        LoginUser original = LoginUser.builder()
+                .userId(1L)
+                .account("admin")
+                .loginIp("127.0.0.1")
+                .jti("original-jti")
+                .build();
+
+        LoginUser copy = original.copyWithJti("request-jti");
+
+        assertThat(copy.getJti()).isEqualTo("request-jti");
+        assertThat(copy.getAccount()).isEqualTo("admin");
+        assertThat(original.getJti()).isEqualTo("original-jti");
+    }
+
+    @Test
     void of_mapsLoginUserToSessionWithoutAuthorizationDetails() {
         LoginUser user = LoginUser.builder()
                 .userId(1L)
@@ -22,11 +38,12 @@ class LoginSessionTest {
                 .permissions(Set.of("system:user:list"))
                 .build();
 
-        LoginSession session = AuthSessionService.of(user, "access-jti", "refresh-jti");
+        LoginSession session = AuthSessionService.of(user, "access-jti", "refresh-jti", "Mozilla/5.0");
 
         assertThat(session)
                 .extracting(LoginSession::getAccessJti, LoginSession::getRefreshJti,
-                        LoginSession::getUserId, LoginSession::getAccount, LoginSession::getLoginIp)
-                .containsExactly("access-jti", "refresh-jti", 1L, "admin", "127.0.0.1");
+                        LoginSession::getUserId, LoginSession::getAccount, LoginSession::getLoginIp,
+                        LoginSession::getUserAgent)
+                .containsExactly("access-jti", "refresh-jti", 1L, "admin", "127.0.0.1", "Mozilla/5.0");
     }
 }

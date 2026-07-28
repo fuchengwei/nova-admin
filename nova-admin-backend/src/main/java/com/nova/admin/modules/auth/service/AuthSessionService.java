@@ -74,6 +74,38 @@ public class AuthSessionService {
         return sessions;
     }
 
+    public List<LoginSession> getActiveSessionsByUserId(Long userId) {
+        Set<Object> refreshJtis = redisTemplate.opsForSet().members(userSessionsKey(userId));
+        if (refreshJtis == null || refreshJtis.isEmpty()) {
+            return List.of();
+        }
+        List<LoginSession> sessions = new ArrayList<>();
+        for (Object refreshJti : refreshJtis) {
+            if (refreshJti instanceof String value) {
+                LoginSession session = findByRefreshJti(value);
+                if (session != null && userId.equals(session.getUserId())) {
+                    sessions.add(session);
+                }
+            }
+        }
+        return sessions;
+    }
+
+    public void revokeSessionForUser(Long userId, String accessJti) {
+        LoginSession session = findByAccessJti(accessJti);
+        if (session != null && userId.equals(session.getUserId())) {
+            revokeSession(session);
+        }
+    }
+
+    public void revokeOtherSessions(Long userId, String currentAccessJti) {
+        for (LoginSession session : getActiveSessionsByUserId(userId)) {
+            if (!currentAccessJti.equals(session.getAccessJti())) {
+                revokeSession(session);
+            }
+        }
+    }
+
     public void revokeSession(String accessJti) {
         LoginSession session = findByAccessJti(accessJti);
         if (session == null) {
@@ -111,6 +143,10 @@ public class AuthSessionService {
     }
 
     public static LoginSession of(LoginUser user, String accessJti, String refreshJti) {
+        return of(user, accessJti, refreshJti, null);
+    }
+
+    public static LoginSession of(LoginUser user, String accessJti, String refreshJti, String userAgent) {
         return LoginSession.builder()
                 .accessJti(accessJti)
                 .refreshJti(refreshJti)
@@ -120,6 +156,7 @@ public class AuthSessionService {
                 .deptId(user.getDeptId())
                 .loginTime(user.getLoginTime())
                 .loginIp(user.getLoginIp())
+                .userAgent(userAgent)
                 .build();
     }
 

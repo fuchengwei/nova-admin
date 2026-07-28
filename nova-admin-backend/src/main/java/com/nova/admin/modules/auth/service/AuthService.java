@@ -84,7 +84,7 @@ public class AuthService {
 
         loginLogService.recordLoginLog(account, ip, userAgent, true, "登录成功");
 
-        return issueTokens(user, loginUser);
+        return issueTokens(user, loginUser, userAgent);
     }
 
     /** 注销当前设备会话。 */
@@ -118,15 +118,15 @@ public class AuthService {
         }
 
         LoginUser loginUser = userDetailsService.refreshCache(user, session.getLoginIp());
-        return issueTokens(user, loginUser);
+        return issueTokens(user, loginUser, session.getUserAgent());
     }
 
-    private LoginResponse issueTokens(SysUser user, LoginUser loginUser) {
+    private LoginResponse issueTokens(SysUser user, LoginUser loginUser, String userAgent) {
         String access = jwtUtil.generateAccessToken(user.getId(), user.getAccount());
         String refresh = jwtUtil.generateRefreshToken(user.getId(), user.getAccount());
         String accessJti = jwtUtil.parse(access).get("jti", String.class);
         String refreshJti = jwtUtil.parse(refresh).get("jti", String.class);
-        authSessionService.register(AuthSessionService.of(loginUser, accessJti, refreshJti),
+        authSessionService.register(AuthSessionService.of(loginUser, accessJti, refreshJti, userAgent),
                 jwtUtil.getAccessExpireSeconds(), jwtUtil.getRefreshExpireSeconds());
 
         UserInfoDTO userInfo = UserInfoDTO.builder()

@@ -98,13 +98,6 @@ function flushPendingQueue(token: string | null, error: unknown | null): void {
   pendingQueue = [];
 }
 
-/** 判断响应是否为鉴权失败：code === 401 且 success === false */
-function isAuthError(body: R<unknown> | undefined): boolean {
-  if (!body) return false;
-  const failed = body.success === false || (body.success === undefined && body.code !== 0);
-  return body.code === 401 && failed;
-}
-
 /** 判断原始请求是否携带了 Token（优先检查请求头，回退到本地存储） */
 function requestHadToken(config: AxiosRequestConfig | undefined): boolean {
   const headers = config?.headers;
@@ -213,21 +206,7 @@ function handleUnauthorized(config: AxiosRequestConfig | undefined): Promise<unk
 }
 
 service.interceptors.response.use(
-  (response) => {
-    const body = response.data as R<unknown>;
-    const config = response.config;
-
-    // 业务层 401（HTTP 200 但 code === 401 且 success === false）
-    if (isAuthError(body)) {
-      if (!config.skipAuthRefresh && !config.authRefreshed) {
-        return handleUnauthorized(config);
-      }
-      // 已刷新过仍返回 401 或为 refresh 请求自身：直接降级
-      forceLogout('refreshFailed');
-      return Promise.reject(new Error('Authentication failed after refresh'));
-    }
-    return response.data;
-  },
+  (response) => response.data,
   (error) => {
     const config = error?.config as AxiosRequestConfig | undefined;
     const status = error?.response?.status;
@@ -235,8 +214,8 @@ service.interceptors.response.use(
     const code = body?.code;
     const msg = body?.msg || error?.message;
 
-    // 鉴权失败（HTTP 401 或业务 code 401）
-    if (status === 401 || isAuthError(body)) {
+    // 鉴权失败使用标准 HTTP 状态码，响应体仍保持 R<T> 结构。
+    if (status === 401) {
       if (!config?.skipAuthRefresh && !config?.authRefreshed) {
         return handleUnauthorized(config);
       }
@@ -244,7 +223,7 @@ service.interceptors.response.use(
       return Promise.reject(error);
     }
 
-    if (status === 403 || code === 403) {
+    if (status === 403) {
       showError(resolveText(httpConfig.forbiddenMessage));
     } else if (code && code !== 0) {
       showError(msg);

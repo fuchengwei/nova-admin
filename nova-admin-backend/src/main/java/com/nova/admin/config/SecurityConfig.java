@@ -68,9 +68,13 @@ public class SecurityConfig {
                         .anyRequest().authenticated())
                 .exceptionHandling(e -> e
                         .authenticationEntryPoint((ignored, resp, ex) -> writeJson(resp,
-                                R.fail(ResultCode.UNAUTHORIZED, ex.getMessage())))
+                                HttpServletResponse.SC_UNAUTHORIZED,
+                                R.fail(ResultCode.UNAUTHORIZED,
+                                        messageOrDefault(ex.getMessage(), ResultCode.UNAUTHORIZED))))
                         .accessDeniedHandler((ignored, resp, ex) -> writeJson(resp,
-                                R.fail(ResultCode.FORBIDDEN, ex.getMessage()))))
+                                HttpServletResponse.SC_FORBIDDEN,
+                                R.fail(ResultCode.FORBIDDEN,
+                                        messageOrDefault(ex.getMessage(), ResultCode.FORBIDDEN)))))
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }
@@ -98,11 +102,18 @@ public class SecurityConfig {
         return cfg.getAuthenticationManager();
     }
 
-    private void writeJson(HttpServletResponse resp, R<?> body) throws java.io.IOException {
-        resp.setStatus(HttpServletResponse.SC_OK);
+    private void writeJson(HttpServletResponse resp, int status, R<?> body) throws java.io.IOException {
+        if (resp.isCommitted()) {
+            return;
+        }
+        resp.setStatus(status);
         resp.setContentType(MediaType.APPLICATION_JSON_VALUE);
         resp.setCharacterEncoding(StandardCharsets.UTF_8.name());
         resp.getWriter().write(com.fasterxml.jackson.databind.json.JsonMapper.builder().build()
                 .writeValueAsString(body));
+    }
+
+    private String messageOrDefault(String message, ResultCode fallback) {
+        return message == null || message.isBlank() ? fallback.getMsg() : message;
     }
 }

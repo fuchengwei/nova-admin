@@ -67,12 +67,15 @@ export function useSessionEvents({ onSessionRevoked }: UseSessionEventsOptions):
           signal: abortController.signal,
         });
         const contentType = response.headers.get('content-type') ?? '';
-        if (
-          response.status === 401 ||
-          response.status === 403 ||
-          !response.ok ||
-          !contentType.includes('text/event-stream')
-        ) {
+        if (response.status === 401 || response.status === 403) {
+          handleRevoked();
+          return;
+        }
+        if (!response.ok) {
+          scheduleReconnect();
+          return;
+        }
+        if (!contentType.includes('text/event-stream')) {
           handleRevoked();
           return;
         }

@@ -58,7 +58,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                 // 从 UserDetailsService 加载（已含角色/权限缓存）
                 UserDetails ud = userDetailsService.loadUserByUsername(account);
                 if (ud instanceof SecurityUser securityUser) {
-                    securityUser.getLoginUser().setJti(jti);
+                    ud = new SecurityUser(securityUser.getLoginUser().copyWithJti(jti), securityUser.getPassword());
                 }
                 UsernamePasswordAuthenticationToken auth =
                         new UsernamePasswordAuthenticationToken(ud, null, ud.getAuthorities());

@@ -50,4 +50,20 @@ public class LoginUser implements Serializable {
 
     /** 当前 access token 的唯一标识（jti），用于精确黑名单（注销/踢下线） */
     private String jti;
+
+    /** 为当前请求创建带有独立会话标识的副本，避免修改 Redis 中的共享缓存对象。 */
+    public LoginUser copyWithJti(String accessJti) {
+        return LoginUser.builder()
+                .userId(userId)
+                .account(account)
+                .nickname(nickname)
+                .deptId(deptId)
+                .roles(roles)
+                .permissions(permissions)
+                .dataScope(dataScope)
+                .loginTime(loginTime)
+                .loginIp(loginIp)
+                .jti(accessJti)
+                .build();
+    }
 }

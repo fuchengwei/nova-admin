@@ -31,4 +31,5 @@ public class LoginSession implements Serializable {
     private Long deptId;
     private Long loginTime;
     private String loginIp;
+    private String userAgent;
 }
