@@ -490,6 +490,11 @@ export default {
     loginProtection: 'Login Protection',
     generalUpload: 'General Upload',
     avatarUploadGroup: 'Avatar Upload',
+    storageType: 'File Storage',
+    storageLocal: 'Local Disk',
+    storageMinio: 'MinIO Object Storage',
+    storageTypeHint:
+      'MinIO endpoint, bucket, and credentials stay in deployment configuration and are not saved here.',
     noticeMessage: 'Announcement Body',
     emailChannel: 'Email Channel',
     smsChannel: 'SMS Channel',

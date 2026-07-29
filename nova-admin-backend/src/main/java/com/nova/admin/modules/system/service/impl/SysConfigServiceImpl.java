@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.nova.admin.common.api.ResultCode;
 import com.nova.admin.common.exception.BizException;
+import com.nova.admin.config.NovaProperties;
 import com.nova.admin.modules.system.dto.ActiveNoticeDTO;
 import com.nova.admin.modules.system.dto.BasicSettingsDTO;
 import com.nova.admin.modules.system.dto.NoticeSettingsDTO;
@@ -41,6 +42,8 @@ public class SysConfigServiceImpl extends ServiceImpl<SysConfigMapper, SysConfig
     private static final long MB = 1024L * 1024L;
     private static final Set<String> SPECIAL_CHARS = Set.of("!", "@", "#", "$", "%", "^", "&", "*", "(", ")", "_", "+", "-", "=", "[", "]", "{", "}", ";", "'", ":", "\"", "\\", "|", ",", ".", "<", ">", "/", "?", "`", "~");
 
+    private final NovaProperties novaProperties;
+
     @Override
     public BasicSettingsDTO getBasicSettings() {
         Map<String, String> values = groupValues(GROUP_BASIC);
@@ -74,6 +77,7 @@ public class SysConfigServiceImpl extends ServiceImpl<SysConfigMapper, SysConfig
     public UploadSettingsDTO getUploadSettings() {
         Map<String, String> values = groupValues(GROUP_UPLOAD);
         UploadSettingsDTO dto = defaultUploadSettings();
+        dto.setStorageType(getString(values, "upload.storage-type", dto.getStorageType()));
         dto.setMaxSizeMb(getInt(values, "upload.max-size-mb", dto.getMaxSizeMb()));
         dto.setAllowedTypes(getString(values, "upload.allowed-types", dto.getAllowedTypes()));
         dto.setAvatarMaxSizeMb(getInt(values, "upload.avatar.max-size-mb", dto.getAvatarMaxSizeMb()));
@@ -140,6 +144,7 @@ public class SysConfigServiceImpl extends ServiceImpl<SysConfigMapper, SysConfig
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void updateUploadSettings(UploadSettingsDTO settings) {
+        upsert(GROUP_UPLOAD, "upload.storage-type", settings.getStorageType(), "string", "文件存储类型");
         upsert(GROUP_UPLOAD, "upload.max-size-mb", settings.getMaxSizeMb(), "number", "通用最大上传大小");
         upsert(GROUP_UPLOAD, "upload.allowed-types", settings.getAllowedTypes(), "string", "通用允许文件类型");
         upsert(GROUP_UPLOAD, "upload.avatar.max-size-mb", settings.getAvatarMaxSizeMb(), "number", "头像最大上传大小");
@@ -307,6 +312,7 @@ public class SysConfigServiceImpl extends ServiceImpl<SysConfigMapper, SysConfig
 
     private UploadSettingsDTO defaultUploadSettings() {
         UploadSettingsDTO dto = new UploadSettingsDTO();
+        dto.setStorageType(novaProperties.getFile().getStorageType());
         dto.setMaxSizeMb(100);
         dto.setAllowedTypes("*");
         dto.setAvatarMaxSizeMb(5);

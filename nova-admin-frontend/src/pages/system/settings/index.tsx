@@ -379,6 +379,13 @@ export default function SystemSettingsPage() {
               }
               highlights={[
                 {
+                  label: t('settings.storageType'),
+                  value:
+                    uploadData?.storageType === 'minio'
+                      ? t('settings.storageMinio')
+                      : t('settings.storageLocal'),
+                },
+                {
                   label: t('settings.maxSizeMb'),
                   value: `${displayText(uploadData?.maxSizeMb)} MB`,
                 },
@@ -589,6 +596,14 @@ export default function SystemSettingsPage() {
             >
               <div className="grid gap-4 md:grid-cols-2">
                 <MetaPanel title={t('settings.generalUpload')}>
+                  <MetaRow
+                    label={t('settings.storageType')}
+                    value={
+                      uploadData?.storageType === 'minio'
+                        ? t('settings.storageMinio')
+                        : t('settings.storageLocal')
+                    }
+                  />
                   <MetaRow
                     label={t('settings.maxSizeMb')}
                     value={`${displayText(uploadData?.maxSizeMb)} MB`}

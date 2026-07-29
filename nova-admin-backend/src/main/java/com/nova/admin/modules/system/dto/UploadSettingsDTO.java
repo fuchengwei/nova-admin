@@ -3,6 +3,8 @@ package com.nova.admin.modules.system.dto;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
 
@@ -15,6 +17,11 @@ public class UploadSettingsDTO implements Serializable {
 
     @Serial
     private static final long serialVersionUID = 1L;
+
+    @NotBlank(message = "存储类型不能为空")
+    @Pattern(regexp = "local|minio", message = "存储类型仅支持 local 或 minio")
+    @Schema(description = "文件存储类型：local 或 minio")
+    private String storageType;
 
     @Min(value = 1, message = "通用上传大小不能小于1MB")
     @Max(value = 100, message = "通用上传大小不能大于100MB")

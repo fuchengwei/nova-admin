@@ -11,6 +11,7 @@ import com.nova.admin.modules.infra.dto.FilePageQuery;
 import com.nova.admin.modules.infra.entity.SysFile;
 import com.nova.admin.modules.infra.mapper.SysFileMapper;
 import com.nova.admin.modules.infra.service.FileService;
+import com.nova.admin.modules.system.service.SysConfigService;
 import com.nova.admin.security.SecurityUtils;
 import io.minio.BucketExistsArgs;
 import io.minio.GetObjectArgs;
@@ -43,6 +44,7 @@ public class FileServiceImpl extends ServiceImpl<SysFileMapper, SysFile> impleme
 
     private final NovaProperties novaProperties;
     private final MinioClient minioClient;
+    private final SysConfigService sysConfigService;
 
     @Override
     public PageResult<SysFile> getFilePage(FilePageQuery query) {
@@ -71,7 +73,7 @@ public class FileServiceImpl extends ServiceImpl<SysFileMapper, SysFile> impleme
                 now.getYear(), now.getMonthValue(), now.getDayOfMonth(),
                 UUID.randomUUID().toString().replace("-", ""), ext);
 
-        String storageType = novaProperties.getFile().getStorageType();
+        String storageType = sysConfigService.getUploadSettings().getStorageType();
         String url;
 
         if ("minio".equalsIgnoreCase(storageType)) {

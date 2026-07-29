@@ -3,6 +3,7 @@ import type { R } from '@/types/api';
 
 export type SettingsGroup = 'basic' | 'security' | 'upload' | 'notice';
 export type NoticeLevel = 'info' | 'success' | 'warning' | 'error';
+export type StorageType = 'local' | 'minio';
 
 export interface BasicSettings {
   systemName?: string;
@@ -26,6 +27,7 @@ export interface SecuritySettings {
 }
 
 export interface UploadSettings {
+  storageType?: StorageType;
   maxSizeMb?: number;
   allowedTypes?: string;
   avatarMaxSizeMb?: number;

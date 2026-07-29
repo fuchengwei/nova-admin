@@ -3,6 +3,8 @@ package com.nova.admin.modules.infra.service;
 import com.nova.admin.config.NovaProperties;
 import com.nova.admin.modules.infra.entity.SysFile;
 import com.nova.admin.modules.infra.service.impl.FileServiceImpl;
+import com.nova.admin.modules.system.dto.UploadSettingsDTO;
+import com.nova.admin.modules.system.service.SysConfigService;
 import com.nova.admin.security.LoginUser;
 import com.nova.admin.security.SecurityUser;
 import io.minio.GetObjectResponse;
@@ -34,11 +36,14 @@ class FileServiceImplTest {
     @Mock
     private MinioClient minioClient;
 
+    @Mock
+    private SysConfigService sysConfigService;
+
     private FileServiceImpl fileService;
 
     @BeforeEach
     void setUp() {
-        fileService = spy(new FileServiceImpl(novaProperties(), minioClient));
+        fileService = spy(new FileServiceImpl(novaProperties(), minioClient, sysConfigService));
         SecurityUser principal = new SecurityUser(LoginUser.builder()
                 .userId(1L)
                 .account("admin")
@@ -57,6 +62,7 @@ class FileServiceImplTest {
     void upload_whenMinioIsSelected_createsBucketAndPersistsProxyPreviewUrl() throws Exception {
         MockMultipartFile file = new MockMultipartFile(
                 "file", "avatar.png", "image/png", new byte[] {1, 2, 3});
+        given(sysConfigService.getUploadSettings()).willReturn(uploadSettings("minio"));
         given(minioClient.bucketExists(any())).willReturn(false);
         doReturn(true).when(fileService).save(any(SysFile.class));
 
@@ -97,7 +103,7 @@ class FileServiceImplTest {
 
     private NovaProperties novaProperties() {
         NovaProperties properties = new NovaProperties();
-        properties.getFile().setStorageType("minio");
+        properties.getFile().setStorageType("local");
         properties.getFile().getLocal().setBasePath("/tmp/nova-admin-test");
         properties.getFile().getLocal().setUrlPrefix("http://localhost:8080/api/file/preview/");
         properties.getFile().getMinio().setEndpoint("http://localhost:9000");
@@ -114,5 +120,11 @@ class FileServiceImplTest {
         file.setBucket("nova-admin");
         file.setObjectKey("2026/07/29/avatar.png");
         return file;
+    }
+
+    private UploadSettingsDTO uploadSettings(String storageType) {
+        UploadSettingsDTO settings = new UploadSettingsDTO();
+        settings.setStorageType(storageType);
+        return settings;
     }
 }
