@@ -82,7 +82,7 @@ nova:
     allow-credentials: true
     max-age: 3600
   file:
-    storage-type: local
+    storage-type: minio
     local:
       base-path: ${user.home}/nova-admin/upload
       url-prefix: http://localhost:8080/api/file/preview/

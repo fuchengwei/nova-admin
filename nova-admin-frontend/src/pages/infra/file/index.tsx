@@ -1,49 +1,19 @@
 import { useRef, useState } from 'react';
 import { Button, Tag, Modal, Popconfirm, Image, Upload, type UploadProps } from 'antd';
 import { message } from '@/utils/message';
-import { DeleteOutlined, ReloadOutlined, EyeOutlined, UploadOutlined } from '@ant-design/icons';
+import { DeleteOutlined, DownloadOutlined, EyeOutlined, UploadOutlined } from '@ant-design/icons';
 import { ProTable, type ProColumns, type ActionType } from '@ant-design/pro-components';
 import { useMutation } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { getFilePage, uploadFile, deleteFile, type FileRecord } from '@/api/file';
 import { useTableScrollY } from '@/hooks/useTableScrollY';
 import { displayText, isEmptyDisplayValue } from '@/utils/display';
-
-function formatFileSize(size?: number): string {
-  if (isEmptyDisplayValue(size)) return '-';
-  if (size > 1024 * 1024) return `${(size / (1024 * 1024)).toFixed(2)} MB`;
-  return `${(size / 1024).toFixed(2)} KB`;
-}
-
-function isImage(contentType?: string): boolean {
-  return contentType ? contentType.startsWith('image/') : false;
-}
-
-const contentTypeEnum = {
-  'image/png': { text: 'image/png' },
-  'image/jpeg': { text: 'image/jpeg' },
-  'image/gif': { text: 'image/gif' },
-  'image/webp': { text: 'image/webp' },
-  'application/pdf': { text: 'application/pdf' },
-  'text/plain': { text: 'text/plain' },
-  'application/json': { text: 'application/json' },
-  'application/msword': { text: 'application/msword' },
-  'application/vnd.openxmlformats-officedocument.wordprocessingml.document': {
-    text: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-  },
-  'application/vnd.ms-excel': { text: 'application/vnd.ms-excel' },
-  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': {
-    text: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-  },
-  'application/vnd.ms-powerpoint': { text: 'application/vnd.ms-powerpoint' },
-  'application/vnd.openxmlformats-officedocument.presentationml.presentation': {
-    text: 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
-  },
-  'application/zip': { text: 'application/zip' },
-  'application/x-zip-compressed': { text: 'application/x-zip-compressed' },
-  'application/x-rar-compressed': { text: 'application/x-rar-compressed' },
-  'application/x-7z-compressed': { text: 'application/x-7z-compressed' },
-};
+import FileTypeBadge, {
+  isImageFile,
+  isPdfFile,
+  isPreviewableFile,
+} from './components/FileTypeBadge';
+import { contentTypeEnum, formatFileSize } from './fileDisplay';
 
 export default function FilePage() {
   const { t } = useTranslation();
@@ -82,13 +52,9 @@ export default function FilePage() {
   };
 
   const handleDownload = (record: FileRecord) => {
-    const link = document.createElement('a');
-    link.href = record.url;
-    link.download = record.originalName || record.name;
-    link.target = '_blank';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    const downloadUrl = new URL(record.url, window.location.href);
+    downloadUrl.searchParams.set('download', 'true');
+    window.open(downloadUrl, '_blank', 'noopener,noreferrer');
   };
 
   const uploadProps: UploadProps = {
@@ -140,7 +106,12 @@ export default function FilePage() {
       width: 140,
       valueType: 'select',
       valueEnum: contentTypeEnum,
-      render: (value) => displayText(value),
+      render: (_, record) => (
+        <FileTypeBadge
+          contentType={record.contentType}
+          fileName={record.originalName || record.name}
+        />
+      ),
     },
     {
       title: t('file.storageType'),
@@ -160,34 +131,51 @@ export default function FilePage() {
       search: false,
     },
     {
-      title: t('common.delete'),
+      title: t('common.action'),
       valueType: 'option',
       key: 'option',
-      width: 150,
+      width: 210,
       fixed: 'right',
-      render: (_, record) => [
-        <Button
-          key="preview"
-          type="link"
-          size="small"
-          icon={<EyeOutlined />}
-          onClick={() => handlePreview(record)}
-        >
-          {t('file.preview')}
-        </Button>,
-        <Popconfirm
-          key="del"
-          title={t('file.deleteConfirm')}
-          onConfirm={() => deleteMutation.mutate(record.id)}
-          okText={t('common.confirm')}
-          cancelText={t('common.cancel')}
-          okButtonProps={{ danger: true }}
-        >
-          <Button type="link" size="small" danger icon={<DeleteOutlined />}>
-            {t('common.delete')}
-          </Button>
-        </Popconfirm>,
-      ],
+      render: (_, record) => {
+        const actions = [];
+        if (isPreviewableFile(record.contentType)) {
+          actions.push(
+            <Button
+              key="preview"
+              type="link"
+              size="small"
+              icon={<EyeOutlined />}
+              onClick={() => handlePreview(record)}
+            >
+              {t('file.preview')}
+            </Button>,
+          );
+        }
+        actions.push(
+          <Button
+            key="download"
+            type="link"
+            size="small"
+            icon={<DownloadOutlined />}
+            onClick={() => handleDownload(record)}
+          >
+            {t('file.download')}
+          </Button>,
+          <Popconfirm
+            key="del"
+            title={t('file.deleteConfirm')}
+            onConfirm={() => deleteMutation.mutate(record.id)}
+            okText={t('common.confirm')}
+            cancelText={t('common.cancel')}
+            okButtonProps={{ danger: true }}
+          >
+            <Button type="link" size="small" danger icon={<DeleteOutlined />}>
+              {t('common.delete')}
+            </Button>
+          </Popconfirm>,
+        );
+        return actions;
+      },
     },
   ];
 
@@ -235,22 +223,17 @@ export default function FilePage() {
         width={800}
         destroyOnHidden
       >
-        {previewFile && isImage(previewFile.contentType) ? (
+        {previewFile && isImageFile(previewFile.contentType) ? (
           <div className="flex justify-center">
-            <Image src={previewFile.url} alt={previewFile.name} style={{ maxHeight: '70vh' }} />
+            <Image src={previewFile.url} alt={previewFile.name} className="max-h-[70vh]" />
           </div>
-        ) : (
-          <div className="flex flex-col items-center gap-4 py-8">
-            <p className="text-gray-500">{t('file.download')}</p>
-            <Button
-              type="primary"
-              icon={<ReloadOutlined />}
-              onClick={() => previewFile && handleDownload(previewFile)}
-            >
-              {t('file.download')}
-            </Button>
-          </div>
-        )}
+        ) : previewFile && isPdfFile(previewFile.contentType) ? (
+          <iframe
+            className="h-[70vh] w-full border-0"
+            src={previewFile.url}
+            title={previewFile.name}
+          />
+        ) : null}
       </Modal>
     </div>
   );

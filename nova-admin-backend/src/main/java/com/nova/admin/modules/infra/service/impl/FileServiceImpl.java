@@ -12,15 +12,23 @@ import com.nova.admin.modules.infra.entity.SysFile;
 import com.nova.admin.modules.infra.mapper.SysFileMapper;
 import com.nova.admin.modules.infra.service.FileService;
 import com.nova.admin.security.SecurityUtils;
+import io.minio.BucketExistsArgs;
+import io.minio.GetObjectArgs;
+import io.minio.MakeBucketArgs;
+import io.minio.MinioClient;
+import io.minio.PutObjectArgs;
+import io.minio.RemoveObjectArgs;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.FileSystemResource;
+import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -34,6 +42,7 @@ import java.util.UUID;
 public class FileServiceImpl extends ServiceImpl<SysFileMapper, SysFile> implements FileService {
 
     private final NovaProperties novaProperties;
+    private final MinioClient minioClient;
 
     @Override
     public PageResult<SysFile> getFilePage(FilePageQuery query) {
@@ -97,18 +106,12 @@ public class FileServiceImpl extends ServiceImpl<SysFileMapper, SysFile> impleme
             throw new BizException(ResultCode.DATA_NOT_FOUND, "文件不存在");
         }
 
-        // 删除物理文件
         String storageType = sysFile.getStorageType();
         if ("local".equalsIgnoreCase(storageType)) {
-            String basePath = novaProperties.getFile().getLocal().getBasePath();
-            Path filePath = Paths.get(basePath, sysFile.getObjectKey());
-            try {
-                Files.deleteIfExists(filePath);
-            } catch (IOException e) {
-                log.warn("删除本地文件失败: {}", filePath, e);
-            }
+            deleteFromLocal(sysFile.getObjectKey());
+        } else if ("minio".equalsIgnoreCase(storageType)) {
+            deleteFromMinio(sysFile);
         }
-        // MinIO 删除暂不实现（需要 MinioClient 依赖）
 
         removeById(id);
         log.info("文件删除成功，id={}, objectKey={}", id, sysFile.getObjectKey());
@@ -116,12 +119,15 @@ public class FileServiceImpl extends ServiceImpl<SysFileMapper, SysFile> impleme
 
     @Override
     public Resource preview(String objectKey) {
-        String basePath = novaProperties.getFile().getLocal().getBasePath();
-        Path filePath = Paths.get(basePath, objectKey);
-        if (!Files.exists(filePath)) {
+        SysFile sysFile = getOne(new LambdaQueryWrapper<SysFile>()
+                .eq(SysFile::getObjectKey, objectKey));
+        if (sysFile == null) {
             throw new BizException(ResultCode.DATA_NOT_FOUND, "文件不存在");
         }
-        return new FileSystemResource(filePath);
+        if ("minio".equalsIgnoreCase(sysFile.getStorageType())) {
+            return previewFromMinio(sysFile);
+        }
+        return previewFromLocal(sysFile.getObjectKey());
     }
 
     private String uploadToLocal(MultipartFile file, String objectKey) {
@@ -136,8 +142,79 @@ public class FileServiceImpl extends ServiceImpl<SysFileMapper, SysFile> impleme
         return novaProperties.getFile().getLocal().getUrlPrefix() + objectKey;
     }
 
-    private String uploadToMinio(MultipartFile ignoredFile, String ignoredObjectKey) {
-        // MinIO 上传需要 minio-sdk 依赖，此处抛出提示
-        throw new BizException(ResultCode.DATA_OPERATION_FAILED, "MinIO 存储暂未实现，请使用 local 存储类型");
+    private String uploadToMinio(MultipartFile file, String objectKey) {
+        String bucket = minioBucket();
+        try (InputStream inputStream = file.getInputStream()) {
+            ensureMinioBucket(bucket);
+            minioClient.putObject(PutObjectArgs.builder()
+                    .bucket(bucket)
+                    .object(objectKey)
+                    .stream(inputStream, file.getSize(), -1)
+                    .contentType(file.getContentType() == null
+                            ? "application/octet-stream"
+                            : file.getContentType())
+                    .build());
+            return novaProperties.getFile().getLocal().getUrlPrefix() + objectKey;
+        } catch (Exception e) {
+            log.error("MinIO 文件上传失败，objectKey={}", objectKey, e);
+            throw new BizException(ResultCode.DATA_OPERATION_FAILED, "文件上传失败");
+        }
+    }
+
+    private void deleteFromLocal(String objectKey) {
+        Path filePath = Paths.get(novaProperties.getFile().getLocal().getBasePath(), objectKey);
+        try {
+            Files.deleteIfExists(filePath);
+        } catch (IOException e) {
+            log.warn("删除本地文件失败: {}", filePath, e);
+        }
+    }
+
+    private void deleteFromMinio(SysFile sysFile) {
+        try {
+            minioClient.removeObject(RemoveObjectArgs.builder()
+                    .bucket(resolveBucket(sysFile))
+                    .object(sysFile.getObjectKey())
+                    .build());
+        } catch (Exception e) {
+            log.error("MinIO 文件删除失败，id={}, objectKey={}", sysFile.getId(), sysFile.getObjectKey(), e);
+            throw new BizException(ResultCode.DATA_OPERATION_FAILED, "文件删除失败");
+        }
+    }
+
+    private Resource previewFromLocal(String objectKey) {
+        Path filePath = Paths.get(novaProperties.getFile().getLocal().getBasePath(), objectKey);
+        if (!Files.exists(filePath)) {
+            throw new BizException(ResultCode.DATA_NOT_FOUND, "文件不存在");
+        }
+        return new FileSystemResource(filePath);
+    }
+
+    private Resource previewFromMinio(SysFile sysFile) {
+        try {
+            return new InputStreamResource(minioClient.getObject(GetObjectArgs.builder()
+                    .bucket(resolveBucket(sysFile))
+                    .object(sysFile.getObjectKey())
+                    .build()));
+        } catch (Exception e) {
+            log.error("MinIO 文件读取失败，id={}, objectKey={}", sysFile.getId(), sysFile.getObjectKey(), e);
+            throw new BizException(ResultCode.DATA_OPERATION_FAILED, "文件读取失败");
+        }
+    }
+
+    private void ensureMinioBucket(String bucket) throws Exception {
+        if (!minioClient.bucketExists(BucketExistsArgs.builder().bucket(bucket).build())) {
+            minioClient.makeBucket(MakeBucketArgs.builder().bucket(bucket).build());
+        }
+    }
+
+    private String resolveBucket(SysFile sysFile) {
+        return sysFile.getBucket() == null || sysFile.getBucket().isBlank()
+                ? minioBucket()
+                : sysFile.getBucket();
+    }
+
+    private String minioBucket() {
+        return novaProperties.getFile().getMinio().getBucket();
     }
 }
