@@ -34,6 +34,10 @@ export interface UploadSettings {
   avatarAllowedTypes?: string;
 }
 
+export interface StorageConnectionCheckRequest {
+  storageType: StorageType;
+}
+
 export interface NoticeSettings {
   title?: string;
   content?: string;
@@ -71,6 +75,8 @@ export const updateSecuritySettings = (data: SecuritySettings) =>
 
 export const getUploadSettings = () => getSettingsGroup<UploadSettings>('upload');
 export const updateUploadSettings = (data: UploadSettings) => updateSettingsGroup('upload', data);
+export const verifyUploadStorage = (data: StorageConnectionCheckRequest) =>
+  request<R<void>>({ url: '/system/config/upload/verify-storage', method: 'POST', data });
 
 export const getNoticeSettings = () => getSettingsGroup<NoticeSettings>('notice');
 export const updateNoticeSettings = (data: NoticeSettings) => updateSettingsGroup('notice', data);

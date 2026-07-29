@@ -132,6 +132,19 @@ public class FileServiceImpl extends ServiceImpl<SysFileMapper, SysFile> impleme
         return previewFromLocal(sysFile.getObjectKey());
     }
 
+    @Override
+    public void verifyStorage(String storageType) {
+        if ("local".equalsIgnoreCase(storageType)) {
+            verifyLocalStorage();
+            return;
+        }
+        if ("minio".equalsIgnoreCase(storageType)) {
+            verifyMinioStorage();
+            return;
+        }
+        throw new BizException(ResultCode.BAD_REQUEST, "不支持的存储类型");
+    }
+
     private String uploadToLocal(MultipartFile file, String objectKey) {
         String basePath = novaProperties.getFile().getLocal().getBasePath();
         Path filePath = Paths.get(basePath, objectKey);
@@ -142,6 +155,25 @@ public class FileServiceImpl extends ServiceImpl<SysFileMapper, SysFile> impleme
             throw new BizException(ResultCode.DATA_OPERATION_FAILED, "文件上传失败");
         }
         return novaProperties.getFile().getLocal().getUrlPrefix() + objectKey;
+    }
+
+    private void verifyLocalStorage() {
+        String basePath = novaProperties.getFile().getLocal().getBasePath();
+        if (basePath == null || basePath.isBlank()) {
+            throw new BizException(ResultCode.DATA_OPERATION_FAILED, "本地文件存储目录未配置");
+        }
+        try {
+            Path directory = Paths.get(basePath);
+            Files.createDirectories(directory);
+            if (!Files.isDirectory(directory) || !Files.isWritable(directory)) {
+                throw new BizException(ResultCode.DATA_OPERATION_FAILED, "本地文件存储目录不可写");
+            }
+        } catch (BizException ex) {
+            throw ex;
+        } catch (Exception ex) {
+            log.warn("本地文件存储检测失败，path={}", basePath, ex);
+            throw new BizException(ResultCode.DATA_OPERATION_FAILED, "本地文件存储不可用");
+        }
     }
 
     private String uploadToMinio(MultipartFile file, String objectKey) {
@@ -160,6 +192,23 @@ public class FileServiceImpl extends ServiceImpl<SysFileMapper, SysFile> impleme
         } catch (Exception e) {
             log.error("MinIO 文件上传失败，objectKey={}", objectKey, e);
             throw new BizException(ResultCode.DATA_OPERATION_FAILED, "文件上传失败");
+        }
+    }
+
+    private void verifyMinioStorage() {
+        String bucket = minioBucket();
+        if (bucket == null || bucket.isBlank()) {
+            throw new BizException(ResultCode.DATA_OPERATION_FAILED, "MinIO 存储桶未配置");
+        }
+        try {
+            if (!minioClient.bucketExists(BucketExistsArgs.builder().bucket(bucket).build())) {
+                throw new BizException(ResultCode.DATA_OPERATION_FAILED, "MinIO 存储桶不存在");
+            }
+        } catch (BizException ex) {
+            throw ex;
+        } catch (Exception ex) {
+            log.warn("MinIO 文件存储检测失败，bucket={}", bucket, ex);
+            throw new BizException(ResultCode.DATA_OPERATION_FAILED, "MinIO 文件存储不可用");
         }
     }
 

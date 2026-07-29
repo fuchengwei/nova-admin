@@ -495,6 +495,9 @@ export default {
     storageMinio: 'MinIO Object Storage',
     storageTypeHint:
       'MinIO endpoint, bucket, and credentials stay in deployment configuration and are not saved here.',
+    verifyStorage: 'Verify Connection',
+    storageVerifySuccess: 'Storage connection is available',
+    storageVerifyFailed: 'Storage connection verification failed',
     noticeMessage: 'Announcement Body',
     emailChannel: 'Email Channel',
     smsChannel: 'SMS Channel',

@@ -21,6 +21,7 @@ import {
   updateNoticeSettings,
   updateSecuritySettings,
   updateUploadSettings,
+  verifyUploadStorage,
   type BasicSettings,
   type NoticeSettings,
   type SecuritySettings,
@@ -175,6 +176,17 @@ export default function SystemSettingsPage() {
         await refetchUpload();
       } else {
         message.error(res.msg || t('common.error'));
+      }
+    },
+  });
+
+  const verifyStorageMutation = useMutation({
+    mutationFn: verifyUploadStorage,
+    onSuccess: (res) => {
+      if (res.code === 0) {
+        message.success(t('settings.storageVerifySuccess'));
+      } else {
+        message.error(res.msg || t('settings.storageVerifyFailed'));
       }
     },
   });
@@ -734,6 +746,8 @@ export default function SystemSettingsPage() {
       <UploadSettingsFormModal
         open={uploadModalOpen}
         initialValues={uploadInitialValues}
+        verifying={verifyStorageMutation.isPending}
+        onVerify={(storageType) => verifyStorageMutation.mutate({ storageType })}
         onClose={() => setUploadModalOpen(false)}
         onSubmit={async (values) => {
           uploadMutation.mutate(values);

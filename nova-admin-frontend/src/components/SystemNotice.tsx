@@ -27,11 +27,11 @@ const dismissNotice = (fingerprint: string) => {
 export default function SystemNotice() {
   const [open, setOpen] = useState(false);
   const [fingerprint, setFingerprint] = useState<string>();
-  const { data: notice } = useQuery({
+  const { data: notice } = useQuery<ActiveNotice | null>({
     queryKey: ['settings', 'active-notice'],
     queryFn: async () => {
       const res = await getActiveNotice();
-      return res.code === 0 ? res.data : undefined;
+      return res.code === 0 ? (res.data ?? null) : null;
     },
     refetchOnMount: 'always',
     staleTime: 0,
@@ -49,7 +49,7 @@ export default function SystemNotice() {
 
   return (
     <AnnouncementDialog
-      notice={notice}
+      notice={notice ?? undefined}
       onDismiss={() => {
         if (fingerprint) dismissNotice(fingerprint);
         setOpen(false);

@@ -15,4 +15,6 @@ public interface FileService {
     void delete(Long id);
 
     Resource preview(String objectKey);
+
+    void verifyStorage(String storageType);
 }

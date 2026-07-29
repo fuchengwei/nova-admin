@@ -1,6 +1,8 @@
 package com.nova.admin.modules.infra.service;
 
 import com.nova.admin.config.NovaProperties;
+import com.nova.admin.common.api.ResultCode;
+import com.nova.admin.common.exception.BizException;
 import com.nova.admin.modules.infra.entity.SysFile;
 import com.nova.admin.modules.infra.service.impl.FileServiceImpl;
 import com.nova.admin.modules.system.dto.UploadSettingsDTO;
@@ -13,6 +15,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.io.TempDir;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -21,9 +24,12 @@ import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.doReturn;
@@ -40,6 +46,9 @@ class FileServiceImplTest {
     private SysConfigService sysConfigService;
 
     private FileServiceImpl fileService;
+
+    @TempDir
+    private Path tempDir;
 
     @BeforeEach
     void setUp() {
@@ -101,10 +110,44 @@ class FileServiceImplTest {
         assertThat(resource).isInstanceOf(InputStreamResource.class);
     }
 
+    @Test
+    void verifyStorage_whenLocalIsSelected_createsWritableDirectory() {
+        Path storageDirectory = tempDir.resolve("uploads");
+        fileService = new FileServiceImpl(novaProperties(storageDirectory), minioClient, sysConfigService);
+
+        fileService.verifyStorage("local");
+
+        assertThat(Files.isDirectory(storageDirectory)).isTrue();
+        assertThat(Files.isWritable(storageDirectory)).isTrue();
+    }
+
+    @Test
+    void verifyStorage_whenMinioBucketExists_succeeds() throws Exception {
+        given(minioClient.bucketExists(any())).willReturn(true);
+
+        fileService.verifyStorage("minio");
+
+        verify(minioClient).bucketExists(any());
+    }
+
+    @Test
+    void verifyStorage_whenMinioBucketDoesNotExist_throwsBizException() throws Exception {
+        given(minioClient.bucketExists(any())).willReturn(false);
+
+        assertThatThrownBy(() -> fileService.verifyStorage("minio"))
+                .isInstanceOf(BizException.class)
+                .extracting("code")
+                .isEqualTo(ResultCode.DATA_OPERATION_FAILED.getCode());
+    }
+
     private NovaProperties novaProperties() {
+        return novaProperties(tempDir.resolve("nova-admin-test"));
+    }
+
+    private NovaProperties novaProperties(Path basePath) {
         NovaProperties properties = new NovaProperties();
         properties.getFile().setStorageType("local");
-        properties.getFile().getLocal().setBasePath("/tmp/nova-admin-test");
+        properties.getFile().getLocal().setBasePath(basePath.toString());
         properties.getFile().getLocal().setUrlPrefix("http://localhost:8080/api/file/preview/");
         properties.getFile().getMinio().setEndpoint("http://localhost:9000");
         properties.getFile().getMinio().setAccessKey("access-key");
