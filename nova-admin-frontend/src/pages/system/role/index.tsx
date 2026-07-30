@@ -47,7 +47,7 @@ export default function RolePage() {
   const [modalOpen, setModalOpen] = useState(false);
   const [editMode, setEditMode] = useState(false);
   const [editingRecord, setEditingRecord] = useState<RoleRecord | null>(null);
-  const [checkedKeys, setCheckedKeys] = useState<number[]>([]);
+  const [checkedKeys, setCheckedKeys] = useState<string[]>([]);
 
   const { data: menuTree } = useQuery({
     queryKey: ['menuTree'],
@@ -92,7 +92,7 @@ export default function RolePage() {
     checked: React.Key[] | { checked: React.Key[]; halfChecked: React.Key[] },
   ) => {
     const keys = Array.isArray(checked) ? checked : checked.checked;
-    setCheckedKeys(keys as number[]);
+    setCheckedKeys(keys.map(String));
   };
 
   const menuTreeNodes: DataNode[] = (menuTree ?? []).map((item) => ({

@@ -43,8 +43,8 @@ public class SysMenuController extends BaseController {
     @PostMapping
     @PreAuthorize("hasAuthority('system:menu:add')")
     @Operation(summary = "创建菜单")
-    public R<Long> createMenu(@Valid @RequestBody MenuCreateRequest req) {
-        return ok(sysMenuService.createMenu(req));
+    public R<String> createMenu(@Valid @RequestBody MenuCreateRequest req) {
+        return ok(String.valueOf(sysMenuService.createMenu(req)));
     }
 
     @PutMapping

@@ -46,8 +46,8 @@ public class JobController extends BaseController {
     @PostMapping
     @PreAuthorize("hasRole('super_admin') or hasAuthority('monitor:job:add')")
     @Operation(summary = "创建定时任务")
-    public R<Long> create(@Valid @RequestBody SysJob job) {
-        return ok(jobService.create(job));
+    public R<String> create(@Valid @RequestBody SysJob job) {
+        return ok(String.valueOf(jobService.create(job)));
     }
 
     @PutMapping

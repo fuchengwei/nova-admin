@@ -14,9 +14,9 @@ import type { TreeSelectNode } from '@/utils/tree';
 import type { DeptTreeNode } from '@/api/dept';
 import { getUserPage } from '@/api/user';
 
-/** 部门表单值（parentId 为空表示根部门，提交时由调用方转为 0） */
+/** 部门表单值（parentId 为空表示根部门，提交时由调用方转为 "0"） */
 export interface DeptFormValues {
-  parentId?: number;
+  parentId?: string;
   name: string;
   code?: string;
   leader?: string;
@@ -31,7 +31,7 @@ export interface DeptFormModalProps {
   editMode: boolean;
   record: DeptTreeNode | null;
   /** 新增模式下的上级部门 ID（undefined 表示新增根部门） */
-  addParentId?: number;
+  addParentId?: string;
   /** 上级部门下拉树数据（编辑时为排除自身后的树） */
   parentOptions: TreeSelectNode[];
   onSubmit: (
@@ -82,9 +82,9 @@ export default function DeptFormModal({
     return list;
   }, [userPage, editMode, record]);
 
-  // 上级部门树追加根部门节点：根部门 ID 为 0，直接展示为「根部门」而非 "0"
+  // 上级部门树追加根部门节点：根部门 ID 为 "0"，直接展示为「根部门」
   const parentTreeData = useMemo<TreeSelectNode[]>(
-    () => [{ value: 0, title: t('dept.rootDept'), children: parentOptions }],
+    () => [{ value: '0', title: t('dept.rootDept'), children: parentOptions }],
     [t, parentOptions],
   );
 
@@ -110,7 +110,7 @@ export default function DeptFormModal({
               status: record.status,
             }
           : {
-              parentId: addParentId ?? 0,
+              parentId: addParentId ?? '0',
               sort: 0,
               status: 1,
             }

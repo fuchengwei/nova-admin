@@ -338,6 +338,8 @@ VALUES
     (17, 15, '修改用户', 'F', 'system:user:edit',      '', '', '', 1, 0, 1, NOW()),
     (18, 15, '删除用户', 'F', 'system:user:remove',    '', '', '', 2, 0, 1, NOW()),
     (19, 15, '重置密码', 'F', 'system:user:reset-pwd', '', '', '', 3, 0, 1, NOW()),
+    (20, 15, '导入用户', 'F', 'system:user:import',    '', '', '', 4, 0, 1, NOW()),
+    (21, 15, '导出用户', 'F', 'system:user:export',    '', '', '', 5, 0, 1, NOW()),
     -- 部门管理
     (11, 1, '部门管理', 'C', 'system:dept:list',   '/system/dept', 'system/dept/index', 'ApartmentOutlined', 1, 1, 1, NOW()),
     (12, 11, '新增部门', 'F', 'system:dept:add',    '', '', '', 0, 0, 1, NOW()),
@@ -383,6 +385,7 @@ VALUES
     (1107, 'security.captcha.enabled', 'true', 'security', 'boolean', '验证码开关', 1, NOW(), NOW(), 0),
     (1108, 'security.token.access-minutes', '120', 'security', 'number', '访问 Token 有效期', 1, NOW(), NOW(), 0),
     (1109, 'security.token.refresh-minutes', '10080', 'security', 'number', '刷新 Token 有效期', 1, NOW(), NOW(), 0),
+    (1110, 'security.user-import.initial-password', 'Nova@123', 'security', 'string', '用户导入初始密码', 1, NOW(), NOW(), 0),
     (1201, 'upload.max-size-mb', '100', 'upload', 'number', '通用最大上传大小', 1, NOW(), NOW(), 0),
     (1202, 'upload.allowed-types', '*', 'upload', 'string', '通用允许文件类型', 1, NOW(), NOW(), 0),
     (1203, 'upload.avatar.max-size-mb', '5', 'upload', 'number', '头像最大上传大小', 1, NOW(), NOW(), 0),

@@ -52,8 +52,8 @@ public class SysDictTypeController extends BaseController {
     @PostMapping
     @PreAuthorize("hasAuthority('system:dict:add')")
     @Operation(summary = "创建字典类型")
-    public R<Long> createDictType(@Valid @RequestBody DictTypeCreateRequest req) {
-        return ok(sysDictTypeService.createDictType(req));
+    public R<String> createDictType(@Valid @RequestBody DictTypeCreateRequest req) {
+        return ok(String.valueOf(sysDictTypeService.createDictType(req)));
     }
 
     @PutMapping

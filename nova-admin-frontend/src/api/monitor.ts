@@ -38,7 +38,7 @@ export interface OnlineUser {
   tokenKey: string;
   account: string;
   nickname: string;
-  deptId?: number;
+  deptId?: string;
   loginIp?: string;
   loginTime?: string;
 }

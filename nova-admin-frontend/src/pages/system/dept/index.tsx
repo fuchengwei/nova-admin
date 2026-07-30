@@ -30,7 +30,7 @@ export default function DeptPage() {
   const [modalOpen, setModalOpen] = useState(false);
   const [editMode, setEditMode] = useState(false);
   /** 新增模式下的上级部门 ID（undefined 表示新增根部门） */
-  const [addParentId, setAddParentId] = useState<number | undefined>(undefined);
+  const [addParentId, setAddParentId] = useState<string | undefined>(undefined);
 
   // 查询部门树
   const { data: treeData, isLoading } = useQuery({
@@ -56,7 +56,7 @@ export default function DeptPage() {
   const deleteMutation = useMutation({ mutationFn: deleteDept });
 
   const handleSelect = (_: unknown, info: { node: DataNode }) => {
-    const key = info.node.key as number;
+    const key = String(info.node.key);
     const find = (nodes?: DeptTreeNode[]): DeptTreeNode | null => {
       if (!nodes) return null;
       for (const n of nodes) {
@@ -115,8 +115,8 @@ export default function DeptPage() {
     isEdit: boolean,
     record: DeptTreeNode | null,
   ): Promise<boolean> => {
-    // 根部门 parentId 为空时转为 0（后端 parentId 为 @NotNull，0 表示根节点）
-    const payload = { ...values, parentId: values.parentId ?? 0 };
+    // 根部门 parentId 为空时转为 "0"（后端 parentId 为 @NotNull，0 表示根节点）
+    const payload = { ...values, parentId: values.parentId ?? '0' };
     const res =
       isEdit && record
         ? await updateMutation.mutateAsync({

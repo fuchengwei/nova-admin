@@ -8,8 +8,8 @@ import { displayText } from '@/utils/display';
 export interface UserColumnDeps {
   onEdit: (record: UserRecord) => void;
   onResetPwd: (record: UserRecord) => void;
-  onDelete: (id: number) => void;
-  toggleStatus: (id: number, status: number) => void;
+  onDelete: (id: string) => void;
+  toggleStatus: (id: string, status: number) => void;
   toggleLoading: boolean;
 }
 

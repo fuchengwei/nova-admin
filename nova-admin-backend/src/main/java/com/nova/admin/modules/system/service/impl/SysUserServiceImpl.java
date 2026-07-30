@@ -5,27 +5,39 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.nova.admin.common.api.PageResult;
 import com.nova.admin.common.api.ResultCode;
+import com.nova.admin.common.constant.Constants;
 import com.nova.admin.common.exception.BizException;
 import com.nova.admin.modules.auth.event.AuthorizationChangedEvent;
 import com.nova.admin.modules.system.dto.UserCreateRequest;
+import com.nova.admin.modules.system.dto.UserImportResultDTO;
 import com.nova.admin.modules.system.dto.UserPageQuery;
 import com.nova.admin.modules.system.dto.UserUpdateRequest;
 import com.nova.admin.modules.system.entity.SysDept;
+import com.nova.admin.modules.system.entity.SysRole;
 import com.nova.admin.modules.system.entity.SysUser;
 import com.nova.admin.modules.system.entity.SysUserRole;
 import com.nova.admin.modules.system.mapper.SysDeptMapper;
+import com.nova.admin.modules.system.mapper.SysRoleMapper;
 import com.nova.admin.modules.system.mapper.SysUserMapper;
 import com.nova.admin.modules.system.mapper.SysUserRoleMapper;
 import com.nova.admin.modules.system.service.SysConfigService;
 import com.nova.admin.modules.system.service.SysUserService;
+import com.nova.admin.modules.system.service.UserExcelCodec;
 import com.nova.admin.security.SecurityUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -42,6 +54,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
 
     private final SysUserRoleMapper userRoleMapper;
     private final SysDeptMapper deptMapper;
+    private final SysRoleMapper roleMapper;
     private final PasswordEncoder passwordEncoder;
     private final SysConfigService sysConfigService;
     private final ApplicationEventPublisher eventPublisher;
@@ -52,8 +65,84 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
 
         Page<SysUser> result = (Page<SysUser>) getBaseMapper().selectUserPage(page, query);
 
-        // 联查部门名称
         List<SysUser> records = result.getRecords();
+        enrichUsers(records);
+
+        return PageResult.of(result);
+    }
+
+    @Override
+    public byte[] exportUsers(UserPageQuery query) {
+        List<SysUser> users = getBaseMapper().selectUserList(query);
+        enrichUsers(users);
+        UserImportOptions options = loadUserImportOptions();
+        List<UserExcelCodec.UserRow> rows = users.stream()
+                .map(user -> new UserExcelCodec.UserRow(
+                        value(user.getAccount()), value(user.getNickname()), value(user.getRealName()),
+                        value(user.getEmail()), value(user.getPhone()), genderLabel(user.getGender()),
+                        options.departmentLabels().getOrDefault(user.getDeptId(), ""), statusLabel(user.getStatus()),
+                        user.getRoleIds().stream()
+                                .map(options.roleLabels()::get)
+                                .filter(Objects::nonNull)
+                                .collect(Collectors.joining(","))
+                ))
+                .toList();
+        return UserExcelCodec.export(rows);
+    }
+
+    @Override
+    public byte[] userImportTemplate() {
+        UserImportOptions options = loadUserImportOptions();
+        return UserExcelCodec.template(
+                new ArrayList<>(options.departmentLabels().values()),
+                new ArrayList<>(options.roleLabels().values())
+        );
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public UserImportResultDTO importUsers(MultipartFile file) {
+        if (file == null || file.isEmpty()) {
+            throw new BizException(ResultCode.BAD_REQUEST, "导入文件不能为空");
+        }
+        if (file.getSize() > 10 * 1024 * 1024) {
+            throw new BizException(ResultCode.BAD_REQUEST, "导入文件不能超过10MB");
+        }
+        List<UserExcelCodec.UserRow> rows;
+        try {
+            rows = UserExcelCodec.parse(file.getBytes());
+        } catch (IOException | IllegalArgumentException ex) {
+            throw new BizException(ResultCode.BAD_REQUEST, ex.getMessage());
+        }
+        if (rows.size() > 1000) {
+            throw new BizException(ResultCode.BAD_REQUEST, "单次最多导入1000个用户");
+        }
+
+        UserImportResultDTO result = new UserImportResultDTO();
+        result.setTotal(rows.size());
+        result.setErrors(new ArrayList<>());
+        Long operatorId = SecurityUtils.requireUserId();
+        Set<String> importedAccounts = new HashSet<>();
+        String initialPassword = sysConfigService.getUserImportInitialPassword();
+        sysConfigService.validatePassword(initialPassword);
+        UserImportOptions options = loadUserImportOptions();
+        for (int index = 0; index < rows.size(); index++) {
+            try {
+                importUser(rows.get(index), initialPassword, operatorId, importedAccounts, options);
+                result.setSuccess(result.getSuccess() + 1);
+            } catch (BizException ex) {
+                result.setFailed(result.getFailed() + 1);
+                if (result.getErrors().size() < 100) {
+                    result.getErrors().add("第" + (index + 2) + "行：" + ex.getMessage());
+                }
+            }
+        }
+        log.info("批量导入用户完成，total={}, success={}, failed={}, operator={}",
+                result.getTotal(), result.getSuccess(), result.getFailed(), operatorId);
+        return result;
+    }
+
+    private void enrichUsers(List<SysUser> records) {
         Set<Long> deptIds = records.stream()
                 .map(SysUser::getDeptId)
                 .filter(Objects::nonNull)
@@ -70,7 +159,6 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
             }
         }
 
-        // 批量填充用户角色 ID 列表（用于前端编辑回显）
         Set<Long> userIds = records.stream().map(SysUser::getId).collect(Collectors.toSet());
         if (!userIds.isEmpty()) {
             List<SysUserRole> userRoles = userRoleMapper.selectList(
@@ -86,7 +174,6 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
             }
         }
 
-        return PageResult.of(result);
     }
 
     @Override
@@ -215,6 +302,180 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
     }
 
     // ==================== 私有方法 ====================
+
+    private void importUser(UserExcelCodec.UserRow row, String initialPassword, Long operatorId,
+                            Set<String> importedAccounts, UserImportOptions options) {
+        String account = trim(row.account());
+        if (account.isBlank()) {
+            throw new BizException(ResultCode.BAD_REQUEST, "账号不能为空");
+        }
+        if (!account.matches("^[\\p{L}\\p{N}._-]{1,64}$")) {
+            throw new BizException(ResultCode.BAD_REQUEST, "账号仅支持字母、数字、点、下划线和短横线");
+        }
+        if (getBaseMapper().selectByAccount(account) != null) {
+            throw new BizException(ResultCode.DATA_EXISTS, "账号已存在");
+        }
+        String nickname = trim(row.nickname());
+        if (nickname.isBlank()) {
+            throw new BizException(ResultCode.BAD_REQUEST, "昵称不能为空");
+        }
+        validateLength(nickname, 64, "昵称");
+        validateLength(trim(row.realName()), 64, "姓名");
+
+        String email = trim(row.email());
+        if (!email.matches(Constants.EMAIL_PATTERN)) {
+            throw new BizException(ResultCode.BAD_REQUEST, "邮箱格式不正确");
+        }
+        String phone = trim(row.phone());
+        if (!phone.matches(Constants.PHONE_PATTERN)) {
+            throw new BizException(ResultCode.BAD_REQUEST, "手机号格式不正确");
+        }
+
+        Integer gender = parseGender(row.gender());
+        Integer status = parseStatus(row.status());
+        Long deptId = parseChoice(row.department(), options.departmentIds(), "部门");
+        List<Long> roleIds = parseChoices(row.roles(), options.roleIds(), "角色");
+        if (!importedAccounts.add(account)) {
+            throw new BizException(ResultCode.DATA_EXISTS, "账号已存在");
+        }
+
+        SysUser user = new SysUser();
+        user.setAccount(account);
+        user.setPassword(passwordEncoder.encode(initialPassword));
+        populateUserFields(user, nickname, trim(row.realName()), email, phone,
+                gender, deptId, status);
+        user.setSuperAdmin(0);
+        user.setCreateBy(operatorId);
+        user.setUpdateBy(operatorId);
+        save(user);
+        saveUserRoles(user.getId(), roleIds);
+        }
+    private Integer parseGender(String value) {
+        String trimmed = trim(value);
+        if (trimmed.isBlank()) {
+            return 0;
+        }
+        return switch (trimmed) {
+            case "未知", "0" -> 0;
+            case "男", "1" -> 1;
+            case "女", "2" -> 2;
+            default -> throw new BizException(ResultCode.BAD_REQUEST, "性别仅支持未知、男或女");
+        };
+    }
+
+    private Integer parseStatus(String value) {
+        String trimmed = trim(value);
+        if (trimmed.isBlank()) {
+            return 1;
+        }
+        return switch (trimmed) {
+            case "启用", "1" -> 1;
+            case "停用", "0" -> 0;
+            default -> throw new BizException(ResultCode.BAD_REQUEST, "状态仅支持启用或停用");
+        };
+    }
+
+    private Long parseChoice(String value, Map<String, Long> choices, String field) {
+        String trimmed = trim(value);
+        if (trimmed.isBlank()) {
+            return null;
+        }
+        Long id = choices.get(trimmed);
+        if (id == null) {
+            throw new BizException(ResultCode.DATA_NOT_FOUND, field + "不存在或已停用");
+        }
+        return id;
+    }
+
+    private List<Long> parseChoices(String value, Map<String, Long> choices, String field) {
+        String trimmed = trim(value).replace('，', ',');
+        if (trimmed.isBlank()) {
+            return List.of();
+        }
+        List<Long> roleIds = new ArrayList<>();
+        for (String choice : trimmed.split(",")) {
+            Long id = parseChoice(choice, choices, field);
+            if (!roleIds.contains(id)) {
+                roleIds.add(id);
+            }
+        }
+        return roleIds;
+    }
+
+    private String trim(String value) {
+        return value == null ? "" : value.trim();
+    }
+
+    private void validateLength(String value, int maxLength, String field) {
+        if (value.length() > maxLength) {
+            throw new BizException(ResultCode.BAD_REQUEST, field + "长度不能超过" + maxLength + "个字符");
+        }
+    }
+
+    private UserImportOptions loadUserImportOptions() {
+        List<SysDept> allDepts = deptMapper.selectListBySortOrder();
+        Map<Long, SysDept> deptById = allDepts.stream()
+                .collect(Collectors.toMap(SysDept::getId, dept -> dept));
+        Map<Long, String> departmentLabels = new LinkedHashMap<>();
+        Map<String, Long> departmentIds = new HashMap<>();
+        allDepts.stream()
+                .filter(dept -> Integer.valueOf(1).equals(dept.getStatus()))
+                .forEach(dept -> {
+                    String label = departmentLabel(dept, deptById);
+                    departmentLabels.put(dept.getId(), label);
+                    departmentIds.put(label, dept.getId());
+                });
+
+        List<SysRole> roles = roleMapper.selectList(new LambdaQueryWrapper<SysRole>()
+                .eq(SysRole::getStatus, 1)
+                .orderByAsc(SysRole::getSort));
+        Map<Long, String> roleLabels = new LinkedHashMap<>();
+        Map<String, Long> roleIds = new HashMap<>();
+        roles.forEach(role -> {
+            String label = roleLabel(role);
+            roleLabels.put(role.getId(), label);
+            roleIds.put(label, role.getId());
+        });
+        return new UserImportOptions(departmentLabels, departmentIds, roleLabels, roleIds);
+    }
+
+    private String departmentLabel(SysDept dept, Map<Long, SysDept> deptById) {
+        List<String> names = new ArrayList<>();
+        Set<Long> visited = new HashSet<>();
+        SysDept current = dept;
+        while (current != null && visited.add(current.getId())) {
+            names.add(current.getName());
+            current = current.getParentId() == null || current.getParentId() == 0
+                    ? null
+                    : deptById.get(current.getParentId());
+        }
+        Collections.reverse(names);
+        return String.join(" / ", names);
+    }
+
+    private String roleLabel(SysRole role) {
+        return role.getName() + "（" + role.getCode() + "）";
+    }
+
+    private String genderLabel(Integer gender) {
+        return switch (gender == null ? 0 : gender) {
+            case 1 -> "男";
+            case 2 -> "女";
+            default -> "未知";
+        };
+    }
+
+    private String statusLabel(Integer status) {
+        return Integer.valueOf(1).equals(status) ? "启用" : "停用";
+    }
+
+    private String value(Object value) {
+        return value == null ? "" : String.valueOf(value);
+    }
+
+    private record UserImportOptions(Map<Long, String> departmentLabels, Map<String, Long> departmentIds,
+                                     Map<Long, String> roleLabels, Map<String, Long> roleIds) {
+    }
 
     /**
      * 填充用户字段

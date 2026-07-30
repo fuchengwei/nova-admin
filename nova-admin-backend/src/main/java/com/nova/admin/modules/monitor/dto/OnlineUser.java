@@ -1,5 +1,7 @@
 package com.nova.admin.modules.monitor.dto;
 
+import tools.jackson.databind.annotation.JsonSerialize;
+import tools.jackson.databind.ser.std.ToStringSerializer;
 import lombok.Data;
 
 import java.io.Serial;
@@ -15,6 +17,7 @@ public class OnlineUser implements Serializable {
     private String tokenKey;
     private String account;
     private String nickname;
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long deptId;
     private String loginIp;
     private String loginTime;

@@ -14,7 +14,7 @@ export interface UserFormModalProps {
   open: boolean;
   editMode: boolean;
   record: UserRecord | null;
-  roleOptions: { label: string; value: number }[];
+  roleOptions: { label: string; value: string }[];
   deptTreeData: TreeSelectNode[];
   onSubmit: (values: UserRecord, editMode: boolean, record: UserRecord | null) => Promise<boolean>;
   onClose: () => void;

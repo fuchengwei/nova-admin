@@ -45,8 +45,8 @@ public class SysDictDataController extends BaseController {
     @PostMapping
     @PreAuthorize("hasAuthority('system:dict:add')")
     @Operation(summary = "创建字典数据")
-    public R<Long> createDictData(@Valid @RequestBody DictDataCreateRequest req) {
-        return ok(sysDictDataService.createDictData(req));
+    public R<String> createDictData(@Valid @RequestBody DictDataCreateRequest req) {
+        return ok(String.valueOf(sysDictDataService.createDictData(req)));
     }
 
     @PutMapping

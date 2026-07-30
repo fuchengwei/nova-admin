@@ -91,6 +91,13 @@ BeanUtils.copyProperties(user, dto);
 - 禁止无意义注释（如 `// 获取用户列表`、`// return result`）
 - 禁止注释掉的代码提交（直接删除）
 
+### 5.1 雪花 ID 序列化
+
+对外 JSON 响应中的雪花 ID 不得输出为 JSON number，避免 JavaScript 精度丢失。`Long` 类型的
+`id`、关联 ID 以及 ID 集合分别使用 `@JsonSerialize(using = ToStringSerializer.class)` 或
+`@JsonSerialize(contentUsing = ToStringSerializer.class)`；Controller 返回新建 ID 时使用
+`R<String>`。请求参数仍可保留 `Long`，前端 ID 类型必须为 `string`。
+
 ## 6. 依赖注入
 
 使用**构造器注入**（`@RequiredArgsConstructor` + `final` 字段），不用 `@Autowired` 字段注入：

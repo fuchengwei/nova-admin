@@ -1,6 +1,6 @@
 /** antd TreeSelect / ProFormTreeSelect 通用树节点结构 */
 export interface TreeSelectNode {
-  value: number;
+  value: string;
   title: string;
   children?: TreeSelectNode[];
 }
@@ -11,7 +11,7 @@ export interface TreeSelectNode {
  * @param data 原始树形数据（为空时返回空数组）
  * @returns 转换后的树节点数组
  */
-export const toTreeSelectData = <T extends { id: number; name: string; children?: T[] }>(
+export const toTreeSelectData = <T extends { id: string; name: string; children?: T[] }>(
   data?: T[],
 ): TreeSelectNode[] => {
   if (!data) return [];

@@ -27,7 +27,7 @@ export interface LoginResult {
 }
 
 export interface UserInfo {
-  id: number;
+  id: string;
   account: string;
   nickname: string;
   realName?: string;
@@ -35,7 +35,7 @@ export interface UserInfo {
   email?: string;
   phone?: string;
   gender?: number;
-  deptId?: number;
+  deptId?: string;
   deptName?: string;
   lastLoginTime?: string;
   lastLoginIp?: string;
@@ -44,8 +44,8 @@ export interface UserInfo {
 }
 
 export interface MenuInfo {
-  id: number;
-  parentId: number;
+  id: string;
+  parentId: string;
   name: string;
   type: 'M' | 'C' | 'F';
   perms?: string;

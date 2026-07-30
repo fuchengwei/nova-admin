@@ -40,6 +40,7 @@ public class SysConfigServiceImpl extends ServiceImpl<SysConfigMapper, SysConfig
     private static final String GROUP_NOTICE = "notice";
 
     private static final long MB = 1024L * 1024L;
+    private static final String DEFAULT_USER_IMPORT_INITIAL_PASSWORD = "Nova@123";
     private static final Set<String> SPECIAL_CHARS = Set.of("!", "@", "#", "$", "%", "^", "&", "*", "(", ")", "_", "+", "-", "=", "[", "]", "{", "}", ";", "'", ":", "\"", "\\", "|", ",", ".", "<", ">", "/", "?", "`", "~");
 
     private final NovaProperties novaProperties;
@@ -130,6 +131,13 @@ public class SysConfigServiceImpl extends ServiceImpl<SysConfigMapper, SysConfig
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void updateSecuritySettings(SecuritySettingsDTO settings) {
+        String initialPassword = settings.getUserImportInitialPassword();
+        validatePassword(
+                initialPassword == null || initialPassword.isBlank()
+                        ? getUserImportInitialPassword()
+                        : initialPassword,
+                settings
+        );
         upsert(GROUP_SECURITY, "security.password.min-length", settings.getPasswordMinLength(), "number", "密码最小长度");
         upsert(GROUP_SECURITY, "security.password.require-number", settings.getPasswordRequireNumber(), "boolean", "密码要求数字");
         upsert(GROUP_SECURITY, "security.password.require-letter", settings.getPasswordRequireLetter(), "boolean", "密码要求字母");
@@ -139,6 +147,9 @@ public class SysConfigServiceImpl extends ServiceImpl<SysConfigMapper, SysConfig
         upsert(GROUP_SECURITY, "security.captcha.enabled", settings.getCaptchaEnabled(), "boolean", "验证码开关");
         upsert(GROUP_SECURITY, "security.token.access-minutes", settings.getAccessTokenExpireMinutes(), "number", "访问 Token 有效期");
         upsert(GROUP_SECURITY, "security.token.refresh-minutes", settings.getRefreshTokenExpireMinutes(), "number", "刷新 Token 有效期");
+        if (initialPassword != null && !initialPassword.isBlank()) {
+            upsert(GROUP_SECURITY, "security.user-import.initial-password", initialPassword, "string", "用户导入初始密码");
+        }
     }
 
     @Override
@@ -168,7 +179,19 @@ public class SysConfigServiceImpl extends ServiceImpl<SysConfigMapper, SysConfig
 
     @Override
     public void validatePassword(String rawPassword) {
-        SecuritySettingsDTO settings = getSecuritySettings();
+        validatePassword(rawPassword, getSecuritySettings());
+    }
+
+    @Override
+    public String getUserImportInitialPassword() {
+        return getString(
+                groupValues(GROUP_SECURITY),
+                "security.user-import.initial-password",
+                DEFAULT_USER_IMPORT_INITIAL_PASSWORD
+        );
+    }
+
+    private void validatePassword(String rawPassword, SecuritySettingsDTO settings) {
         if (rawPassword == null || rawPassword.length() < settings.getPasswordMinLength()) {
             throw new BizException(ResultCode.BAD_REQUEST, "密码长度不能小于" + settings.getPasswordMinLength() + "位");
         }

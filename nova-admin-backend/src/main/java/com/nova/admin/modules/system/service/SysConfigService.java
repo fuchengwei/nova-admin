@@ -31,5 +31,7 @@ public interface SysConfigService extends IService<SysConfig> {
 
     void validatePassword(String rawPassword);
 
+    String getUserImportInitialPassword();
+
     void validateUpload(MultipartFile file, boolean avatar);
 }

@@ -59,8 +59,8 @@ public class SysRoleController extends BaseController {
     @PostMapping
     @PreAuthorize("hasAuthority('system:role:add')")
     @Operation(summary = "创建角色")
-    public R<Long> createRole(@Valid @RequestBody RoleCreateRequest req) {
-        return ok(sysRoleService.createRole(req));
+    public R<String> createRole(@Valid @RequestBody RoleCreateRequest req) {
+        return ok(String.valueOf(sysRoleService.createRole(req)));
     }
 
     @PutMapping

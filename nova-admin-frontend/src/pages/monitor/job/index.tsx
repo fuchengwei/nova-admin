@@ -193,7 +193,7 @@ export default function JobPage() {
                 size="small"
                 aria-label={t('job.run')}
                 icon={<PlayCircleOutlined />}
-                onClick={() => runMutation.mutate(record.id as number)}
+                onClick={() => record.id && runMutation.mutate(record.id)}
               />
             </Tooltip>
           ),
@@ -204,7 +204,7 @@ export default function JobPage() {
                 size="small"
                 aria-label={t('job.pause')}
                 icon={<PauseCircleOutlined />}
-                onClick={() => pauseMutation.mutate(record.id as number)}
+                onClick={() => record.id && pauseMutation.mutate(record.id)}
               />
             </Tooltip>
           ) : record.status !== 1 && canResume ? (
@@ -214,7 +214,7 @@ export default function JobPage() {
                 size="small"
                 aria-label={t('job.resume')}
                 icon={<CaretRightOutlined />}
-                onClick={() => resumeMutation.mutate(record.id as number)}
+                onClick={() => record.id && resumeMutation.mutate(record.id)}
               />
             </Tooltip>
           ) : null,
@@ -236,7 +236,7 @@ export default function JobPage() {
             <Popconfirm
               key="del"
               title={t('job.deleteConfirm')}
-              onConfirm={() => deleteMutation.mutate(record.id as number)}
+              onConfirm={() => record.id && deleteMutation.mutate(record.id)}
               okText={t('common.confirm')}
               cancelText={t('common.cancel')}
               okButtonProps={{ danger: true }}

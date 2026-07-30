@@ -160,6 +160,12 @@ export default {
     createSuccess: 'Created successfully',
     updateSuccess: 'Updated successfully',
     deleteSuccess: 'Deleted successfully',
+    importUsers: 'Import Users',
+    exportUsers: 'Export Users',
+    downloadImportTemplate: 'Download Import Template',
+    importSuccess: '{{count}} users imported successfully',
+    importResult: 'User Import Result',
+    importSummary: '{{total}} rows processed, {{success}} succeeded, {{failed}} failed.',
   },
   role: {
     roleName: 'Role Name',
@@ -505,6 +511,9 @@ export default {
     passwordRequireNumber: 'Require Numbers',
     passwordRequireLetter: 'Require Letters',
     passwordRequireSpecial: 'Require Special Characters',
+    userImportInitialPassword: 'User Import Initial Password',
+    userImportInitialPasswordHint:
+      'Leave blank to keep the current password. This value is never returned.',
     securitySaveSuccess: 'Security policy saved and applies to subsequent authentication requests',
     loginLockMaxAttempts: 'Max Failed Attempts',
     loginLockMinutes: 'Lock Minutes',

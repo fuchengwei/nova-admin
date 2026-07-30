@@ -1,6 +1,8 @@
 package com.nova.admin.modules.system.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import tools.jackson.databind.annotation.JsonSerialize;
+import tools.jackson.databind.ser.std.ToStringSerializer;
 import lombok.Builder;
 import lombok.Data;
 
@@ -21,6 +23,7 @@ public class RoleDetailDTO implements Serializable {
     private static final long serialVersionUID = 1L;
 
     @Schema(description = "角色ID")
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long id;
 
     @Schema(description = "角色名称")
@@ -48,5 +51,6 @@ public class RoleDetailDTO implements Serializable {
     private LocalDateTime updateTime;
 
     @Schema(description = "菜单ID列表")
+    @JsonSerialize(contentUsing = ToStringSerializer.class)
     private List<Long> menuIds;
 }

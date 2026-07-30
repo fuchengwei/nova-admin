@@ -55,7 +55,7 @@ export default function MenuPage() {
   const deleteMutation = useMutation({ mutationFn: deleteMenu });
 
   const menuMap = useMemo(() => {
-    const map = new Map<number, MenuInfo>();
+    const map = new Map<string, MenuInfo>();
     const walk = (nodes: MenuInfo[]) => {
       for (const n of nodes) {
         map.set(n.id, n);
@@ -71,7 +71,7 @@ export default function MenuPage() {
       setSelectedMenu(null);
       return;
     }
-    setSelectedMenu(menuMap.get(Number(selectedKeys[0])) ?? null);
+    setSelectedMenu(menuMap.get(String(selectedKeys[0])) ?? null);
   };
 
   const handleAdd = () => {
@@ -292,7 +292,7 @@ export default function MenuPage() {
                 alwaysShow: selectedMenu.alwaysShow,
               }
             : {
-                parentId: selectedMenu?.id ?? 0,
+                parentId: selectedMenu?.id ?? '0',
                 type: 'M',
                 sort: 0,
                 visible: 1,
@@ -324,7 +324,7 @@ export default function MenuPage() {
             label={t('menu.parentMenu')}
             rules={[{ required: true, message: t('menu.parentMenuRequired') }]}
             fieldProps={{
-              treeData: [{ value: 0, title: t('menu.rootMenu'), children: treeSelectData }],
+              treeData: [{ value: '0', title: t('menu.rootMenu'), children: treeSelectData }],
               allowClear: true,
               treeDefaultExpandAll: true,
               placeholder: t('menu.parentMenu'),

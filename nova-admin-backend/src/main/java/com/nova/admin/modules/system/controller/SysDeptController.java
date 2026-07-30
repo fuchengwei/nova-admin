@@ -50,8 +50,8 @@ public class SysDeptController extends BaseController {
     @PostMapping
     @PreAuthorize("hasAuthority('system:dept:add')")
     @Operation(summary = "创建部门")
-    public R<Long> createDept(@Valid @RequestBody DeptCreateRequest req) {
-        return ok(sysDeptService.createDept(req));
+    public R<String> createDept(@Valid @RequestBody DeptCreateRequest req) {
+        return ok(String.valueOf(sysDeptService.createDept(req)));
     }
 
     @PutMapping

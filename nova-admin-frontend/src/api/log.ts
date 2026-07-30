@@ -10,7 +10,7 @@ export interface OperationLogRecord {
   requestUrl?: string;
   javaMethod?: string;
   javaArgs?: string;
-  userId?: number;
+  userId?: string;
   account?: string;
   ip?: string;
   userAgent?: string;

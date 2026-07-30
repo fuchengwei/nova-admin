@@ -1,6 +1,8 @@
 package com.nova.admin.modules.system.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import tools.jackson.databind.annotation.JsonSerialize;
+import tools.jackson.databind.ser.std.ToStringSerializer;
 import lombok.Builder;
 import lombok.Data;
 
@@ -18,6 +20,7 @@ public class UserInfoDTO implements Serializable {
     private static final long serialVersionUID = 1L;
 
     @Schema(description = "用户 ID")
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long id;
 
     @Schema(description = "账号")
@@ -42,6 +45,7 @@ public class UserInfoDTO implements Serializable {
     private Integer gender;
 
     @Schema(description = "部门 ID")
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long deptId;
 
     @Schema(description = "部门名称")

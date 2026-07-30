@@ -2,8 +2,8 @@ import { request } from '@/utils/request';
 import type { R } from '@/types/api';
 
 export interface DeptTreeNode {
-  id: number;
-  parentId: number;
+  id: string;
+  parentId: string;
   name: string;
   code?: string;
   leader?: string;
@@ -16,7 +16,7 @@ export interface DeptTreeNode {
 }
 
 export interface DeptCreateRequest {
-  parentId: number;
+  parentId: string;
   name: string;
   code?: string;
   leader?: string;
@@ -27,7 +27,7 @@ export interface DeptCreateRequest {
 }
 
 export interface DeptUpdateRequest extends DeptCreateRequest {
-  id: number;
+  id: string;
 }
 
 /** 获取部门树 */
@@ -35,17 +35,17 @@ export const getDeptTree = () =>
   request<R<DeptTreeNode[]>>({ url: '/system/dept/tree', method: 'GET' });
 
 /** 获取排除某节点的部门树 */
-export const getDeptTreeExclude = (id: number) =>
+export const getDeptTreeExclude = (id: string) =>
   request<R<DeptTreeNode[]>>({ url: `/system/dept/tree/exclude/${id}`, method: 'GET' });
 
 /** 创建部门 */
 export const createDept = (data: DeptCreateRequest) =>
-  request<R<void>>({ url: '/system/dept', method: 'POST', data });
+  request<R<string>>({ url: '/system/dept', method: 'POST', data });
 
 /** 更新部门 */
 export const updateDept = (data: DeptUpdateRequest) =>
   request<R<void>>({ url: '/system/dept', method: 'PUT', data });
 
 /** 删除部门 */
-export const deleteDept = (id: number) =>
+export const deleteDept = (id: string) =>
   request<R<void>>({ url: `/system/dept/${id}`, method: 'DELETE' });

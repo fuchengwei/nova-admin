@@ -5,7 +5,9 @@ import com.nova.admin.common.api.PageResult;
 import com.nova.admin.modules.system.dto.UserCreateRequest;
 import com.nova.admin.modules.system.dto.UserPageQuery;
 import com.nova.admin.modules.system.dto.UserUpdateRequest;
+import com.nova.admin.modules.system.dto.UserImportResultDTO;
 import com.nova.admin.modules.system.entity.SysUser;
+import org.springframework.web.multipart.MultipartFile;
 
 /**
  * 用户 Service
@@ -41,4 +43,10 @@ public interface SysUserService extends IService<SysUser> {
      * 更新状态
      */
     void updateStatus(Long id, Integer status);
+
+    byte[] exportUsers(UserPageQuery query);
+
+    byte[] userImportTemplate();
+
+    UserImportResultDTO importUsers(MultipartFile file);
 }

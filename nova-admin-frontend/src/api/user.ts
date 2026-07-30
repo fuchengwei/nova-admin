@@ -2,7 +2,7 @@ import { request } from '@/utils/request';
 import type { R, PageResult } from '@/types/api';
 
 export interface UserRecord {
-  id: number;
+  id: string;
   account: string;
   nickname?: string;
   realName?: string;
@@ -10,14 +10,14 @@ export interface UserRecord {
   email?: string;
   phone?: string;
   gender?: number;
-  deptId?: number;
+  deptId?: string;
   deptName?: string;
   superAdmin?: number;
   status?: number;
   lastLoginTime?: string;
   lastLoginIp?: string;
   createTime?: string;
-  roleIds?: number[];
+  roleIds?: string[];
 }
 
 export interface UserCreateRequest {
@@ -27,13 +27,13 @@ export interface UserCreateRequest {
   email?: string;
   phone?: string;
   gender?: number;
-  deptId?: number;
+  deptId?: string;
   status: number;
-  roleIds?: number[];
+  roleIds?: string[];
 }
 
 export interface UserUpdateRequest extends Partial<Omit<UserCreateRequest, 'password'>> {
-  id: number;
+  id: string;
   password?: string;
 }
 
@@ -44,23 +44,42 @@ export interface UserPageParams {
   nickname?: string;
   phone?: string;
   status?: number;
-  deptId?: number;
+  deptId?: string;
+}
+
+export interface UserImportResult {
+  total: number;
+  success: number;
+  failed: number;
+  errors: string[];
 }
 
 export const getUserPage = (params: UserPageParams) =>
   request<R<PageResult<UserRecord>>>({ url: '/system/user/page', method: 'GET', params });
 
 export const createUser = (data: UserCreateRequest) =>
-  request<R<void>>({ url: '/system/user', method: 'POST', data });
+  request<R<string>>({ url: '/system/user', method: 'POST', data });
 
 export const updateUser = (data: UserUpdateRequest) =>
   request<R<void>>({ url: '/system/user', method: 'PUT', data });
 
-export const deleteUser = (id: number) =>
+export const deleteUser = (id: string) =>
   request<R<void>>({ url: `/system/user/${id}`, method: 'DELETE' });
 
-export const resetPassword = (id: number, password: string) =>
+export const resetPassword = (id: string, password: string) =>
   request<R<void>>({ url: `/system/user/${id}/reset-password`, method: 'PUT', data: { password } });
 
-export const updateUserStatus = (id: number, status: number) =>
+export const updateUserStatus = (id: string, status: number) =>
   request<R<void>>({ url: `/system/user/${id}/status`, method: 'PUT', data: { status } });
+
+export const exportUsers = (params: UserPageParams) =>
+  request<Blob>({ url: '/system/user/export', method: 'GET', params, responseType: 'blob' });
+
+export const getUserImportTemplate = () =>
+  request<Blob>({ url: '/system/user/import-template', method: 'GET', responseType: 'blob' });
+
+export const importUsers = (file: File) => {
+  const data = new FormData();
+  data.append('file', file);
+  return request<R<UserImportResult>>({ url: '/system/user/import', method: 'POST', data });
+};

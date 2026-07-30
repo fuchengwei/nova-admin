@@ -34,6 +34,13 @@ public SysUser getById(@PathVariable Long id) { ... }
 }
 ```
 
+### 1.1 雪花 ID 响应约定
+
+所有雪花 ID 在 JSON 响应中必须是字符串，不能返回 JSON number。适用字段包括实体/DTO 的
+`id`、`parentId`、`userId`、`deptId`、`roleId`、`menuId`、`typeId` 及 ID 数组；创建接口返回
+新 ID 时使用 `R<String>`。前端对应类型统一为 `string`，路径参数和请求体仍可传字符串，由后端
+转换为 `Long`。分页数量、文件大小和耗时等普通数值保持 number。
+
 ## 2. 分页规范
 
 请求参数继承 `PageQuery`：

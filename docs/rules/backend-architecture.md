@@ -17,6 +17,19 @@ Controller  →  Service  →  Mapper  →  Database
 | Entity | 纯数据模型，`@TableName` 注解 | 业务方法；直接暴露给前端 |
 | DTO | 传输对象，面向 API | ORM 注解 |
 
+## 1.1 雪花 ID 与 JSON 边界
+
+项目使用 MyBatis-Plus `ASSIGN_ID` 生成雪花 `Long`。雪花 ID 通常超过 JavaScript
+`Number.MAX_SAFE_INTEGER`，因此所有出现在 HTTP JSON 响应中的 ID 字段必须序列化为字符串，
+包括 `id`、`parentId`、`userId`、`deptId`、`roleId`、`menuId`、`typeId` 及其 `List<Long>` 集合。
+
+- Entity/DTO 的 ID 字段使用 `@JsonSerialize(using = ToStringSerializer.class)`。
+- `List<Long>` ID 集合使用 `@JsonSerialize(contentUsing = ToStringSerializer.class)`。
+- 创建接口返回新 ID 时，Controller 必须将 `Long` 转为 `String` 后放入 `R<String>`。
+- 路径参数和请求体中的 ID 后端仍可使用 `Long` 接收，Jackson/Spring 负责将字符串转换为 `Long`。
+- 禁止在前端将雪花 ID 建模为 `number`，表格 `rowKey`、URL 拼接和 ID 关联字段统一使用 `string`。
+- 普通数值（分页总数、文件大小、耗时、统计值）不属于 ID，不应套用该序列化规则。
+
 ## 2. 包结构
 
 ```

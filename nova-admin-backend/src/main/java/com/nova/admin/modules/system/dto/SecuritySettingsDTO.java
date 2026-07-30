@@ -1,8 +1,10 @@
 package com.nova.admin.modules.system.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.Size;
 import lombok.Data;
 
 import java.io.Serial;
@@ -28,6 +30,11 @@ public class SecuritySettingsDTO implements Serializable {
 
     @Schema(description = "是否要求包含特殊字符")
     private Boolean passwordRequireSpecial;
+
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
+    @Size(max = 64, message = "导入初始密码长度不能超过64")
+    @Schema(description = "用户导入初始密码，仅提交时更新，不会回传")
+    private String userImportInitialPassword;
 
     @Min(value = 1, message = "登录失败锁定次数不能小于1")
     @Max(value = 20, message = "登录失败锁定次数不能大于20")

@@ -34,4 +34,35 @@
         ORDER BY u.create_time DESC
     </select>
 
+    <select id="selectUserList" resultType="com.nova.admin.modules.system.entity.SysUser">
+        SELECT u.*, d.name AS dept_name
+        FROM sys_user u
+        LEFT JOIN sys_dept d ON d.id = u.dept_id AND d.deleted = 0
+        <where>
+            u.deleted = 0
+            <if test="query.account != null">
+                AND u.account LIKE CONCAT('%', #{query.account}, '%')
+            </if>
+            <if test="query.nickname != null">
+                AND u.nickname LIKE CONCAT('%', #{query.nickname}, '%')
+            </if>
+            <if test="query.phone != null">
+                AND u.phone LIKE CONCAT('%', #{query.phone}, '%')
+            </if>
+            <if test="query.status != null">
+                AND u.status = #{query.status}
+            </if>
+            <if test="query.deptId != null">
+                AND u.dept_id = #{query.deptId}
+            </if>
+            <if test="query.createTimeStart != null">
+                AND u.create_time &gt;= #{query.createTimeStart}
+            </if>
+            <if test="query.createTimeEnd != null">
+                AND u.create_time &lt;= #{query.createTimeEnd}
+            </if>
+        </where>
+        ORDER BY u.create_time DESC
+    </select>
+
 </mapper>
