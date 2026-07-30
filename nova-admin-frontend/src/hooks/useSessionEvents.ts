@@ -4,7 +4,8 @@ import { getApiBaseUrl, getToken } from '@/utils/request';
 const RECONNECT_DELAY_MS = 3_000;
 
 interface UseSessionEventsOptions {
-  onSessionRevoked: () => void;
+  /** 返回 true 时执行强制退出，false 表示当前事件由调用方静默处理。 */
+  onSessionRevoked: () => boolean;
 }
 
 export function useSessionEvents({ onSessionRevoked }: UseSessionEventsOptions): void {
@@ -16,10 +17,11 @@ export function useSessionEvents({ onSessionRevoked }: UseSessionEventsOptions):
     let retryTimer: ReturnType<typeof setTimeout> | undefined;
     let abortController: AbortController | undefined;
 
-    const handleRevoked = () => {
-      if (stopped) return;
-      stopped = true;
-      callbackRef.current();
+    const handleRevoked = (): boolean => {
+      if (stopped) return true;
+      const handled = callbackRef.current();
+      if (handled) stopped = true;
+      return handled;
     };
 
     const scheduleReconnect = () => {
@@ -45,7 +47,7 @@ export function useSessionEvents({ onSessionRevoked }: UseSessionEventsOptions):
           const event = buffer.slice(0, boundary);
           buffer = buffer.slice(boundary + 2);
           if (/event:\s*session-revoked/.test(event)) {
-            handleRevoked();
+            if (!handleRevoked()) scheduleReconnect();
             return;
           }
           boundary = buffer.indexOf('\n\n');
@@ -68,7 +70,7 @@ export function useSessionEvents({ onSessionRevoked }: UseSessionEventsOptions):
         });
         const contentType = response.headers.get('content-type') ?? '';
         if (response.status === 401 || response.status === 403) {
-          handleRevoked();
+          if (!handleRevoked()) scheduleReconnect();
           return;
         }
         if (!response.ok) {
@@ -76,7 +78,7 @@ export function useSessionEvents({ onSessionRevoked }: UseSessionEventsOptions):
           return;
         }
         if (!contentType.includes('text/event-stream')) {
-          handleRevoked();
+          if (!handleRevoked()) scheduleReconnect();
           return;
         }
         await consumeEvents(response);

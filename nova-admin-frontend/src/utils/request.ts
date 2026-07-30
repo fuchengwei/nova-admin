@@ -8,6 +8,8 @@ import type { R, LoginResult } from '@/types/api';
 const TOKEN_KEY = 'nova_access_token';
 const REFRESH_KEY = 'nova_refresh_token';
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
+const PASSWORD_CHANGE_REQUIRED_CODE = 1008;
+let suppressAuthExpiryFeedback = false;
 
 function showError(content: string): void {
   message.error(content);
@@ -23,6 +25,11 @@ export const setToken = (access: string, refresh: string) => {
 export const clearTokens = () => {
   localStorage.removeItem(TOKEN_KEY);
   localStorage.removeItem(REFRESH_KEY);
+};
+
+/** 标记当前会话由用户主动流程结束，不展示通用的登录失效提示。 */
+export const setAuthExpiryFeedbackSuppressed = (suppressed: boolean) => {
+  suppressAuthExpiryFeedback = suppressed;
 };
 
 /** 扩展 axios 配置：标记跳过鉴权刷新 / 标记已刷新重试 */
@@ -114,12 +121,14 @@ let lastForceLogoutAt = 0;
 const FORCE_LOGOUT_INTERVAL = 2000;
 function forceLogout(reason: 'noToken' | 'refreshFailed'): void {
   const now = Date.now();
-  if (now - lastForceLogoutAt < FORCE_LOGOUT_INTERVAL) return;
+  if (!suppressAuthExpiryFeedback && now - lastForceLogoutAt < FORCE_LOGOUT_INTERVAL) return;
   lastForceLogoutAt = now;
 
-  const text =
-    reason === 'noToken' ? httpConfig.authExpiredMessage : httpConfig.refreshFailedMessage;
-  showError(resolveText(text));
+  if (!suppressAuthExpiryFeedback) {
+    const text =
+      reason === 'noToken' ? httpConfig.authExpiredMessage : httpConfig.refreshFailedMessage;
+    showError(resolveText(text));
+  }
 
   clearTokens();
   useUserStore.getState().reset();
@@ -162,6 +171,11 @@ function retryRequest(config: AxiosRequestConfig): Promise<unknown> {
  * 多个请求同时 401 时，仅发起一次刷新，其余排队等待重试。
  */
 function handleUnauthorized(config: AxiosRequestConfig | undefined): Promise<unknown> {
+  if (suppressAuthExpiryFeedback) {
+    forceLogout('refreshFailed');
+    return Promise.reject(new Error('Session ended after password change'));
+  }
+
   if (!config) {
     forceLogout('noToken');
     return Promise.reject(new Error('Request config missing'));
@@ -224,6 +238,9 @@ service.interceptors.response.use(
     }
 
     if (status === 403) {
+      if (code === PASSWORD_CHANGE_REQUIRED_CODE) {
+        return Promise.reject(error);
+      }
       showError(resolveText(httpConfig.forbiddenMessage));
     } else if (code && code !== 0) {
       showError(msg);

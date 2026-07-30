@@ -12,6 +12,7 @@ import com.nova.admin.modules.system.entity.SysDept;
 import com.nova.admin.modules.system.mapper.SysDeptMapper;
 import com.nova.admin.modules.system.mapper.SysMenuMapper;
 import com.nova.admin.modules.system.mapper.SysUserMapper;
+import com.nova.admin.modules.system.service.PasswordLifecyclePolicy;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -32,6 +33,7 @@ public class AuthQueryService {
     private final SysUserMapper userMapper;
     private final SysDeptMapper deptMapper;
     private final SysMenuMapper menuMapper;
+    private final PasswordLifecyclePolicy passwordLifecyclePolicy;
 
     public UserInfoDTO currentUserInfo(Long userId) {
         SysUser user = userMapper.selectById(userId);
@@ -54,6 +56,7 @@ public class AuthQueryService {
                 .deptName(resolveDeptName(user))
                 .lastLoginTime(user.getLastLoginTime())
                 .lastLoginIp(user.getLastLoginIp())
+                .passwordChangeRequired(passwordLifecyclePolicy.isPasswordChangeRequired(lu))
                 .roles(lu.getRoles() == null ? List.of() : new ArrayList<>(lu.getRoles()))
                 .permissions(lu.getPermissions() == null ? List.of() : new ArrayList<>(lu.getPermissions()))
                 .build();

@@ -6,6 +6,7 @@ import { ProForm, ProFormText } from '@ant-design/pro-components';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { getCaptcha, login } from '@/api/auth';
+import { useUserStore } from '@/stores/userStore';
 import { getToken } from '@/utils/request';
 
 const { Title, Text } = Typography;
@@ -27,6 +28,8 @@ export default function LoginPage() {
   const { t } = useTranslation();
   const { token } = antdTheme.useToken();
   const loadingRef = useRef(false);
+  const setUserInfo = useUserStore((state) => state.setUserInfo);
+  const resetUser = useUserStore((state) => state.reset);
 
   useEffect(() => {
     if (getToken()) {
@@ -72,8 +75,15 @@ export default function LoginPage() {
         ...(captchaEnabled ? { captchaKey, captchaCode: values.captchaCode } : {}),
       });
       if (res.code === 0) {
+        resetUser();
+        setUserInfo(res.data.userInfo);
         message.success(t('login.welcome'));
-        navigate(params.get('redirect') || '/dashboard', { replace: true });
+        navigate(
+          res.data?.passwordChangeRequired ? '/profile' : params.get('redirect') || '/dashboard',
+          {
+            replace: true,
+          },
+        );
       } else {
         message.error(res.msg || t('common.fail'));
         loadCaptcha();

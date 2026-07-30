@@ -355,6 +355,10 @@ export default function SystemSettingsPage() {
                   value: displayText(securityData?.passwordMinLength),
                 },
                 {
+                  label: t('settings.passwordExpireDays'),
+                  value: displayText(securityData?.passwordExpireDays),
+                },
+                {
                   label: t('settings.captchaEnabled'),
                   value: badge(
                     Boolean(securityData?.captchaEnabled),
@@ -561,6 +565,10 @@ export default function SystemSettingsPage() {
                       t('menu.yes'),
                       t('menu.no'),
                     )}
+                  />
+                  <MetaRow
+                    label={t('settings.passwordExpireDays')}
+                    value={displayText(securityData?.passwordExpireDays)}
                   />
                 </MetaPanel>
                 <MetaPanel title={t('settings.loginProtection')}>

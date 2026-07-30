@@ -115,13 +115,26 @@ public class AuthSessionService {
     }
 
     public void revokeSession(LoginSession session) {
-        authSessionEventService.notifyRevoked(session.getAccessJti());
+        revokeSession(session, true);
+    }
+
+    private void revokeSession(LoginSession session, boolean notifyBrowser) {
+        if (notifyBrowser) {
+            authSessionEventService.notifyRevoked(session.getAccessJti());
+        }
         redisTemplate.delete(sessionKey(session.getAccessJti()));
         redisTemplate.delete(refreshKey(session.getRefreshJti()));
         redisTemplate.opsForSet().remove(userSessionsKey(session.getUserId()), session.getRefreshJti());
     }
 
     public void revokeAllByUserId(Long userId) {
+        revokeAllByUserId(userId, null);
+    }
+
+    /**
+     * 撤销指定用户的所有会话，并可跳过向发起当前操作的浏览器发送撤销事件。
+     */
+    public void revokeAllByUserId(Long userId, String silentAccessJti) {
         String userSessionsKey = userSessionsKey(userId);
         Set<Object> refreshJtis = redisTemplate.opsForSet().members(userSessionsKey);
         if (refreshJtis != null) {
@@ -129,7 +142,7 @@ public class AuthSessionService {
                 if (refreshJti instanceof String value) {
                     LoginSession session = findByRefreshJti(value);
                     if (session != null) {
-                        revokeSession(session);
+                        revokeSession(session, !session.getAccessJti().equals(silentAccessJti));
                     }
                 }
             }

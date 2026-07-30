@@ -31,6 +31,7 @@ public enum ResultCode {
     USER_NOT_FOUND(1005, "用户不存在"),
     USERNAME_EXISTS(1006, "用户名已存在"),
     PASSWORD_NOT_MATCH(1007, "原密码不正确"),
+    PASSWORD_CHANGE_REQUIRED(1008, "请先修改密码后再继续操作"),
 
     TOKEN_INVALID(1101, "Token 无效或已过期"),
     TOKEN_EXPIRED(1102, "Token 已过期"),

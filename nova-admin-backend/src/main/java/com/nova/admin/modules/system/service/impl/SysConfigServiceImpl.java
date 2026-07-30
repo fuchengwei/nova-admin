@@ -21,6 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Arrays;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -66,6 +67,7 @@ public class SysConfigServiceImpl extends ServiceImpl<SysConfigMapper, SysConfig
         dto.setPasswordRequireNumber(getBool(values, "security.password.require-number", dto.getPasswordRequireNumber()));
         dto.setPasswordRequireLetter(getBool(values, "security.password.require-letter", dto.getPasswordRequireLetter()));
         dto.setPasswordRequireSpecial(getBool(values, "security.password.require-special", dto.getPasswordRequireSpecial()));
+        dto.setPasswordExpireDays(getInt(values, "security.password.expire-days", dto.getPasswordExpireDays()));
         dto.setLoginLockMaxAttempts(getInt(values, "security.login.max-attempts", dto.getLoginLockMaxAttempts()));
         dto.setLoginLockMinutes(getInt(values, "security.login.lock-minutes", dto.getLoginLockMinutes()));
         dto.setCaptchaEnabled(getBool(values, "security.captcha.enabled", dto.getCaptchaEnabled()));
@@ -142,6 +144,7 @@ public class SysConfigServiceImpl extends ServiceImpl<SysConfigMapper, SysConfig
         upsert(GROUP_SECURITY, "security.password.require-number", settings.getPasswordRequireNumber(), "boolean", "密码要求数字");
         upsert(GROUP_SECURITY, "security.password.require-letter", settings.getPasswordRequireLetter(), "boolean", "密码要求字母");
         upsert(GROUP_SECURITY, "security.password.require-special", settings.getPasswordRequireSpecial(), "boolean", "密码要求特殊字符");
+        upsert(GROUP_SECURITY, "security.password.expire-days", settings.getPasswordExpireDays(), "number", "密码有效期（天）");
         upsert(GROUP_SECURITY, "security.login.max-attempts", settings.getLoginLockMaxAttempts(), "number", "登录失败锁定次数");
         upsert(GROUP_SECURITY, "security.login.lock-minutes", settings.getLoginLockMinutes(), "number", "登录锁定分钟数");
         upsert(GROUP_SECURITY, "security.captcha.enabled", settings.getCaptchaEnabled(), "boolean", "验证码开关");
@@ -180,6 +183,13 @@ public class SysConfigServiceImpl extends ServiceImpl<SysConfigMapper, SysConfig
     @Override
     public void validatePassword(String rawPassword) {
         validatePassword(rawPassword, getSecuritySettings());
+    }
+
+    @Override
+    public boolean isPasswordExpired(LocalDateTime passwordChangedAt) {
+        int expireDays = getSecuritySettings().getPasswordExpireDays();
+        return expireDays > 0 && (passwordChangedAt == null
+                || !passwordChangedAt.plusDays(expireDays).isAfter(LocalDateTime.now()));
     }
 
     @Override
@@ -325,6 +335,7 @@ public class SysConfigServiceImpl extends ServiceImpl<SysConfigMapper, SysConfig
         dto.setPasswordRequireNumber(false);
         dto.setPasswordRequireLetter(false);
         dto.setPasswordRequireSpecial(false);
+        dto.setPasswordExpireDays(0);
         dto.setLoginLockMaxAttempts(5);
         dto.setLoginLockMinutes(10);
         dto.setCaptchaEnabled(true);

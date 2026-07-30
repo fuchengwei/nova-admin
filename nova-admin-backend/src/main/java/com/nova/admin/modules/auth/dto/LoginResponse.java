@@ -28,6 +28,9 @@ public class LoginResponse implements Serializable {
     @Schema(description = "访问 Token 过期时间（秒）")
     private Long expiresIn;
 
+    @Schema(description = "是否需要立即修改密码")
+    private Boolean passwordChangeRequired;
+
     @Schema(description = "用户信息")
     private UserInfoDTO userInfo;
 }

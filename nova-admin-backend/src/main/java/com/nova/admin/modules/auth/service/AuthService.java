@@ -14,6 +14,7 @@ import com.nova.admin.modules.system.entity.SysUser;
 import com.nova.admin.modules.system.mapper.SysUserMapper;
 import com.nova.admin.modules.system.service.SysLoginLogService;
 import com.nova.admin.modules.system.service.SysConfigService;
+import com.nova.admin.modules.system.service.PasswordLifecyclePolicy;
 import io.jsonwebtoken.Claims;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -42,6 +43,7 @@ public class AuthService {
     private final AuthSessionService authSessionService;
     private final SysLoginLogService loginLogService;
     private final SysConfigService sysConfigService;
+    private final PasswordLifecyclePolicy passwordLifecyclePolicy;
 
     /** 登录 */
     public LoginResponse login(LoginRequest req, HttpServletRequest httpReq) {
@@ -152,12 +154,14 @@ public class AuthService {
                 .lastLoginIp(user.getLastLoginIp())
                 .roles(new ArrayList<>(loginUser.getRoles() == null ? List.of() : loginUser.getRoles()))
                 .permissions(new ArrayList<>(loginUser.getPermissions() == null ? List.of() : loginUser.getPermissions()))
+                .passwordChangeRequired(passwordLifecyclePolicy.isPasswordChangeRequired(loginUser))
                 .build();
         return LoginResponse.builder()
                 .tokenType("Bearer")
                 .accessToken(access)
                 .refreshToken(refresh)
                 .expiresIn(accessExpireSeconds)
+                .passwordChangeRequired(passwordLifecyclePolicy.isPasswordChangeRequired(loginUser))
                 .userInfo(userInfo)
                 .build();
     }

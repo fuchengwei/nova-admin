@@ -2,7 +2,7 @@ import { useRef, useState } from 'react';
 import { Button, Modal, Upload, type UploadProps } from 'antd';
 import { message } from '@/utils/message';
 import { DownloadOutlined, PlusOutlined, UploadOutlined } from '@ant-design/icons';
-import { PageContainer, ProTable, type ActionType } from '@ant-design/pro-components';
+import { ProTable, type ActionType } from '@ant-design/pro-components';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import {
@@ -220,50 +220,53 @@ export default function UserPage() {
   };
 
   return (
-    <PageContainer title={t('menu.user')} className="page-fill">
-      <div ref={wrapperRef} className="flex min-h-0 flex-1 flex-col">
-        <ProTable<UserRecord>
-          actionRef={actionRef}
-          rowKey="id"
-          headerTitle={t('menu.user')}
-          columns={columns}
-          style={{ height: '100%' }}
-          scroll={{ x: 1100, y: scrollY }}
-          request={async (params) => {
-            const payload = toUserPageParams(params);
-            latestQueryRef.current = payload;
-            const res = await getUserPage(payload);
-            if (res.code !== 0) return { data: [], success: false, total: 0 };
-            return {
-              data: res.data.records,
-              success: true,
-              total: res.data.total,
-            };
-          }}
-          pagination={{ pageSize: 10, showSizeChanger: true }}
-          search={{ labelWidth: 'auto' }}
-          toolBarRender={() => [
-            <Button key="add" type="primary" icon={<PlusOutlined />} onClick={handleOpenAdd}>
-              {t('user.addUser')}
-            </Button>,
-            <Upload key="import" {...importUploadProps}>
-              <Button icon={<UploadOutlined />} loading={importMutation.isPending}>
-                {t('user.importUsers')}
-              </Button>
-            </Upload>,
-            <Button key="template" icon={<DownloadOutlined />} onClick={handleDownloadTemplate}>
-              {t('user.downloadImportTemplate')}
-            </Button>,
-            <Button key="export" icon={<DownloadOutlined />} onClick={handleExport}>
-              {t('user.exportUsers')}
-            </Button>,
-          ]}
-          options={{ reload: true, density: true, setting: true }}
-          columnsState={{
-            persistenceKey: 'user-table',
-            persistenceType: 'localStorage',
-          }}
-        />
+    <div className="flex h-full min-h-0 flex-col">
+      <h2 className="mb-4 text-lg font-semibold">{t('menu.user')}</h2>
+      <div ref={wrapperRef} className="min-h-0 flex-1">
+        <div className="table-fill h-full">
+          <ProTable<UserRecord>
+            actionRef={actionRef}
+            rowKey="id"
+            headerTitle={t('menu.user')}
+            columns={columns}
+            style={{ height: '100%' }}
+            scroll={{ x: 1100, y: scrollY }}
+            request={async (params) => {
+              const payload = toUserPageParams(params);
+              latestQueryRef.current = payload;
+              const res = await getUserPage(payload);
+              if (res.code !== 0) return { data: [], success: false, total: 0 };
+              return {
+                data: res.data.records,
+                success: true,
+                total: res.data.total,
+              };
+            }}
+            pagination={{ pageSize: 10, showSizeChanger: true }}
+            search={{ labelWidth: 'auto' }}
+            toolBarRender={() => [
+              <Button key="add" type="primary" icon={<PlusOutlined />} onClick={handleOpenAdd}>
+                {t('user.addUser')}
+              </Button>,
+              <Upload key="import" {...importUploadProps}>
+                <Button icon={<UploadOutlined />} loading={importMutation.isPending}>
+                  {t('user.importUsers')}
+                </Button>
+              </Upload>,
+              <Button key="template" icon={<DownloadOutlined />} onClick={handleDownloadTemplate}>
+                {t('user.downloadImportTemplate')}
+              </Button>,
+              <Button key="export" icon={<DownloadOutlined />} onClick={handleExport}>
+                {t('user.exportUsers')}
+              </Button>,
+            ]}
+            options={{ reload: true, density: true, setting: true }}
+            columnsState={{
+              persistenceKey: 'user-table',
+              persistenceType: 'localStorage',
+            }}
+          />
+        </div>
       </div>
 
       <UserFormModal
@@ -307,6 +310,6 @@ export default function UserPage() {
           </div>
         )}
       </Modal>
-    </PageContainer>
+    </div>
   );
 }

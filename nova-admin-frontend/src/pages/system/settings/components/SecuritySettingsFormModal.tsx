@@ -43,6 +43,14 @@ export default function SecuritySettingsFormModal({
         <ProFormSwitch name="passwordRequireNumber" label={t('settings.passwordRequireNumber')} />
         <ProFormSwitch name="passwordRequireLetter" label={t('settings.passwordRequireLetter')} />
         <ProFormSwitch name="passwordRequireSpecial" label={t('settings.passwordRequireSpecial')} />
+        <ProFormDigit
+          name="passwordExpireDays"
+          label={t('settings.passwordExpireDays')}
+          min={0}
+          max={3650}
+          fieldProps={{ precision: 0 }}
+          tooltip={t('settings.passwordExpireDaysHint')}
+        />
         <ProFormText.Password
           name="userImportInitialPassword"
           label={t('settings.userImportInitialPassword')}

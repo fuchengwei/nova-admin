@@ -57,6 +57,9 @@ public class UserInfoDTO implements Serializable {
     @Schema(description = "最近登录 IP")
     private String lastLoginIp;
 
+    @Schema(description = "是否需要立即修改密码")
+    private Boolean passwordChangeRequired;
+
     @Schema(description = "角色编码列表")
     private List<String> roles;
 

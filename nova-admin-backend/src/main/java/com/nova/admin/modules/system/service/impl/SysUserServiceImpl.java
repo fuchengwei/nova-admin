@@ -42,6 +42,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.time.LocalDateTime;
 import java.util.stream.Collectors;
 
 /**
@@ -187,6 +188,8 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
         SysUser user = new SysUser();
         user.setAccount(account);
         user.setPassword(passwordEncoder.encode(req.getPassword()));
+        user.setForcePasswordChange(1);
+        user.setPasswordChangedAt(LocalDateTime.now());
         populateUserFields(user, req.getNickname(), req.getRealName(), req.getEmail(),
                 req.getPhone(), req.getGender(), req.getDeptId(), req.getStatus());
         user.setSuperAdmin(0);
@@ -271,6 +274,8 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
         SysUser user = new SysUser();
         user.setId(id);
         user.setPassword(passwordEncoder.encode(newPassword));
+        user.setForcePasswordChange(1);
+        user.setPasswordChangedAt(LocalDateTime.now());
 
         Long operatorId = SecurityUtils.requireUserId();
         user.setUpdateBy(operatorId);
@@ -342,6 +347,8 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
         SysUser user = new SysUser();
         user.setAccount(account);
         user.setPassword(passwordEncoder.encode(initialPassword));
+        user.setForcePasswordChange(1);
+        user.setPasswordChangedAt(LocalDateTime.now());
         populateUserFields(user, nickname, trim(row.realName()), email, phone,
                 gender, deptId, status);
         user.setSuperAdmin(0);

@@ -3,6 +3,7 @@ package com.nova.admin.config;
 import com.nova.admin.common.api.R;
 import com.nova.admin.common.api.ResultCode;
 import com.nova.admin.security.JwtAuthFilter;
+import com.nova.admin.security.PasswordLifecycleFilter;
 import jakarta.servlet.DispatcherType;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -36,6 +37,7 @@ public class SecurityConfig {
 
     private final NovaProperties novaProperties;
     private final JwtAuthFilter jwtAuthFilter;
+    private final PasswordLifecycleFilter passwordLifecycleFilter;
 
     /** 白名单（无需认证） */
     public static final String[] WHITELIST = {
@@ -75,7 +77,8 @@ public class SecurityConfig {
                                 HttpServletResponse.SC_FORBIDDEN,
                                 R.fail(ResultCode.FORBIDDEN,
                                         messageOrDefault(ex.getMessage(), ResultCode.FORBIDDEN)))))
-                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterAfter(passwordLifecycleFilter, JwtAuthFilter.class);
         return http.build();
     }
 

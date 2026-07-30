@@ -46,6 +46,10 @@ public class SysUser extends BaseDO {
     private Integer superAdmin;
     /** 1 启用 0 停用 */
     private Integer status;
+    /** 1 表示下次登录后必须修改密码 */
+    private Integer forcePasswordChange;
+    /** 最近一次设置密码的时间 */
+    private LocalDateTime passwordChangedAt;
     private LocalDateTime lastLoginTime;
     private String lastLoginIp;
 

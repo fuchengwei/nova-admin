@@ -14,6 +14,7 @@ import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
@@ -121,5 +122,28 @@ class AuthSessionServiceTest {
         verify(authSessionEventService).notifyRevoked("access-other");
         verify(redisTemplate).delete("nova:auth:session:access-other");
         verify(redisTemplate).delete("nova:auth:refresh:refresh-other");
+    }
+
+    @Test
+    void revokeAllByUserId_silencesInitiatingBrowserAndNotifiesOtherSessions() {
+        given(redisTemplate.opsForValue()).willReturn(valueOperations);
+        given(redisTemplate.opsForSet()).willReturn(setOperations);
+        LoginSession initiating = LoginSession.builder()
+                .userId(1L).accessJti("access-current").refreshJti("refresh-current").build();
+        LoginSession other = LoginSession.builder()
+                .userId(1L).accessJti("access-other").refreshJti("refresh-other").build();
+        given(setOperations.members("nova:auth:user-sessions:1"))
+                .willReturn(Set.of("refresh-current", "refresh-other"));
+        given(valueOperations.get("nova:auth:refresh:refresh-current")).willReturn(initiating);
+        given(valueOperations.get("nova:auth:refresh:refresh-other")).willReturn(other);
+        AuthSessionService service = new AuthSessionService(redisTemplate, authSessionEventService);
+
+        service.revokeAllByUserId(1L, "access-current");
+
+        verify(authSessionEventService, never()).notifyRevoked("access-current");
+        verify(authSessionEventService).notifyRevoked("access-other");
+        verify(redisTemplate).delete("nova:auth:session:access-current");
+        verify(redisTemplate).delete("nova:auth:session:access-other");
+        verify(redisTemplate).delete("nova:auth:user-sessions:1");
     }
 }

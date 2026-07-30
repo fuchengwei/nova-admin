@@ -80,22 +80,22 @@ body,
 /* ProTable 默认只在最外层 .ant-pro-table 设了 height: 100%，
    内部 .ant-pro-card 仍按内容自然撑高，会撑爆父容器导致分页器被挤出视口。
    这里强制 .ant-pro-table 内的卡片占满剩余空间并允许收缩。 */
-.tabs-fill .ant-pro-table {
+:is(.tabs-fill, .table-fill) .ant-pro-table {
   display: flex;
   flex-direction: column;
   min-height: 0;
 }
-.tabs-fill .ant-pro-table > .ant-pro-card {
+:is(.tabs-fill, .table-fill) .ant-pro-table > .ant-pro-card {
   flex-shrink: 0;
 }
-.tabs-fill .ant-pro-table > .ant-pro-card:has(.ant-table) {
+:is(.tabs-fill, .table-fill) .ant-pro-table > .ant-pro-card:has(.ant-table) {
   flex: 1;
   min-height: 0;
   display: flex;
   flex-direction: column;
   overflow: hidden;
 }
-.tabs-fill .ant-pro-table > .ant-pro-card:has(.ant-table) > .ant-pro-card-body {
+:is(.tabs-fill, .table-fill) .ant-pro-table > .ant-pro-card:has(.ant-table) > .ant-pro-card-body {
   flex: 1;
   min-height: 0;
   display: flex;
@@ -288,7 +288,7 @@ body,
 .announcement-dialog-actions .ant-btn {
   min-width: 88px;
 }
-.tabs-fill
+:is(.tabs-fill, .table-fill)
   .ant-pro-table
   > .ant-pro-card:has(.ant-table)
   > .ant-pro-card-body
@@ -298,7 +298,7 @@ body,
   display: flex;
   flex-direction: column;
 }
-.tabs-fill
+:is(.tabs-fill, .table-fill)
   .ant-pro-table
   > .ant-pro-card:has(.ant-table)
   > .ant-pro-card-body

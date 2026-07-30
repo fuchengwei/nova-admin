@@ -10,21 +10,27 @@ export interface PasswordFormModalProps {
   open: boolean;
   onSubmit: (values: CurrentUserPasswordUpdateRequest) => Promise<boolean>;
   onClose: () => void;
+  forceChange?: boolean;
 }
 
-export default function PasswordFormModal({ open, onSubmit, onClose }: PasswordFormModalProps) {
+export default function PasswordFormModal({ open, onSubmit, onClose, forceChange = false }: PasswordFormModalProps) {
   const { t } = useTranslation();
 
   return (
     <ModalForm<PasswordFormValues>
-      title={t('profile.changePassword')}
+      title={forceChange ? t('profile.passwordChangeRequiredTitle') : t('profile.changePassword')}
       open={open}
       onOpenChange={(visible) => {
-        if (!visible) onClose();
+        if (!visible && !forceChange) onClose();
       }}
       layout="vertical"
       width={520}
-      modalProps={{ destroyOnHidden: true }}
+      modalProps={{
+        destroyOnHidden: true,
+        closable: !forceChange,
+        mask: { closable: !forceChange },
+        keyboard: !forceChange,
+      }}
       onFinish={async (values) =>
         onSubmit({
           oldPassword: values.oldPassword,
@@ -32,6 +38,11 @@ export default function PasswordFormModal({ open, onSubmit, onClose }: PasswordF
         })
       }
     >
+      {forceChange && (
+        <p className="mb-5 text-sm text-[color:var(--ant-color-text-secondary)]">
+          {t('profile.passwordChangeRequiredDesc')}
+        </p>
+      )}
       <ProFormText.Password
         name="oldPassword"
         label={t('profile.oldPassword')}

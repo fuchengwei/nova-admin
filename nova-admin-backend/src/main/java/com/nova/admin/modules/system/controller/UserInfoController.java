@@ -17,6 +17,7 @@ import com.nova.admin.modules.system.entity.SysUser;
 import com.nova.admin.modules.system.service.AuthQueryService;
 import com.nova.admin.modules.system.service.SysConfigService;
 import com.nova.admin.modules.system.service.SysUserService;
+import com.nova.admin.security.LoginUser;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -103,9 +104,12 @@ public class UserInfoController extends BaseController {
         SysUser update = new SysUser();
         update.setId(userId);
         update.setPassword(passwordEncoder.encode(req.getNewPassword()));
+        update.setForcePasswordChange(0);
+        update.setPasswordChangedAt(java.time.LocalDateTime.now());
         update.setUpdateBy(userId);
         sysUserService.updateById(update);
-        authSessionService.revokeAllByUserId(userId);
+        String currentAccessJti = SecurityUtils.getLoginUser().map(LoginUser::getJti).orElse(null);
+        authSessionService.revokeAllByUserId(userId, currentAccessJti);
         return ok();
     }
 

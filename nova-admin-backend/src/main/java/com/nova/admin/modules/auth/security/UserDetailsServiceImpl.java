@@ -106,6 +106,8 @@ public class UserDetailsServiceImpl implements UserDetailsService {
                 .roles(roles)
                 .permissions(permissions)
                 .dataScope(dataScope)
+                .forcePasswordChange(user.getForcePasswordChange())
+                .passwordChangedAt(user.getPasswordChangedAt())
                 .loginIp(loginIp)
                 .loginTime(loginTime)
                 .build();

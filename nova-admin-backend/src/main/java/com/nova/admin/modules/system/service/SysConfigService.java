@@ -31,6 +31,9 @@ public interface SysConfigService extends IService<SysConfig> {
 
     void validatePassword(String rawPassword);
 
+    /** 当前策略下，指定密码更新时间是否已过期。 */
+    boolean isPasswordExpired(java.time.LocalDateTime passwordChangedAt);
+
     String getUserImportInitialPassword();
 
     void validateUpload(MultipartFile file, boolean avatar);

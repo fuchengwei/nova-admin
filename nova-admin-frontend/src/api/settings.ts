@@ -19,6 +19,7 @@ export interface SecuritySettings {
   passwordRequireNumber?: boolean;
   passwordRequireLetter?: boolean;
   passwordRequireSpecial?: boolean;
+  passwordExpireDays?: number;
   userImportInitialPassword?: string;
   loginLockMaxAttempts?: number;
   loginLockMinutes?: number;

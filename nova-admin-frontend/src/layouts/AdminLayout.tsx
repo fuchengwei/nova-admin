@@ -13,6 +13,7 @@ import { ProLayout } from '@ant-design/pro-components';
 import { useQuery } from '@tanstack/react-query';
 import { getPublicBasicSettings } from '@/api/settings';
 import SystemNotice from '@/components/SystemNotice';
+import PasswordChangeGate from '@/components/PasswordChangeGate';
 import { useAppStore, type Locale } from '@/stores/appStore';
 import { useUserStore } from '@/stores/userStore';
 import { clearTokens, getToken } from '@/utils/request';
@@ -48,18 +49,29 @@ export default function AdminLayout() {
   // 挂载时并行拉取用户信息 + 菜单，保证 permissions 始终是服务端最新值
   useEffect(() => {
     if (!getToken()) return;
-    Promise.all([getUserInfo(), getUserMenus()])
-      .then(([infoRes, menuRes]) => {
-        if (infoRes.code === 0 && infoRes.data) setUserInfo(infoRes.data);
+    const loadIdentity = async () => {
+      try {
+        const infoRes = await getUserInfo();
+        if (infoRes.code !== 0 || !infoRes.data) return;
+        setUserInfo(infoRes.data);
+        if (infoRes.data.passwordChangeRequired) {
+          setMenus([]);
+          return;
+        }
+        const menuRes = await getUserMenus();
         if (menuRes.code === 0 && menuRes.data) setMenus(menuRes.data);
-      })
-      .catch(() => undefined)
-      .finally(() => setMenusLoaded(true));
+      } catch {
+        // 请求拦截器统一处理登录过期和其他异常。
+      } finally {
+        setMenusLoaded(true);
+      }
+    };
+    void loadIdentity();
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   useSessionEvents({
     onSessionRevoked: () => {
-      if (ignoreSessionRevocationRef.current || !getToken()) return;
+      if (ignoreSessionRevocationRef.current || !getToken()) return false;
       clearTokens();
       reset();
       modal.warning({
@@ -68,6 +80,7 @@ export default function AdminLayout() {
         okText: t('common.confirm'),
       });
       navigate('/login', { replace: true });
+      return true;
     },
   });
 
@@ -151,6 +164,20 @@ export default function AdminLayout() {
       <div className="flex h-screen items-center justify-center">
         <Spin size="large" description={t('common.loading') ?? '加载中...'} />
       </div>
+    );
+  }
+
+  if (userInfo?.passwordChangeRequired) {
+    return (
+      <PasswordChangeGate
+        required
+        onPasswordChangeStart={() => {
+          ignoreSessionRevocationRef.current = true;
+        }}
+        onPasswordChangeFailed={() => {
+          ignoreSessionRevocationRef.current = false;
+        }}
+      />
     );
   }
 

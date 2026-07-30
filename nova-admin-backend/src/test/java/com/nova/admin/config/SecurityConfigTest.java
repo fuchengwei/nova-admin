@@ -2,6 +2,7 @@ package com.nova.admin.config;
 
 import com.nova.admin.common.api.R;
 import com.nova.admin.security.JwtAuthFilter;
+import com.nova.admin.security.PasswordLifecycleFilter;
 import jakarta.servlet.FilterChain;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -42,6 +43,9 @@ class SecurityConfigTest {
     @MockitoBean
     private JwtAuthFilter jwtAuthFilter;
 
+    @MockitoBean
+    private PasswordLifecycleFilter passwordLifecycleFilter;
+
     @Test
     void protectedEndpoint_whenUnauthenticated_returnsHttp401WithRBody() throws Exception {
         passThroughJwtFilter();
@@ -69,6 +73,11 @@ class SecurityConfigTest {
             chain.doFilter(invocation.getArgument(0), invocation.getArgument(1));
             return null;
         }).when(jwtAuthFilter).doFilter(any(), any(), any());
+        doAnswer(invocation -> {
+            FilterChain chain = invocation.getArgument(2);
+            chain.doFilter(invocation.getArgument(0), invocation.getArgument(1));
+            return null;
+        }).when(passwordLifecycleFilter).doFilter(any(), any(), any());
     }
 
     private MockMvc mockMvc() {

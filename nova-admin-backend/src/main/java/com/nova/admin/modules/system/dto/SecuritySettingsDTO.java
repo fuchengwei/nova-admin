@@ -31,6 +31,11 @@ public class SecuritySettingsDTO implements Serializable {
     @Schema(description = "是否要求包含特殊字符")
     private Boolean passwordRequireSpecial;
 
+    @Min(value = 0, message = "密码有效期不能小于0天")
+    @Max(value = 3650, message = "密码有效期不能大于3650天")
+    @Schema(description = "密码有效期（天），0 表示永不过期")
+    private Integer passwordExpireDays;
+
     @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     @Size(max = 64, message = "导入初始密码长度不能超过64")
     @Schema(description = "用户导入初始密码，仅提交时更新，不会回传")

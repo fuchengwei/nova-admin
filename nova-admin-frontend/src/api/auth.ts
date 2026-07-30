@@ -1,4 +1,4 @@
-import { request, setToken } from '@/utils/request';
+import { request, setAuthExpiryFeedbackSuppressed, setToken } from '@/utils/request';
 import type { R, CaptchaResult, LoginResult, UserInfo, MenuInfo } from '@/types/api';
 
 export interface UserSession {
@@ -26,6 +26,7 @@ export async function login(payload: {
   });
   if (res.code === 0 && res.data) {
     setToken(res.data.accessToken, res.data.refreshToken);
+    setAuthExpiryFeedbackSuppressed(false);
   }
   return res;
 }

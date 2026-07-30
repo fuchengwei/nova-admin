@@ -16,7 +16,13 @@ export interface UserColumnDeps {
 /** 用户表格列定义（页面局部逻辑） */
 export const useUserColumns = (deps: UserColumnDeps): ProColumns<UserRecord>[] => {
   const { t } = useTranslation();
-  const { onEdit, onResetPwd, onDelete, toggleStatus, toggleLoading } = deps;
+  const {
+    onEdit,
+    onResetPwd,
+    onDelete,
+    toggleStatus,
+    toggleLoading,
+  } = deps;
 
   return [
     {

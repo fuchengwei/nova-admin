@@ -6,6 +6,7 @@ import com.nova.admin.modules.system.dto.SecuritySettingsDTO;
 import com.nova.admin.modules.system.entity.SysUser;
 import com.nova.admin.modules.system.mapper.SysUserMapper;
 import com.nova.admin.modules.system.service.SysConfigService;
+import com.nova.admin.modules.system.service.PasswordLifecyclePolicy;
 import com.nova.admin.modules.system.service.SysLoginLogService;
 import com.nova.admin.security.JwtUtil;
 import com.nova.admin.security.LoginSession;
@@ -58,6 +59,9 @@ class AuthServiceTest {
     @Mock
     private SysConfigService sysConfigService;
 
+    @Mock
+    private PasswordLifecyclePolicy passwordLifecyclePolicy;
+
     @InjectMocks
     private AuthService authService;
 
@@ -85,6 +89,7 @@ class AuthServiceTest {
         given(passwordEncoder.matches("password", "encoded-password")).willReturn(true);
         given(userDetailsService.refreshCache(eq(user), any())).willReturn(loginUser);
         given(sysConfigService.getSecuritySettings()).willReturn(settings);
+        given(passwordLifecyclePolicy.isPasswordChangeRequired(loginUser)).willReturn(false);
         given(jwtUtil.generateAccessToken(1L, "admin", 5L)).willReturn("access-token");
         given(jwtUtil.generateRefreshToken(1L, "admin", 60L)).willReturn("refresh-token");
         given(jwtUtil.getExpireSeconds(5L)).willReturn(300L);
@@ -103,6 +108,7 @@ class AuthServiceTest {
         var response = authService.login(request, httpRequest);
 
         assertThat(response.getExpiresIn()).isEqualTo(300L);
+        assertThat(response.getPasswordChangeRequired()).isFalse();
         verify(jwtUtil).generateAccessToken(1L, "admin", 5L);
         verify(jwtUtil).generateRefreshToken(1L, "admin", 60L);
         ArgumentCaptor<LoginSession> sessionCaptor = ArgumentCaptor.forClass(LoginSession.class);

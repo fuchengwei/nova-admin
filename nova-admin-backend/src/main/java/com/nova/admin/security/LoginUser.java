@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 
 import java.io.Serial;
 import java.io.Serializable;
+import java.time.LocalDateTime;
 import java.util.Set;
 
 /**
@@ -42,6 +43,12 @@ public class LoginUser implements Serializable {
     /** 数据权限范围（取最高级） */
     private Integer dataScope;
 
+    /** 1 表示该账号必须修改密码后才能继续使用业务功能。 */
+    private Integer forcePasswordChange;
+
+    /** 最近一次设置密码的时间，用于计算密码有效期。 */
+    private LocalDateTime passwordChangedAt;
+
     /** 登录时间 */
     private Long loginTime;
 
@@ -61,6 +68,8 @@ public class LoginUser implements Serializable {
                 .roles(roles)
                 .permissions(permissions)
                 .dataScope(dataScope)
+                .forcePasswordChange(forcePasswordChange)
+                .passwordChangedAt(passwordChangedAt)
                 .loginTime(loginTime)
                 .loginIp(loginIp)
                 .jti(accessJti)

@@ -23,6 +23,7 @@ export interface LoginResult {
   accessToken: string;
   refreshToken: string;
   expiresIn: number;
+  passwordChangeRequired?: boolean;
   userInfo: UserInfo;
 }
 
@@ -39,6 +40,7 @@ export interface UserInfo {
   deptName?: string;
   lastLoginTime?: string;
   lastLoginIp?: string;
+  passwordChangeRequired?: boolean;
   roles: string[];
   permissions: string[];
 }

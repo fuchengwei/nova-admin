@@ -419,6 +419,8 @@ export default {
     avatarUploadSuccess: 'Avatar uploaded successfully',
     profileSaveSuccess: 'Profile saved successfully',
     passwordUpdateSuccess: 'Password updated, please log in again',
+    passwordChangeRequiredTitle: 'Password Update Required',
+    passwordChangeRequiredDesc: 'Update your password before continuing to use system features.',
     department: 'Department',
     roles: 'Roles',
     lastLoginTime: 'Last Login Time',
@@ -511,6 +513,8 @@ export default {
     passwordRequireNumber: 'Require Numbers',
     passwordRequireLetter: 'Require Letters',
     passwordRequireSpecial: 'Require Special Characters',
+    passwordExpireDays: 'Password Expiration (days)',
+    passwordExpireDaysHint: 'Set to 0 to keep passwords from expiring.',
     userImportInitialPassword: 'User Import Initial Password',
     userImportInitialPasswordHint:
       'Leave blank to keep the current password. This value is never returned.',

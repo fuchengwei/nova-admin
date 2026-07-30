@@ -75,14 +75,14 @@ public class SysUserController extends BaseController {
     }
 
     @PostMapping
-    @PreAuthorize("hasAuthority('system:user:add')")
+    @PreAuthorize("hasRole('super_admin') or hasAuthority('system:user:add')")
     @Operation(summary = "创建用户")
     public R<String> createUser(@Valid @RequestBody UserCreateRequest req) {
         return ok(String.valueOf(sysUserService.createUser(req)));
     }
 
     @PutMapping
-    @PreAuthorize("hasAuthority('system:user:edit')")
+    @PreAuthorize("hasRole('super_admin') or hasAuthority('system:user:edit')")
     @Operation(summary = "更新用户")
     public R<Void> updateUser(@Valid @RequestBody UserUpdateRequest req) {
         sysUserService.updateUser(req);
@@ -98,7 +98,7 @@ public class SysUserController extends BaseController {
     }
 
     @PutMapping("/{id}/reset-password")
-    @PreAuthorize("hasAuthority('system:user:reset-pwd')")
+    @PreAuthorize("hasRole('super_admin') or hasAuthority('system:user:reset-pwd')")
     @Operation(summary = "重置密码")
     public R<Void> resetPassword(@PathVariable Long id, @Valid @RequestBody ResetPasswordRequest body) {
         sysUserService.resetPassword(id, body.getPassword());
@@ -106,7 +106,7 @@ public class SysUserController extends BaseController {
     }
 
     @PutMapping("/{id}/status")
-    @PreAuthorize("hasAuthority('system:user:edit')")
+    @PreAuthorize("hasRole('super_admin') or hasAuthority('system:user:edit')")
     @Operation(summary = "更新用户状态")
     public R<Void> updateStatus(@PathVariable Long id, @RequestBody Map<String, Integer> body) {
         sysUserService.updateStatus(id, body.get("status"));
