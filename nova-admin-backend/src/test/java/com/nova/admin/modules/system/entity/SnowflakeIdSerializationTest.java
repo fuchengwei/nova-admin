@@ -4,6 +4,7 @@ import com.nova.admin.common.api.PageResult;
 import com.nova.admin.common.api.R;
 import com.nova.admin.modules.infra.entity.SysFile;
 import com.nova.admin.modules.job.entity.SysJob;
+import com.nova.admin.modules.job.entity.SysJobLog;
 import com.nova.admin.modules.monitor.dto.OnlineUser;
 import com.nova.admin.modules.system.dto.DeptTreeDTO;
 import com.nova.admin.modules.system.dto.MenuTreeDTO;
@@ -78,8 +79,12 @@ class SnowflakeIdSerializationTest {
     void serialize_jobId_asString() {
         SysJob job = new SysJob();
         job.setId(SNOWFLAKE_ID);
+        SysJobLog jobLog = new SysJobLog();
+        jobLog.setId(SNOWFLAKE_ID);
+        jobLog.setJobId(SNOWFLAKE_ID);
 
         assertThat(objectMapper.valueToTree(job).get("id").isTextual()).isTrue();
+        assertIdFields(objectMapper.valueToTree(jobLog), "id", "jobId");
     }
 
     private void assertIdFields(JsonNode node, String... fields) {

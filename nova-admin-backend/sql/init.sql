@@ -271,15 +271,19 @@ CREATE TABLE sys_job_log (
     id              BIGINT PRIMARY KEY,
     job_id          BIGINT NOT NULL,
     job_name        VARCHAR(64),
+    job_group       VARCHAR(64),
+    invoke_target   VARCHAR(255),
+    trigger_type    VARCHAR(16) NOT NULL,
     start_time      TIMESTAMP,
     end_time        TIMESTAMP,
     cost_ms         BIGINT,
-    status          SMALLINT,
+    status          SMALLINT NOT NULL,
     error_msg       TEXT,
     create_time     TIMESTAMP
 );
 COMMENT ON TABLE sys_job_log IS '任务执行日志';
-CREATE INDEX idx_joblog_job ON sys_job_log(job_id);
+CREATE INDEX idx_joblog_job_time ON sys_job_log(job_id, start_time DESC);
+CREATE INDEX idx_joblog_status ON sys_job_log(status);
 
 -- =====================================================
 -- 10. 系统配置

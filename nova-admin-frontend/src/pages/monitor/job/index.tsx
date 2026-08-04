@@ -9,6 +9,7 @@ import {
   PauseCircleOutlined,
   CaretRightOutlined,
   EditOutlined,
+  HistoryOutlined,
 } from '@ant-design/icons';
 import {
   ProTable,
@@ -38,6 +39,7 @@ import { useUserStore } from '@/stores/userStore';
 import { hasPermission } from '@/utils/layout';
 import CronExpressionField from './components/CronExpressionField';
 import { describeCron } from './cron';
+import JobLogDrawer from './components/JobLogDrawer';
 
 export default function JobPage() {
   const { t } = useTranslation();
@@ -55,6 +57,7 @@ export default function JobPage() {
 
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<SysJob | null>(null);
+  const [historyJob, setHistoryJob] = useState<SysJob | null>(null);
 
   const createMutation = useMutation({ mutationFn: createJob });
   const updateMutation = useMutation({ mutationFn: updateJob });
@@ -186,6 +189,15 @@ export default function JobPage() {
       fixed: 'right',
       render: (_, record) =>
         [
+          <Tooltip key="history" title={t('job.executionHistory')}>
+            <Button
+              type="text"
+              size="small"
+              aria-label={t('job.executionHistory')}
+              icon={<HistoryOutlined />}
+              onClick={() => setHistoryJob(record)}
+            />
+          </Tooltip>,
           canRun && (
             <Tooltip key="run" title={t('job.run')}>
               <Button
@@ -379,6 +391,7 @@ export default function JobPage() {
           <ProFormText className="col-span-2" name="remark" label={t('job.remark')} />
         </div>
       </ModalForm>
+      <JobLogDrawer job={historyJob} onClose={() => setHistoryJob(null)} />
     </div>
   );
 }

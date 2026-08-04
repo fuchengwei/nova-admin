@@ -2,6 +2,9 @@ package com.nova.admin.modules.job.scheduler;
 
 import com.nova.admin.common.exception.BizException;
 import com.nova.admin.modules.job.entity.SysJob;
+import com.nova.admin.modules.job.enums.JobLogStatus;
+import com.nova.admin.modules.job.enums.JobTriggerType;
+import com.nova.admin.modules.job.service.JobLogService;
 import jakarta.annotation.PreDestroy;
 import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.NonNull;
@@ -13,7 +16,9 @@ import org.springframework.scheduling.support.CronExpression;
 import org.springframework.scheduling.support.CronTrigger;
 import org.springframework.stereotype.Component;
 
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ScheduledFuture;
@@ -24,15 +29,17 @@ import java.util.concurrent.ScheduledFuture;
  */
 @Slf4j
 @Component
+@lombok.RequiredArgsConstructor
 public class JobScheduler implements ApplicationContextAware {
 
     private final ThreadPoolTaskScheduler scheduler = new ThreadPoolTaskScheduler();
     private final Map<Long, ScheduledFuture<?>> futures = new ConcurrentHashMap<>();
     /** 正在执行（禁止并发）的任务 */
     private final Map<Long, Boolean> running = new ConcurrentHashMap<>();
+    private final JobLogService jobLogService;
     private ApplicationContext applicationContext;
 
-    public JobScheduler() {
+    {
         scheduler.setPoolSize(5);
         scheduler.setThreadNamePrefix("nova-job-");
         scheduler.setWaitForTasksToCompleteOnShutdown(true);
@@ -53,7 +60,7 @@ public class JobScheduler implements ApplicationContextAware {
         cancel(job.getId());
         validateCron(job.getCronExpression());
         CronTrigger trigger = new CronTrigger(job.getCronExpression());
-        ScheduledFuture<?> future = scheduler.schedule(() -> execute(job), trigger);
+        ScheduledFuture<?> future = scheduler.schedule(() -> execute(job, JobTriggerType.CRON), trigger);
         futures.put(job.getId(), future);
         log.info("定时任务已启动: id={}, name={}, cron={}", job.getId(), job.getJobName(), job.getCronExpression());
     }
@@ -72,22 +79,38 @@ public class JobScheduler implements ApplicationContextAware {
 
     /** 立即执行一次 */
     public void runOnce(SysJob job) {
-        execute(job);
+        execute(job, JobTriggerType.MANUAL);
     }
 
-    private void execute(SysJob job) {
+    private void execute(SysJob job, JobTriggerType triggerType) {
+        LocalDateTime startTime = LocalDateTime.now();
         if (job.getConcurrent() != null && job.getConcurrent() == 0) {
             if (running.putIfAbsent(job.getId(), Boolean.TRUE) != null) {
                 log.warn("任务正在执行，跳过本次调度: id={}", job.getId());
+                recordExecution(job, triggerType, JobLogStatus.SKIPPED, startTime, LocalDateTime.now(),
+                        "任务正在执行，跳过本次触发");
                 return;
             }
         }
         try {
             invoke(job);
+            recordExecution(job, triggerType, JobLogStatus.SUCCESS, startTime, LocalDateTime.now(), null);
         } catch (Exception e) {
             log.error("定时任务执行失败: id={}, name={}", job.getId(), job.getJobName(), e);
+            recordExecution(job, triggerType, JobLogStatus.FAILED, startTime, LocalDateTime.now(), e.getMessage());
         } finally {
-            running.remove(job.getId());
+            if (job.getConcurrent() != null && job.getConcurrent() == 0) {
+                running.remove(job.getId());
+            }
+        }
+    }
+
+    private void recordExecution(SysJob job, JobTriggerType triggerType, JobLogStatus status,
+                                 LocalDateTime startTime, LocalDateTime endTime, String errorMsg) {
+        try {
+            jobLogService.record(job, triggerType, status, startTime, endTime, errorMsg);
+        } catch (Exception e) {
+            log.warn("定时任务执行历史记录失败: id={}, name={}", job.getId(), job.getJobName(), e);
         }
     }
 
@@ -126,6 +149,10 @@ public class JobScheduler implements ApplicationContextAware {
             method.invoke(bean, args);
         } catch (NoSuchMethodException e) {
             throw new BizException("找不到方法 " + methodName + "，bean=" + beanName);
+        } catch (InvocationTargetException e) {
+            Throwable cause = e.getCause();
+            String message = cause == null ? e.getMessage() : cause.getMessage();
+            throw new BizException("调用任务方法失败: " + message);
         } catch (Exception e) {
             throw new BizException("调用任务方法失败: " + e.getMessage());
         }

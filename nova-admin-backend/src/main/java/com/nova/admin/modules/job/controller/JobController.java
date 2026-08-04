@@ -2,10 +2,14 @@ package com.nova.admin.modules.job.controller;
 
 import com.nova.admin.common.api.R;
 import com.nova.admin.common.base.BaseController;
+import com.nova.admin.modules.job.dto.JobLogPageQuery;
 import com.nova.admin.modules.job.dto.JobPageQuery;
 import com.nova.admin.modules.job.entity.SysJob;
+import com.nova.admin.modules.job.entity.SysJobLog;
+import com.nova.admin.modules.job.service.JobLogService;
 import com.nova.admin.modules.job.service.JobService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -28,6 +32,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class JobController extends BaseController {
 
     private final JobService jobService;
+    private final JobLogService jobLogService;
 
     @GetMapping("/page")
     @PreAuthorize("hasRole('super_admin') or hasAuthority('monitor:job:list')")
@@ -36,10 +41,25 @@ public class JobController extends BaseController {
         return ok(jobService.getJobPage(query));
     }
 
+    @GetMapping("/log/page")
+    @PreAuthorize("hasRole('super_admin') or hasAuthority('monitor:job:list')")
+    @Operation(summary = "定时任务执行历史分页列表")
+    public R<com.nova.admin.common.api.PageResult<SysJobLog>> logPage(JobLogPageQuery query) {
+        return ok(jobLogService.getJobLogPage(query));
+    }
+
+    @GetMapping("/log/{id}")
+    @PreAuthorize("hasRole('super_admin') or hasAuthority('monitor:job:list')")
+    @Operation(summary = "定时任务执行历史详情")
+    public R<SysJobLog> logDetail(
+            @Parameter(description = "执行记录ID", required = true) @PathVariable Long id) {
+        return ok(jobLogService.getById(id));
+    }
+
     @GetMapping("/{id}")
     @PreAuthorize("hasRole('super_admin') or hasAuthority('monitor:job:list')")
     @Operation(summary = "定时任务详情")
-    public R<SysJob> detail(@PathVariable Long id) {
+    public R<SysJob> detail(@Parameter(description = "任务ID", required = true) @PathVariable Long id) {
         return ok(jobService.getById(id));
     }
 
