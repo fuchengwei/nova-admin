@@ -35,7 +35,7 @@ public class RoleDetailDTO implements Serializable {
     @Schema(description = "描述")
     private String description;
 
-    @Schema(description = "数据权限: 1全部 2本部门及下级 3本部门 4本人及下级 5本人")
+    @Schema(description = "数据权限: 1全部 2本部门及下级 3本部门 4本人及下级 5本人 6自定义部门")
     private Integer dataScope;
 
     @Schema(description = "排序号")
@@ -53,4 +53,8 @@ public class RoleDetailDTO implements Serializable {
     @Schema(description = "菜单ID列表")
     @JsonSerialize(contentUsing = ToStringSerializer.class)
     private List<Long> menuIds;
+
+    @Schema(description = "自定义部门ID列表")
+    @JsonSerialize(contentUsing = ToStringSerializer.class)
+    private List<Long> deptIds;
 }

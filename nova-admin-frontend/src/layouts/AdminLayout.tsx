@@ -46,30 +46,34 @@ export default function AdminLayout() {
     },
   });
 
-  // 挂载时并行拉取用户信息 + 菜单，保证 permissions 始终是服务端最新值
-  useEffect(() => {
+  const loadIdentity = async () => {
     if (!getToken()) return;
-    const loadIdentity = async () => {
-      try {
-        const infoRes = await getUserInfo();
-        if (infoRes.code !== 0 || !infoRes.data) return;
-        setUserInfo(infoRes.data);
-        if (infoRes.data.passwordChangeRequired) {
-          setMenus([]);
-          return;
-        }
-        const menuRes = await getUserMenus();
-        if (menuRes.code === 0 && menuRes.data) setMenus(menuRes.data);
-      } catch {
-        // 请求拦截器统一处理登录过期和其他异常。
-      } finally {
-        setMenusLoaded(true);
+    try {
+      const infoRes = await getUserInfo();
+      if (infoRes.code !== 0 || !infoRes.data) return;
+      setUserInfo(infoRes.data);
+      if (infoRes.data.passwordChangeRequired) {
+        setMenus([]);
+        return;
       }
-    };
+      const menuRes = await getUserMenus();
+      if (menuRes.code === 0 && menuRes.data) setMenus(menuRes.data);
+    } catch {
+      // 请求拦截器统一处理登录过期和其他异常。
+    } finally {
+      setMenusLoaded(true);
+    }
+  };
+
+  // 挂载时并行拉取用户信息 + 菜单，权限变更事件到达时复用同一流程刷新。
+  useEffect(() => {
     void loadIdentity();
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   useSessionEvents({
+    onAuthorizationChanged: () => {
+      void loadIdentity();
+    },
     onSessionRevoked: () => {
       if (ignoreSessionRevocationRef.current || !getToken()) return false;
       clearTokens();

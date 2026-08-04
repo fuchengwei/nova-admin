@@ -37,7 +37,7 @@ public class SysRoleController extends BaseController {
     private final SysRoleService sysRoleService;
 
     @GetMapping("/page")
-    @PreAuthorize("hasAuthority('system:role:list')")
+    @PreAuthorize("hasRole('super_admin') or hasAuthority('system:role:list')")
     @Operation(summary = "角色分页列表")
     public R<PageResult<SysRole>> getRolePage(RolePageQuery query) {
         return ok(sysRoleService.getRolePage(query));
@@ -50,21 +50,21 @@ public class SysRoleController extends BaseController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAuthority('system:role:list')")
+    @PreAuthorize("hasRole('super_admin') or hasAuthority('system:role:list')")
     @Operation(summary = "角色详情")
     public R<RoleDetailDTO> getRoleDetail(@PathVariable Long id) {
         return ok(sysRoleService.getRoleDetail(id));
     }
 
     @PostMapping
-    @PreAuthorize("hasAuthority('system:role:add')")
+    @PreAuthorize("hasRole('super_admin') or hasAuthority('system:role:add')")
     @Operation(summary = "创建角色")
     public R<String> createRole(@Valid @RequestBody RoleCreateRequest req) {
         return ok(String.valueOf(sysRoleService.createRole(req)));
     }
 
     @PutMapping
-    @PreAuthorize("hasAuthority('system:role:edit')")
+    @PreAuthorize("hasRole('super_admin') or hasAuthority('system:role:edit')")
     @Operation(summary = "更新角色")
     public R<Void> updateRole(@Valid @RequestBody RoleUpdateRequest req) {
         sysRoleService.updateRole(req);
@@ -72,7 +72,7 @@ public class SysRoleController extends BaseController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAuthority('system:role:remove')")
+    @PreAuthorize("hasRole('super_admin') or hasAuthority('system:role:remove')")
     @Operation(summary = "删除角色")
     public R<Void> deleteRole(@PathVariable Long id) {
         sysRoleService.deleteRole(id);

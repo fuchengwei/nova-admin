@@ -29,7 +29,7 @@ public class SysRole extends BaseDO {
     private String name;
     private String code;
     private String description;
-    /** 数据权限：1-全部 2-本部门及下级 3-本部门 4-本人及下级 5-本人 */
+    /** 数据权限：1-全部 2-本部门及下级 3-本部门 4-本人及下级 5-本人 6-自定义部门 */
     private Integer dataScope;
     private Integer sort;
     /** 状态：1-启用 0-停用 */

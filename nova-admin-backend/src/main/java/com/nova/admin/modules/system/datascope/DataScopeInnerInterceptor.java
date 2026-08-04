@@ -3,6 +3,8 @@ package com.nova.admin.modules.system.datascope;
 import com.baomidou.mybatisplus.extension.plugins.inner.InnerInterceptor;
 import com.nova.admin.security.LoginUser;
 import com.nova.admin.security.SecurityUtils;
+import com.nova.admin.common.api.ResultCode;
+import com.nova.admin.common.exception.BizException;
 import lombok.RequiredArgsConstructor;
 import org.apache.ibatis.executor.Executor;
 import org.apache.ibatis.mapping.BoundSql;
@@ -65,7 +67,8 @@ public class DataScopeInnerInterceptor implements InnerInterceptor {
             metaObject.setValue("sql", newSql);
         } catch (Exception e) {
             org.slf4j.LoggerFactory.getLogger(DataScopeInnerInterceptor.class)
-                    .warn("数据权限 SQL 改写失败，已跳过：{}", e.getMessage());
+                    .error("数据权限 SQL 改写失败，拒绝执行查询：{}", e.getMessage(), e);
+            throw new BizException(ResultCode.DATA_SCOPE_DENIED, "数据权限条件生成失败");
         }
     }
 

@@ -2,8 +2,11 @@ package com.nova.admin.modules.auth.service;
 
 import com.nova.admin.common.constant.Constants;
 import com.nova.admin.modules.auth.event.AuthorizationChangedEvent;
+import com.nova.admin.modules.system.entity.SysUser;
+import com.nova.admin.modules.system.mapper.SysUserMapper;
 import com.nova.admin.security.LoginSession;
 import com.nova.admin.security.LoginUser;
+import com.nova.admin.security.SecurityUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
@@ -22,6 +25,7 @@ public class AuthSessionService {
 
     private final RedisTemplate<String, Object> redisTemplate;
     private final AuthSessionEventService authSessionEventService;
+    private final SysUserMapper userMapper;
 
     public void register(LoginSession session, long accessExpireSeconds, long refreshExpireSeconds) {
         redisTemplate.opsForValue().set(sessionKey(session.getAccessJti()), session,
@@ -152,7 +156,45 @@ public class AuthSessionService {
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void onAuthorizationChanged(AuthorizationChangedEvent event) {
-        event.userIds().forEach(this::revokeAllByUserId);
+        if (event.changeType() == AuthorizationChangedEvent.ChangeType.PERMISSIONS_REFRESH) {
+            event.userIds().forEach(this::refreshPermissions);
+            return;
+        }
+        LoginUser currentUser = SecurityUtils.getLoginUser().orElse(null);
+        event.userIds().forEach(userId -> {
+            boolean isCurrentUser = currentUser != null
+                    && userId.equals(currentUser.getUserId())
+                    && currentUser.getJti() != null;
+            if (isCurrentUser) {
+                // 保留发起操作的设备，其他设备仍需立即失效。
+                revokeOtherSessions(userId, currentUser.getJti());
+            } else {
+                revokeAllByUserId(userId);
+            }
+            evictUserCache(userId, isCurrentUser ? currentUser.getAccount() : null);
+        });
+    }
+
+    private void refreshPermissions(Long userId) {
+        String currentAccount = SecurityUtils.getLoginUser()
+                .filter(user -> userId.equals(user.getUserId()))
+                .map(LoginUser::getAccount)
+                .orElse(null);
+        evictUserCache(userId, currentAccount);
+        getActiveSessionsByUserId(userId).stream()
+                .map(LoginSession::getAccessJti)
+                .forEach(authSessionEventService::notifyAuthorizationChanged);
+    }
+
+    private void evictUserCache(Long userId, String currentAccount) {
+        String account = currentAccount;
+        if (account == null || account.isBlank()) {
+            SysUser user = userMapper.selectById(userId);
+            account = user == null ? null : user.getAccount();
+        }
+        if (account != null && !account.isBlank()) {
+            redisTemplate.delete(Constants.REDIS_KEY_USER + account);
+        }
     }
 
     public static LoginSession of(LoginUser user, String accessJti, String refreshJti) {

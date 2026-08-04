@@ -11,6 +11,7 @@ export interface RoleRecord {
   status: number;
   createTime?: string;
   menuIds?: string[];
+  deptIds?: string[];
 }
 
 export interface RoleCreateRequest {
@@ -21,6 +22,7 @@ export interface RoleCreateRequest {
   sort?: number;
   status: number;
   menuIds?: string[];
+  deptIds?: string[];
 }
 
 export interface RoleUpdateRequest extends RoleCreateRequest {

@@ -8,7 +8,7 @@ import java.io.IOException;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
-/** 向已连接的浏览器主动发送会话撤销通知。 */
+/** 向已连接的浏览器主动发送会话及权限变更通知。 */
 @Slf4j
 @Service
 public class AuthSessionEventService {
@@ -37,6 +37,22 @@ public class AuthSessionEventService {
                 log.debug("发送会话撤销通知失败: {}", e.getMessage());
             } finally {
                 emitter.complete();
+            }
+        }
+    }
+
+    /** 通知浏览器重新加载当前用户的权限和菜单，但不影响登录会话。 */
+    public void notifyAuthorizationChanged(String accessJti) {
+        Set<SseEmitter> sessionEmitters = emitters.get(accessJti);
+        if (sessionEmitters == null) {
+            return;
+        }
+        for (SseEmitter emitter : sessionEmitters) {
+            try {
+                emitter.send(SseEmitter.event().name("authorization-changed").data("CHANGED"));
+            } catch (IOException e) {
+                remove(accessJti, emitter);
+                log.debug("发送权限刷新通知失败: {}", e.getMessage());
             }
         }
     }

@@ -233,7 +233,11 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
             saveUserRoles(req.getId(), req.getRoleIds());
         }
 
-        eventPublisher.publishEvent(AuthorizationChangedEvent.of(req.getId()));
+        if (Integer.valueOf(0).equals(req.getStatus()) || Integer.valueOf(0).equals(existing.getStatus())) {
+            eventPublisher.publishEvent(AuthorizationChangedEvent.revokeSessionsOf(req.getId()));
+        } else {
+            eventPublisher.publishEvent(AuthorizationChangedEvent.permissionsOf(req.getId()));
+        }
 
         log.info("更新用户成功，id={}, operator={}", req.getId(), operatorId);
     }
@@ -254,7 +258,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
         userRoleMapper.delete(new LambdaQueryWrapper<SysUserRole>()
                 .eq(SysUserRole::getUserId, id));
 
-        eventPublisher.publishEvent(AuthorizationChangedEvent.of(id));
+        eventPublisher.publishEvent(AuthorizationChangedEvent.revokeSessionsOf(id));
 
         Long operatorId = SecurityUtils.requireUserId();
         log.info("删除用户成功，id={}, operator={}", id, operatorId);
@@ -281,7 +285,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
         user.setUpdateBy(operatorId);
 
         updateById(user);
-        eventPublisher.publishEvent(AuthorizationChangedEvent.of(id));
+        eventPublisher.publishEvent(AuthorizationChangedEvent.revokeSessionsOf(id));
         log.info("重置用户密码成功，id={}, operator={}", id, operatorId);
     }
 
@@ -302,7 +306,11 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
         user.setUpdateBy(operatorId);
 
         updateById(user);
-        eventPublisher.publishEvent(AuthorizationChangedEvent.of(id));
+        if (Integer.valueOf(0).equals(status)) {
+            eventPublisher.publishEvent(AuthorizationChangedEvent.revokeSessionsOf(id));
+        } else {
+            eventPublisher.publishEvent(AuthorizationChangedEvent.permissionsOf(id));
+        }
         log.info("更新用户状态成功，id={}, status={}, operator={}", id, status, operatorId);
     }
 

@@ -97,6 +97,9 @@ public class UserDetailsServiceImpl implements UserDetailsService {
         Integer dataScope = Integer.valueOf(1).equals(user.getSuperAdmin())
                 ? 1
                 : resolveDataScope(user.getId());
+        Set<Long> customDeptIds = Integer.valueOf(1).equals(user.getSuperAdmin())
+                ? Set.of()
+                : resolveCustomDeptIds(user.getId());
 
         return LoginUser.builder()
                 .userId(user.getId())
@@ -106,6 +109,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
                 .roles(roles)
                 .permissions(permissions)
                 .dataScope(dataScope)
+                .customDeptIds(customDeptIds)
                 .forcePasswordChange(user.getForcePasswordChange())
                 .passwordChangedAt(user.getPasswordChangedAt())
                 .loginIp(loginIp)
@@ -114,7 +118,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
     }
 
     /**
-     * 计算用户的实际数据范围：取所有角色 dataScope 中的最小值（数值越小权限越宽）。
+     * 计算用户的固定数据范围：忽略自定义部门范围后取所有角色 dataScope 中的最小值（数值越小权限越宽）。
      * 超管角色 data_scope=1（全部），会自然得到最宽范围；无角色则默认仅本人(5)。
      */
     private Integer resolveDataScope(Long userId) {
@@ -122,6 +126,14 @@ public class UserDetailsServiceImpl implements UserDetailsService {
         if (scopes == null || scopes.isEmpty()) {
             return 5;
         }
-        return scopes.stream().min(Integer::compareTo).orElse(5);
+        return scopes.stream()
+                .filter(scope -> !Integer.valueOf(6).equals(scope))
+                .min(Integer::compareTo)
+                .orElse(scopes.stream().anyMatch(scope -> Integer.valueOf(6).equals(scope)) ? 6 : 5);
+    }
+
+    private Set<Long> resolveCustomDeptIds(Long userId) {
+        List<Long> deptIds = roleMapper.selectCustomDeptIdsByUserId(userId);
+        return deptIds == null ? Set.of() : new HashSet<>(deptIds);
     }
 }

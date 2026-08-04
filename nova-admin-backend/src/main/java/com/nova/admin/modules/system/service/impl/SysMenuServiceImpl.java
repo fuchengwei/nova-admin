@@ -210,7 +210,7 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu> impl
                 .map(SysUserRole::getUserId)
                 .collect(Collectors.toSet());
         if (!userIds.isEmpty()) {
-            eventPublisher.publishEvent(new AuthorizationChangedEvent(userIds));
+            eventPublisher.publishEvent(AuthorizationChangedEvent.permissionsOf(userIds));
         }
     }
 }

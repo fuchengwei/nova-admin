@@ -82,7 +82,7 @@ CREATE TABLE sys_role (
     deleted         SMALLINT NOT NULL DEFAULT 0
 );
 COMMENT ON TABLE sys_role IS '角色表';
-COMMENT ON COLUMN sys_role.data_scope IS '数据权限范围: 1全部 2本部门及下级 3本部门 4本人及下级 5本人';
+COMMENT ON COLUMN sys_role.data_scope IS '数据权限范围: 1全部 2本部门及下级 3本部门 4本人及下级 5本人 6自定义部门';
 CREATE UNIQUE INDEX uk_role_code ON sys_role(code) WHERE deleted = 0;
 
 -- =====================================================
@@ -139,7 +139,7 @@ CREATE TABLE sys_role_dept (
     dept_id         BIGINT NOT NULL,
     PRIMARY KEY (role_id, dept_id)
 );
-COMMENT ON TABLE sys_role_dept IS '角色自定义部门（data_scope=2 时生效）';
+COMMENT ON TABLE sys_role_dept IS '角色自定义部门（data_scope=6 时生效）';
 
 -- =====================================================
 -- 6. 字典表

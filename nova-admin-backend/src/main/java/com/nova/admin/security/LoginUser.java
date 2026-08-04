@@ -43,6 +43,9 @@ public class LoginUser implements Serializable {
     /** 数据权限范围（取最高级） */
     private Integer dataScope;
 
+    /** 角色自定义数据权限涉及的部门 ID（并集） */
+    private Set<Long> customDeptIds;
+
     /** 1 表示该账号必须修改密码后才能继续使用业务功能。 */
     private Integer forcePasswordChange;
 
@@ -68,6 +71,7 @@ public class LoginUser implements Serializable {
                 .roles(roles)
                 .permissions(permissions)
                 .dataScope(dataScope)
+                .customDeptIds(customDeptIds)
                 .forcePasswordChange(forcePasswordChange)
                 .passwordChangedAt(passwordChangedAt)
                 .loginTime(loginTime)

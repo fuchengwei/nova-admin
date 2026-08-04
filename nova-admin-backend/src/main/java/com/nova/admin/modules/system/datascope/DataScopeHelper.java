@@ -6,6 +6,8 @@ import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
+import java.util.Collection;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -30,7 +32,7 @@ public class DataScopeHelper {
     /**
      * 生成数据权限过滤 SQL 片段（不含 AND 关键字，调用方负责拼接）。
      *
-     * @return null 表示全量；否则为形如 {@code dept_id IN (1,2,3)} 的表达式
+     * @return null 表示全量；否则为可直接拼接的过滤表达式
      */
     public String buildScopeSql(LoginUser user, DataScope ann) {
         Integer scope = user.getDataScope();
@@ -42,7 +44,7 @@ public class DataScopeHelper {
         String deptCol = column(ann.deptAlias(), ann.deptColumn());
         String userCol = column(ann.userAlias(), ann.userColumn());
 
-        return switch (scope) {
+        String fixedScopeSql = switch (scope) {
             case 2 -> {
                 if (deptId == null) {
                     yield "1=0";
@@ -64,18 +66,38 @@ public class DataScopeHelper {
             }
             case 5 -> // 仅本人
                     userCol + " = " + userId;
+            case 6 -> "1=0";
             default -> null;
         };
+
+        Set<Long> customDeptIds = user.getCustomDeptIds();
+        String customScopeSql = customDeptIds == null || customDeptIds.isEmpty()
+                ? null
+                : deptCol + " IN (" + joinIds(customDeptIds) + ")";
+
+        if (scope == 6) {
+            return customScopeSql == null ? "1=0" : customScopeSql;
+        }
+
+        if (fixedScopeSql == null) {
+            return customScopeSql;
+        }
+        if (customScopeSql == null) {
+            return fixedScopeSql;
+        }
+        return "(" + fixedScopeSql + " OR " + customScopeSql + ")";
     }
 
     private static String column(String alias, String col) {
         return (alias == null || alias.isBlank()) ? col : alias + "." + col;
     }
 
-    private static String joinIds(List<Long> ids) {
+    private static String joinIds(Collection<Long> ids) {
         if (ids == null || ids.isEmpty()) {
             return "0";
         }
-        return ids.stream().map(String::valueOf).collect(Collectors.joining(","));
+        return java.util.stream.StreamSupport.stream(ids.spliterator(), false)
+                .map(String::valueOf)
+                .collect(Collectors.joining(","));
     }
 }

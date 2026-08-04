@@ -6,11 +6,15 @@ const RECONNECT_DELAY_MS = 3_000;
 interface UseSessionEventsOptions {
   /** 返回 true 时执行强制退出，false 表示当前事件由调用方静默处理。 */
   onSessionRevoked: () => boolean;
+  /** 权限变更时刷新用户信息和菜单，不影响当前登录会话。 */
+  onAuthorizationChanged?: () => void;
 }
 
-export function useSessionEvents({ onSessionRevoked }: UseSessionEventsOptions): void {
-  const callbackRef = useRef(onSessionRevoked);
-  callbackRef.current = onSessionRevoked;
+export function useSessionEvents({ onSessionRevoked, onAuthorizationChanged }: UseSessionEventsOptions): void {
+  const revokedCallbackRef = useRef(onSessionRevoked);
+  const authorizationCallbackRef = useRef(onAuthorizationChanged);
+  revokedCallbackRef.current = onSessionRevoked;
+  authorizationCallbackRef.current = onAuthorizationChanged;
 
   useEffect(() => {
     let stopped = false;
@@ -19,7 +23,7 @@ export function useSessionEvents({ onSessionRevoked }: UseSessionEventsOptions):
 
     const handleRevoked = (): boolean => {
       if (stopped) return true;
-      const handled = callbackRef.current();
+      const handled = revokedCallbackRef.current();
       if (handled) stopped = true;
       return handled;
     };
@@ -46,7 +50,9 @@ export function useSessionEvents({ onSessionRevoked }: UseSessionEventsOptions):
         while (boundary >= 0) {
           const event = buffer.slice(0, boundary);
           buffer = buffer.slice(boundary + 2);
-          if (/event:\s*session-revoked/.test(event)) {
+          if (/event:\s*authorization-changed/.test(event)) {
+            authorizationCallbackRef.current?.();
+          } else if (/event:\s*session-revoked/.test(event)) {
             if (!handleRevoked()) scheduleReconnect();
             return;
           }

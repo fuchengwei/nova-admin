@@ -15,6 +15,8 @@ import com.nova.admin.modules.system.entity.SysRole;
 import com.nova.admin.modules.system.entity.SysRoleDept;
 import com.nova.admin.modules.system.entity.SysRoleMenu;
 import com.nova.admin.modules.system.entity.SysUserRole;
+import com.nova.admin.modules.system.entity.SysDept;
+import com.nova.admin.modules.system.mapper.SysDeptMapper;
 import com.nova.admin.modules.system.mapper.SysRoleDeptMapper;
 import com.nova.admin.modules.system.mapper.SysRoleMapper;
 import com.nova.admin.modules.system.mapper.SysRoleMenuMapper;
@@ -41,6 +43,7 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impl
 
     private final SysRoleMenuMapper roleMenuMapper;
     private final SysRoleDeptMapper roleDeptMapper;
+    private final SysDeptMapper deptMapper;
     private final SysUserRoleMapper userRoleMapper;
     private final ApplicationEventPublisher eventPublisher;
 
@@ -83,6 +86,7 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impl
 
         // 保存角色菜单关联
         saveRoleMenus(role.getId(), req.getMenuIds());
+        saveRoleDepts(role.getId(), req.getDataScope(), req.getDeptIds());
 
         log.info("创建角色成功，id={}, code={}, operator={}", role.getId(), role.getCode(), userId);
         return role.getId();
@@ -114,6 +118,7 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impl
         roleMenuMapper.delete(new LambdaQueryWrapper<SysRoleMenu>()
                 .eq(SysRoleMenu::getRoleId, req.getId()));
         saveRoleMenus(req.getId(), req.getMenuIds());
+        saveRoleDepts(req.getId(), req.getDataScope(), req.getDeptIds());
 
         publishRoleUserInvalidation(req.getId());
 
@@ -165,6 +170,12 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impl
                 .map(SysRoleMenu::getMenuId)
                 .toList();
 
+        List<Long> deptIds = roleDeptMapper.selectList(new LambdaQueryWrapper<SysRoleDept>()
+                        .eq(SysRoleDept::getRoleId, id))
+                .stream()
+                .map(SysRoleDept::getDeptId)
+                .toList();
+
         return RoleDetailDTO.builder()
                 .id(role.getId())
                 .name(role.getName())
@@ -176,6 +187,7 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impl
                 .createTime(role.getCreateTime())
                 .updateTime(role.getUpdateTime())
                 .menuIds(menuIds)
+                .deptIds(deptIds)
                 .build();
     }
 
@@ -223,6 +235,33 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impl
         }
     }
 
+    /** 保存角色自定义部门范围，并校验部门均为启用状态。 */
+    private void saveRoleDepts(Long roleId, Integer dataScope, List<Long> deptIds) {
+        roleDeptMapper.delete(new LambdaQueryWrapper<SysRoleDept>()
+                .eq(SysRoleDept::getRoleId, roleId));
+        if (!Integer.valueOf(6).equals(dataScope)) {
+            return;
+        }
+        List<Long> normalizedIds = deptIds == null
+                ? List.of()
+                : deptIds.stream().filter(java.util.Objects::nonNull).distinct().toList();
+        if (normalizedIds.isEmpty()) {
+            throw new BizException(ResultCode.BAD_REQUEST, "自定义部门范围至少选择一个部门");
+        }
+        long validCount = deptMapper.selectCount(new LambdaQueryWrapper<SysDept>()
+                .in(SysDept::getId, normalizedIds)
+                .eq(SysDept::getStatus, 1));
+        if (validCount != normalizedIds.size()) {
+            throw new BizException(ResultCode.BAD_REQUEST, "自定义部门包含不存在或已停用的部门");
+        }
+        for (Long deptId : normalizedIds) {
+            SysRoleDept roleDept = new SysRoleDept();
+            roleDept.setRoleId(roleId);
+            roleDept.setDeptId(deptId);
+            roleDeptMapper.insert(roleDept);
+        }
+    }
+
     private void publishRoleUserInvalidation(Long roleId) {
         Set<Long> userIds = userRoleMapper.selectList(new LambdaQueryWrapper<SysUserRole>()
                         .eq(SysUserRole::getRoleId, roleId))
@@ -230,7 +269,7 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impl
                 .map(SysUserRole::getUserId)
                 .collect(Collectors.toSet());
         if (!userIds.isEmpty()) {
-            eventPublisher.publishEvent(new AuthorizationChangedEvent(userIds));
+            eventPublisher.publishEvent(AuthorizationChangedEvent.permissionsOf(userIds));
         }
     }
 }

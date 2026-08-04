@@ -17,6 +17,7 @@ import java.lang.annotation.Target;
  *   <li>3 本部门 —— deptColumn = 本人部门</li>
  *   <li>4 本人及下级 —— createBy = 本人（下级以部门树近似，详见 DataScopeHelper）</li>
  *   <li>5 仅本人 —— createBy = 本人</li>
+ *   <li>6 自定义部门 —— deptColumn IN (角色配置的部门集合)</li>
  * </ul>
  */
 @Documented

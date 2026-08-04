@@ -83,4 +83,25 @@ class UserDetailsServiceImplTest {
         assertThat(result.getLoginUser().getLoginTime()).isEqualTo(
                 lastLoginTime.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli());
     }
+
+    @Test
+    void loadUserByUsername_whenRolesContainCustomDepartments_loadsDepartmentUnion() {
+        SysUser user = new SysUser();
+        user.setId(2L);
+        user.setAccount("operator");
+        user.setNickname("Operator");
+        user.setSuperAdmin(0);
+        given(redisTemplate.opsForValue()).willReturn(valueOperations);
+        given(valueOperations.get("nova:user:operator")).willReturn(null);
+        given(userMapper.selectByAccount("operator")).willReturn(user);
+        given(roleMapper.selectRoleCodesByUserId(2L)).willReturn(List.of("operator"));
+        given(menuMapper.selectPermsByUserId(2L)).willReturn(List.of("system:user:list"));
+        given(roleMapper.selectDataScopesByUserId(2L)).willReturn(List.of(5, 6));
+        given(roleMapper.selectCustomDeptIdsByUserId(2L)).willReturn(List.of(10L, 11L));
+
+        SecurityUser result = (SecurityUser) userDetailsService.loadUserByUsername("operator");
+
+        assertThat(result.getLoginUser().getDataScope()).isEqualTo(5);
+        assertThat(result.getLoginUser().getCustomDeptIds()).containsExactlyInAnyOrder(10L, 11L);
+    }
 }

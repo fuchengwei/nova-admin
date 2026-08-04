@@ -3,6 +3,8 @@ package com.nova.admin.modules.system.dto;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
 
@@ -39,7 +41,9 @@ public class RoleUpdateRequest implements Serializable {
     private String description;
 
     @NotNull(message = "数据权限范围不能为空")
-    @Schema(description = "数据权限: 1全部 2本部门及下级 3本部门 4本人及下级 5本人")
+    @Min(value = 1, message = "数据权限范围不合法")
+    @Max(value = 6, message = "数据权限范围不合法")
+    @Schema(description = "数据权限: 1全部 2本部门及下级 3本部门 4本人及下级 5本人 6自定义部门")
     private Integer dataScope;
 
     @Schema(description = "排序号")
@@ -51,4 +55,7 @@ public class RoleUpdateRequest implements Serializable {
 
     @Schema(description = "菜单ID列表")
     private List<Long> menuIds;
+
+    @Schema(description = "自定义部门ID列表，数据权限为6时必填")
+    private List<Long> deptIds;
 }

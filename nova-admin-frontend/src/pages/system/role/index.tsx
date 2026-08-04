@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { Button, Tag, Tree, Popconfirm, Form } from 'antd';
 import { message } from '@/utils/message';
 import type { DataNode } from 'antd/es/tree';
@@ -29,8 +29,11 @@ import {
   type RoleUpdateRequest,
 } from '@/api/role';
 import { getMenuTree } from '@/api/menu';
+import { getDeptTree, type DeptTreeNode } from '@/api/dept';
 import { useTableScrollY } from '@/hooks/useTableScrollY';
 import { displayText } from '@/utils/display';
+import { useUserStore } from '@/stores/userStore';
+import { hasPermission } from '@/utils/layout';
 
 const DATA_SCOPE_MAP: Record<number, string> = {
   1: 'dataScopeAll',
@@ -38,16 +41,26 @@ const DATA_SCOPE_MAP: Record<number, string> = {
   3: 'dataScopeDept',
   4: 'dataScopeSelfAndChild',
   5: 'dataScopeSelf',
+  6: 'dataScopeCustomDept',
 };
 
 export default function RolePage() {
   const { t } = useTranslation();
   const actionRef = useRef<ActionType>(null);
+  const permissions = useUserStore((state) => state.permissions);
+  const roles = useUserStore((state) => state.roles);
+  const hasRolePermission = (permission: string) =>
+    roles.includes('super_admin') || hasPermission(permission, permissions);
+  const canCreate = hasRolePermission('system:role:add');
+  const canEdit = hasRolePermission('system:role:edit');
+  const canDelete = hasRolePermission('system:role:remove');
 
   const [modalOpen, setModalOpen] = useState(false);
   const [editMode, setEditMode] = useState(false);
   const [editingRecord, setEditingRecord] = useState<RoleRecord | null>(null);
   const [checkedKeys, setCheckedKeys] = useState<string[]>([]);
+  const [checkedDeptKeys, setCheckedDeptKeys] = useState<string[]>([]);
+  const [currentDataScope, setCurrentDataScope] = useState(1);
 
   const { data: menuTree } = useQuery({
     queryKey: ['menuTree'],
@@ -66,8 +79,21 @@ export default function RolePage() {
     enabled: editMode && !!editingRecord,
   });
 
+  const { data: deptTree } = useQuery({
+    queryKey: ['deptTree'],
+    queryFn: async () => {
+      const res = await getDeptTree();
+      return res.data ?? [];
+    },
+    enabled: modalOpen && currentDataScope === 6,
+  });
+
   useEffect(() => {
-    if (roleDetail && editMode) setCheckedKeys(roleDetail.menuIds ?? []);
+    if (roleDetail && editMode) {
+      setCheckedKeys(roleDetail.menuIds ?? []);
+      setCheckedDeptKeys(roleDetail.deptIds ?? []);
+      setCurrentDataScope(roleDetail.dataScope);
+    }
   }, [roleDetail, editMode]);
 
   const createMutation = useMutation({ mutationFn: createRole });
@@ -78,6 +104,8 @@ export default function RolePage() {
     setEditMode(false);
     setEditingRecord(null);
     setCheckedKeys([]);
+    setCheckedDeptKeys([]);
+    setCurrentDataScope(1);
     setModalOpen(true);
   };
 
@@ -85,6 +113,8 @@ export default function RolePage() {
     setEditMode(true);
     setEditingRecord(record);
     setCheckedKeys([]);
+    setCheckedDeptKeys([]);
+    setCurrentDataScope(record.dataScope);
     setModalOpen(true);
   };
 
@@ -95,6 +125,13 @@ export default function RolePage() {
     setCheckedKeys(keys.map(String));
   };
 
+  const handleDeptCheck = (
+    checked: React.Key[] | { checked: React.Key[]; halfChecked: React.Key[] },
+  ) => {
+    const keys = Array.isArray(checked) ? checked : checked.checked;
+    setCheckedDeptKeys(keys.map(String));
+  };
+
   const menuTreeNodes: DataNode[] = (menuTree ?? []).map((item) => ({
     key: item.id,
     title: item.name,
@@ -102,6 +139,17 @@ export default function RolePage() {
       ? (item.children.map((c) => ({ key: c.id, title: c.name })) as DataNode[])
       : undefined,
   }));
+
+  const deptTreeNodes = useMemo<DataNode[]>(() => {
+    const toNodes = (nodes: DeptTreeNode[]): DataNode[] =>
+      nodes.map((item) => ({
+        key: item.id,
+        title: item.name,
+        disabled: item.status !== 1,
+        children: item.children ? toNodes(item.children) : undefined,
+      }));
+    return toNodes(deptTree ?? []);
+  }, [deptTree]);
 
   const columns: ProColumns<RoleRecord>[] = [
     {
@@ -173,28 +221,32 @@ export default function RolePage() {
       width: 160,
       fixed: 'right',
       render: (_, record) => [
-        <Button
-          key="edit"
-          type="link"
-          size="small"
-          icon={<EditOutlined />}
-          onClick={() => handleOpenEdit(record)}
-        >
-          {t('common.edit')}
-        </Button>,
-        <Popconfirm
-          key="del"
-          title={t('role.deleteConfirm')}
-          onConfirm={() => deleteMutation.mutate(record.id)}
-          okText={t('common.confirm')}
-          cancelText={t('common.cancel')}
-          okButtonProps={{ danger: true }}
-        >
-          <Button type="link" size="small" danger icon={<DeleteOutlined />}>
-            {t('common.delete')}
+        canEdit ? (
+          <Button
+            key="edit"
+            type="link"
+            size="small"
+            icon={<EditOutlined />}
+            onClick={() => handleOpenEdit(record)}
+          >
+            {t('common.edit')}
           </Button>
-        </Popconfirm>,
-      ],
+        ) : null,
+        canDelete ? (
+          <Popconfirm
+            key="del"
+            title={t('role.deleteConfirm')}
+            onConfirm={() => deleteMutation.mutate(record.id)}
+            okText={t('common.confirm')}
+            cancelText={t('common.cancel')}
+            okButtonProps={{ danger: true }}
+          >
+            <Button type="link" size="small" danger icon={<DeleteOutlined />}>
+              {t('common.delete')}
+            </Button>
+          </Popconfirm>
+        ) : null,
+      ].filter(Boolean),
     },
   ];
 
@@ -229,9 +281,11 @@ export default function RolePage() {
           pagination={{ pageSize: 10, showSizeChanger: true }}
           search={{ labelWidth: 'auto' }}
           toolBarRender={() => [
-            <Button key="add" type="primary" icon={<PlusOutlined />} onClick={handleOpenAdd}>
-              {t('role.addRole')}
-            </Button>,
+            canCreate ? (
+              <Button key="add" type="primary" icon={<PlusOutlined />} onClick={handleOpenAdd}>
+                {t('role.addRole')}
+              </Button>
+            ) : null,
           ]}
           options={{ reload: true, density: true, setting: true }}
         />
@@ -246,6 +300,8 @@ export default function RolePage() {
             setEditMode(false);
             setEditingRecord(null);
             setCheckedKeys([]);
+            setCheckedDeptKeys([]);
+            setCurrentDataScope(1);
           }
         }}
         width={720}
@@ -263,7 +319,15 @@ export default function RolePage() {
             : { dataScope: 1, sort: 0, status: 1 }
         }
         onFinish={async (values) => {
-          const payload = { ...values, menuIds: checkedKeys };
+          if (currentDataScope === 6 && checkedDeptKeys.length === 0) {
+            message.error(t('role.customDeptRequired'));
+            return false;
+          }
+          const payload = {
+            ...values,
+            menuIds: checkedKeys,
+            deptIds: currentDataScope === 6 ? checkedDeptKeys : [],
+          };
           const res =
             editMode && editingRecord
               ? await updateMutation.mutateAsync({
@@ -308,7 +372,15 @@ export default function RolePage() {
               { label: t('role.dataScopeDept'), value: 3 },
               { label: t('role.dataScopeSelfAndChild'), value: 4 },
               { label: t('role.dataScopeSelf'), value: 5 },
+              { label: t('role.dataScopeCustomDept'), value: 6 },
             ]}
+            fieldProps={{
+              onChange: (value) => {
+                const nextScope = Number(value);
+                setCurrentDataScope(nextScope);
+                if (nextScope !== 6) setCheckedDeptKeys([]);
+              },
+            }}
           />
           <ProFormDigit name="sort" label={t('role.sort')} min={0} />
           <ProFormRadio.Group
@@ -333,6 +405,28 @@ export default function RolePage() {
             className="rounded border p-2"
           />
         </Form.Item>
+
+        {currentDataScope === 6 && (
+          <Form.Item
+            label={t('role.assignDepts')}
+            extra={t('role.customDeptHint')}
+            required
+          >
+            <Tree
+              checkable
+              checkStrictly
+              checkedKeys={checkedDeptKeys}
+              onCheck={handleDeptCheck}
+              treeData={deptTreeNodes}
+              defaultExpandAll
+              height={240}
+              className="rounded border p-2"
+            />
+            {checkedDeptKeys.length === 0 && (
+              <div className="mt-1 text-xs text-red-500">{t('role.customDeptRequired')}</div>
+            )}
+          </Form.Item>
+        )}
       </ModalForm>
     </PageContainer>
   );
