@@ -179,7 +179,8 @@ export default {
     dataScopeSelf: 'Self Only',
     dataScopeCustomDept: 'Custom Departments',
     customDeptRequired: 'Please select at least one department',
-    customDeptHint: 'Only selected departments are authorized; sub-departments are not included automatically',
+    customDeptHint:
+      'Only selected departments are authorized; sub-departments are not included automatically',
     assignDepts: 'Authorized Departments',
     dataScopeRequired: 'Please select data scope',
     sort: 'Sort',
@@ -193,6 +194,7 @@ export default {
     roleNameRequired: 'Please enter role name',
     roleCodeRequired: 'Please enter role code',
     assignMenus: 'Menu Permissions',
+    permissionSelected: '{{count}} selected',
     deleteConfirm: 'Are you sure to delete this role?',
     createSuccess: 'Created successfully',
     updateSuccess: 'Updated successfully',

@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
-import { Button, Tag, Tree, Popconfirm, Form } from 'antd';
+import { Button, Tag, Tree, Popconfirm } from 'antd';
 import { message } from '@/utils/message';
 import type { DataNode } from 'antd/es/tree';
 import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
@@ -132,13 +132,15 @@ export default function RolePage() {
     setCheckedDeptKeys(keys.map(String));
   };
 
-  const menuTreeNodes: DataNode[] = (menuTree ?? []).map((item) => ({
-    key: item.id,
-    title: item.name,
-    children: item.children
-      ? (item.children.map((c) => ({ key: c.id, title: c.name })) as DataNode[])
-      : undefined,
-  }));
+  const menuTreeNodes = useMemo<DataNode[]>(() => {
+    const toNodes = (nodes: typeof menuTree): DataNode[] =>
+      (nodes ?? []).map((item) => ({
+        key: item.id,
+        title: item.name,
+        children: item.children ? toNodes(item.children) : undefined,
+      }));
+    return toNodes(menuTree);
+  }, [menuTree]);
 
   const deptTreeNodes = useMemo<DataNode[]>(() => {
     const toNodes = (nodes: DeptTreeNode[]): DataNode[] =>
@@ -220,33 +222,34 @@ export default function RolePage() {
       key: 'option',
       width: 160,
       fixed: 'right',
-      render: (_, record) => [
-        canEdit ? (
-          <Button
-            key="edit"
-            type="link"
-            size="small"
-            icon={<EditOutlined />}
-            onClick={() => handleOpenEdit(record)}
-          >
-            {t('common.edit')}
-          </Button>
-        ) : null,
-        canDelete ? (
-          <Popconfirm
-            key="del"
-            title={t('role.deleteConfirm')}
-            onConfirm={() => deleteMutation.mutate(record.id)}
-            okText={t('common.confirm')}
-            cancelText={t('common.cancel')}
-            okButtonProps={{ danger: true }}
-          >
-            <Button type="link" size="small" danger icon={<DeleteOutlined />}>
-              {t('common.delete')}
+      render: (_, record) =>
+        [
+          canEdit ? (
+            <Button
+              key="edit"
+              type="link"
+              size="small"
+              icon={<EditOutlined />}
+              onClick={() => handleOpenEdit(record)}
+            >
+              {t('common.edit')}
             </Button>
-          </Popconfirm>
-        ) : null,
-      ].filter(Boolean),
+          ) : null,
+          canDelete ? (
+            <Popconfirm
+              key="del"
+              title={t('role.deleteConfirm')}
+              onConfirm={() => deleteMutation.mutate(record.id)}
+              okText={t('common.confirm')}
+              cancelText={t('common.cancel')}
+              okButtonProps={{ danger: true }}
+            >
+              <Button type="link" size="small" danger icon={<DeleteOutlined />}>
+                {t('common.delete')}
+              </Button>
+            </Popconfirm>
+          ) : null,
+        ].filter(Boolean),
     },
   ];
 
@@ -304,7 +307,7 @@ export default function RolePage() {
             setCurrentDataScope(1);
           }
         }}
-        width={720}
+        width={800}
         layout="vertical"
         initialValues={
           editMode && editingRecord
@@ -344,74 +347,96 @@ export default function RolePage() {
           return true;
         }}
       >
-        <div className="grid grid-cols-2 gap-x-4">
-          <ProFormText
-            name="name"
-            label={t('role.roleName')}
-            disabled={editMode}
-            rules={[{ required: true, message: t('role.roleNameRequired') }]}
-          />
-          <ProFormText
-            name="code"
-            label={t('role.roleCode')}
-            disabled={editMode}
-            rules={[{ required: true, message: t('role.roleCodeRequired') }]}
-          />
-          <ProFormTextArea
-            name="description"
-            label={t('role.description')}
-            className="col-span-2"
-          />
-          <ProFormSelect
-            name="dataScope"
-            label={t('role.dataScope')}
-            rules={[{ required: true, message: t('role.dataScopeRequired') }]}
-            options={[
-              { label: t('role.dataScopeAll'), value: 1 },
-              { label: t('role.dataScopeDeptAndChild'), value: 2 },
-              { label: t('role.dataScopeDept'), value: 3 },
-              { label: t('role.dataScopeSelfAndChild'), value: 4 },
-              { label: t('role.dataScopeSelf'), value: 5 },
-              { label: t('role.dataScopeCustomDept'), value: 6 },
-            ]}
-            fieldProps={{
-              onChange: (value) => {
-                const nextScope = Number(value);
-                setCurrentDataScope(nextScope);
-                if (nextScope !== 6) setCheckedDeptKeys([]);
-              },
-            }}
-          />
-          <ProFormDigit name="sort" label={t('role.sort')} min={0} />
-          <ProFormRadio.Group
-            name="status"
-            label={t('role.status')}
-            rules={[{ required: true }]}
-            options={[
-              { label: t('role.enabled'), value: 1 },
-              { label: t('role.disabled'), value: 0 },
-            ]}
-          />
+        <div className="grid grid-cols-2 gap-x-6">
+          <div>
+            <ProFormText
+              name="name"
+              label={t('role.roleName')}
+              disabled={editMode}
+              rules={[{ required: true, message: t('role.roleNameRequired') }]}
+            />
+          </div>
+          <div>
+            <ProFormText
+              name="code"
+              label={t('role.roleCode')}
+              disabled={editMode}
+              rules={[{ required: true, message: t('role.roleCodeRequired') }]}
+            />
+          </div>
+          <div>
+            <ProFormTextArea
+              name="description"
+              label={t('role.description')}
+              fieldProps={{ autoSize: { minRows: 2, maxRows: 2 } }}
+            />
+          </div>
+          <div>
+            <ProFormSelect
+              name="dataScope"
+              label={t('role.dataScope')}
+              rules={[{ required: true, message: t('role.dataScopeRequired') }]}
+              options={[
+                { label: t('role.dataScopeAll'), value: 1 },
+                { label: t('role.dataScopeDeptAndChild'), value: 2 },
+                { label: t('role.dataScopeDept'), value: 3 },
+                { label: t('role.dataScopeSelfAndChild'), value: 4 },
+                { label: t('role.dataScopeSelf'), value: 5 },
+                { label: t('role.dataScopeCustomDept'), value: 6 },
+              ]}
+              fieldProps={{
+                onChange: (value) => {
+                  const nextScope = Number(value);
+                  setCurrentDataScope(nextScope);
+                  if (nextScope !== 6) setCheckedDeptKeys([]);
+                },
+              }}
+            />
+          </div>
+          <div>
+            <ProFormDigit name="sort" label={t('role.sort')} min={0} />
+          </div>
+          <div>
+            <ProFormRadio.Group
+              name="status"
+              label={t('role.status')}
+              rules={[{ required: true }]}
+              options={[
+                { label: t('role.enabled'), value: 1 },
+                { label: t('role.disabled'), value: 0 },
+              ]}
+            />
+          </div>
         </div>
 
-        <Form.Item label={t('role.assignMenus')}>
+        <section className="mt-3 border-t border-slate-200 pt-5">
+          <div className="mb-3 flex items-center justify-between">
+            <div className="text-base font-semibold text-slate-800">{t('role.assignMenus')}</div>
+            <div className="text-sm text-slate-400">
+              {t('role.permissionSelected', { count: checkedKeys.length })}
+            </div>
+          </div>
           <Tree
             checkable
+            blockNode
             checkedKeys={checkedKeys}
             onCheck={handleMenuCheck}
             treeData={menuTreeNodes}
             defaultExpandAll
-            height={280}
-            className="rounded border p-2"
+            height={260}
+            className="rounded-md border border-slate-200 bg-white p-2"
           />
-        </Form.Item>
+        </section>
 
         {currentDataScope === 6 && (
-          <Form.Item
-            label={t('role.assignDepts')}
-            extra={t('role.customDeptHint')}
-            required
-          >
+          <section className="mt-5 border-t border-slate-200 pt-5">
+            <div className="mb-3 flex items-center justify-between">
+              <div className="text-base font-semibold text-slate-800">
+                <span className="mr-1 text-red-500">*</span>
+                {t('role.assignDepts')}
+              </div>
+              <div className="text-sm text-slate-400">{t('role.customDeptHint')}</div>
+            </div>
             <Tree
               checkable
               checkStrictly
@@ -419,13 +444,13 @@ export default function RolePage() {
               onCheck={handleDeptCheck}
               treeData={deptTreeNodes}
               defaultExpandAll
-              height={240}
-              className="rounded border p-2"
+              height={160}
+              className="rounded-md border border-slate-200 bg-white p-2"
             />
             {checkedDeptKeys.length === 0 && (
               <div className="mt-1 text-xs text-red-500">{t('role.customDeptRequired')}</div>
             )}
-          </Form.Item>
+          </section>
         )}
       </ModalForm>
     </PageContainer>

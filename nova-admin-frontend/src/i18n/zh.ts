@@ -194,6 +194,7 @@ export default {
     roleNameRequired: '请输入角色名称',
     roleCodeRequired: '请输入角色编码',
     assignMenus: '菜单权限',
+    permissionSelected: '已选 {{count}} 项',
     deleteConfirm: '确认删除该角色吗？',
     createSuccess: '创建成功',
     updateSuccess: '更新成功',
