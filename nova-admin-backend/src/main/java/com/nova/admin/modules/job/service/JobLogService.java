@@ -16,6 +16,6 @@ public interface JobLogService {
 
     SysJobLog getById(Long id);
 
-    void record(SysJob job, JobTriggerType triggerType, JobLogStatus status,
-                LocalDateTime startTime, LocalDateTime endTime, String errorMsg);
+    SysJobLog record(SysJob job, JobTriggerType triggerType, JobLogStatus status,
+                     LocalDateTime startTime, LocalDateTime endTime, String errorMsg);
 }

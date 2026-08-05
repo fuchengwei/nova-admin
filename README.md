@@ -5,6 +5,7 @@
 ## 技术栈
 
 ### 后端 (`nova-admin-backend`)
+
 - Spring Boot 4.1.0 + Java 25
 - Spring Security 7.1.0 + JJWT 0.12.6
 - MyBatis-Plus 3.5.15
@@ -12,6 +13,7 @@
 - Redisson 3.40+
 
 ### 前端 (`nova-admin-frontend`)
+
 - Vite 8 + React 19 + TypeScript 7.0
 - Ant Design 6.5 + **ProComponents 3.x**（`@ant-design/pro-components`）+ Tailwind CSS 4
 - Zustand 5 + TanStack Query 5
@@ -64,7 +66,7 @@
 
 ## 站内消息
 
-Header 通知铃铛展示当前用户最近 10 条站内消息和未读数量，支持单条已读与全部已读。消息按用户收件记录隔离，基础接口为 `GET /api/system/notification/summary`、`PUT /api/system/notification/{id}/read` 和 `PUT /api/system/notification/read-all`。第一阶段暂不提供管理员发布页面，也不接入具体业务事件。
+Header 通知铃铛展示当前用户最近 10 条站内消息和未读数量，支持单条已读与全部已读。消息按用户收件记录隔离，基础接口为 `GET /api/system/notification/summary`、`PUT /api/system/notification/{id}/read` 和 `PUT /api/system/notification/read-all`。定时任务执行失败时，系统会向启用的超级管理员投递消息；点击消息可直接打开对应执行详情。暂不提供管理员发布页面、实时推送或其他业务事件接入。
 
 ## 用户导入导出
 
@@ -88,6 +90,7 @@ nova-admin/
 ## 快速开始
 
 ### 1. 启动基础设施
+
 > **macOS 推荐使用 OrbStack**（轻量 Docker Desktop 替代品）：
 
 ```bash
@@ -101,24 +104,28 @@ docker compose up -d
 > 也可以使用 Docker Desktop：`open -a Docker` → 等待就绪后执行 `docker compose up -d`。
 
 ### 2. 启动后端
+
 ```bash
 cd nova-admin-backend
 mvn spring-boot:run
 ```
+
 默认端口 `8080`，OpenAPI 文档：`http://localhost:8080/api/swagger-ui.html`
 
 ### 3. 启动前端
+
 ```bash
 cd nova-admin-frontend
 pnpm install
 pnpm dev
 ```
+
 默认端口 `5173`，访问 `http://localhost:5173`
 
 ## 默认账号
 
-| 用户名 | 密码 | 说明 |
-| --- | --- | --- |
+| 用户名  | 密码       | 说明       |
+| ------- | ---------- | ---------- |
 | `admin` | `admin123` | 超级管理员 |
 
 ## 部署

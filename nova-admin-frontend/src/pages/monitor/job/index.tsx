@@ -20,8 +20,9 @@ import {
   type ProColumns,
   type ActionType,
 } from '@ant-design/pro-components';
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
+import { useSearchParams } from 'react-router-dom';
 import {
   getJobPage,
   createJob,
@@ -30,6 +31,7 @@ import {
   pauseJob,
   resumeJob,
   runJob,
+  getJobLog,
   type SysJob,
   type JobPageQuery,
 } from '@/api/job';
@@ -40,10 +42,12 @@ import { hasPermission } from '@/utils/layout';
 import CronExpressionField from './components/CronExpressionField';
 import { describeCron } from './cron';
 import JobLogDrawer from './components/JobLogDrawer';
+import JobLogDetailModal from './components/JobLogDetailModal';
 
 export default function JobPage() {
   const { t } = useTranslation();
   const actionRef = useRef<ActionType>(null);
+  const [searchParams, setSearchParams] = useSearchParams();
   const permissions = useUserStore((state) => state.permissions);
   const roles = useUserStore((state) => state.roles);
   const hasJobPermission = (permission: string) =>
@@ -58,6 +62,21 @@ export default function JobPage() {
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<SysJob | null>(null);
   const [historyJob, setHistoryJob] = useState<SysJob | null>(null);
+  const notificationLogId = searchParams.get('logId');
+  const { data: notificationLog } = useQuery({
+    queryKey: ['jobLog', notificationLogId],
+    enabled: Boolean(notificationLogId),
+    queryFn: async () => {
+      const result = await getJobLog(notificationLogId as string);
+      return result.code === 0 ? result.data : null;
+    },
+  });
+
+  const closeNotificationLog = () => {
+    const params = new URLSearchParams(searchParams);
+    params.delete('logId');
+    setSearchParams(params, { replace: true });
+  };
 
   const createMutation = useMutation({ mutationFn: createJob });
   const updateMutation = useMutation({ mutationFn: updateJob });
@@ -392,6 +411,7 @@ export default function JobPage() {
         </div>
       </ModalForm>
       <JobLogDrawer job={historyJob} onClose={() => setHistoryJob(null)} />
+      <JobLogDetailModal record={notificationLog ?? null} onClose={closeNotificationLog} />
     </div>
   );
 }

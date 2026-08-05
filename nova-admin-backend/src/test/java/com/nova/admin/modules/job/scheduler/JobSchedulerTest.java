@@ -1,8 +1,10 @@
 package com.nova.admin.modules.job.scheduler;
 
 import com.nova.admin.modules.job.entity.SysJob;
+import com.nova.admin.modules.job.entity.SysJobLog;
 import com.nova.admin.modules.job.enums.JobLogStatus;
 import com.nova.admin.modules.job.enums.JobTriggerType;
+import com.nova.admin.modules.job.service.JobFailureNotificationService;
 import com.nova.admin.modules.job.service.JobLogService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -23,6 +25,7 @@ import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.doThrow;
 
 @ExtendWith(MockitoExtension.class)
 class JobSchedulerTest {
@@ -31,13 +34,16 @@ class JobSchedulerTest {
     private JobLogService jobLogService;
 
     @Mock
+    private JobFailureNotificationService jobFailureNotificationService;
+
+    @Mock
     private ApplicationContext applicationContext;
 
     private JobScheduler jobScheduler;
 
     @BeforeEach
     void setUp() {
-        jobScheduler = new JobScheduler(jobLogService);
+        jobScheduler = new JobScheduler(jobLogService, jobFailureNotificationService);
         jobScheduler.setApplicationContext(applicationContext);
     }
 
@@ -55,7 +61,29 @@ class JobSchedulerTest {
     @Test
     void runOnce_whenInvocationFails_recordsFailedManualExecution() {
         SysJob job = job("failedTask.run", 1);
+        SysJobLog jobLog = new SysJobLog();
+        jobLog.setId(2L);
         given(applicationContext.getBean("failedTask")).willReturn(new FailedTask());
+        given(jobLogService.record(eq(job), eq(JobTriggerType.MANUAL), eq(JobLogStatus.FAILED),
+                any(LocalDateTime.class), any(LocalDateTime.class), eq("调用任务方法失败: task failed")))
+                .willReturn(jobLog);
+
+        jobScheduler.runOnce(job);
+
+        verify(jobLogService).record(eq(job), eq(JobTriggerType.MANUAL), eq(JobLogStatus.FAILED),
+                any(LocalDateTime.class), any(LocalDateTime.class), eq("调用任务方法失败: task failed"));
+        verify(jobFailureNotificationService).notifyFailure(
+                job, jobLog, JobTriggerType.MANUAL, "调用任务方法失败: task failed");
+    }
+
+    @Test
+    void runOnce_whenFailureNotificationFails_keepsExecutionHistory() {
+        SysJob job = job("failedTask.run", 1);
+        given(applicationContext.getBean("failedTask")).willReturn(new FailedTask());
+        doThrow(new IllegalStateException("notification unavailable"))
+                .when(jobFailureNotificationService)
+                .notifyFailure(eq(job), isNull(), eq(JobTriggerType.MANUAL),
+                        eq("调用任务方法失败: task failed"));
 
         jobScheduler.runOnce(job);
 

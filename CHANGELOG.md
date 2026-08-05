@@ -6,7 +6,8 @@
 ## [Unreleased]
 
 ### 新增
-- **站内消息通知中心基础能力**：Header 新增通知铃铛，支持当前用户最近消息、未读数量、单条已读和全部已读；消息表与收件记录由初始化 SQL 创建，暂不接入具体业务事件。
+
+- **站内消息通知中心基础能力**：Header 新增通知铃铛，支持当前用户最近消息、未读数量、单条已读和全部已读；消息表与收件记录由初始化 SQL 创建，并已接入定时任务失败通知与执行详情深链。
 - **接口权限发现与同步**：系统管理新增独立的接口权限菜单，支持扫描受 `@PreAuthorize` 保护的真实接口；接口权限独立于菜单按钮存储，可注册发现的权限、为已注册权限分配角色，并自动刷新受影响用户权限；初始化 SQL 会迁移已有菜单按钮权限。
 - **定时任务执行历史**：自动、手动和并发跳过的任务执行均会持久化为可筛选历史记录；任务管理页可按任务查看执行结果与失败详情。
 - **雪花 ID 传输约定**：所有对外 JSON 响应中的雪花 ID 统一序列化为字符串，前端 ID 类型同步改为 `string`，避免 JavaScript 精度丢失。
@@ -25,6 +26,7 @@
 ## [1.0.0] - 2026-07-22
 
 ### 新增
+
 - **认证模块**：图形验证码、登录/注销/刷新令牌、BCrypt 密码校验、Redis 黑名单、登录失败锁定。
 - **RBAC 核心**：用户管理、角色管理、部门管理（树形）、菜单/权限管理（目录/菜单/按钮三级）、动态路由。
 - **数据权限**：5 级（全部/本部门及下级/本部门/本人及下级/本人）+ 自定义部门；`@DataScope` 注解 + MyBatis-Plus `DataScopeInnerInterceptor` 改写 SQL。
@@ -38,9 +40,11 @@
 - **工程化**：后端多阶段 `Dockerfile`、前端 `Dockerfile` + `nginx.conf`、生产 `docker-compose.prod.yml`、部署文档。
 
 ### 修复
+
 - 修复启动期 Bean 循环依赖：`DataScopeHelper` 在 MyBatis `sqlSessionFactory` 构建阶段即被需要，而其注入的 `SysDeptService` 底层依赖 Mapper 会形成循环。改为对 `SysDeptService` 使用 `@Lazy` 懒加载代理，仅在请求执行带 `@DataScope` 的查询时才初始化。
 
 ### 技术栈
+
 - 后端：Spring Boot 4.1.0 + Java 25、Spring Security 7.1、MyBatis-Plus 3.5.15、PostgreSQL 17、Redis 8、Redisson 4.6。
 - 前端：Vite 8 + React 19 + TypeScript 7、Ant Design 6.5、Tailwind CSS 4、Zustand 5、TanStack Query 5。
 

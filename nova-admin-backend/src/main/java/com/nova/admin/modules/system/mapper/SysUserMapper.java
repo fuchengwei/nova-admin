@@ -32,4 +32,18 @@ public interface SysUserMapper extends BaseMapper<SysUser> {
 
     @DataScope(deptAlias = "u", userAlias = "u")
     List<SysUser> selectUserList(@Param("query") UserPageQuery query);
+
+    /** 查询指定角色下所有启用用户的 ID。 */
+    @Select("""
+            SELECT DISTINCT u.id
+            FROM sys_user u
+            INNER JOIN sys_user_role ur ON ur.user_id = u.id
+            INNER JOIN sys_role r ON r.id = ur.role_id
+            WHERE u.deleted = 0
+              AND u.status = 1
+              AND r.deleted = 0
+              AND r.status = 1
+              AND r.code = #{roleCode}
+            """)
+    List<Long> selectEnabledUserIdsByRoleCode(@Param("roleCode") String roleCode);
 }

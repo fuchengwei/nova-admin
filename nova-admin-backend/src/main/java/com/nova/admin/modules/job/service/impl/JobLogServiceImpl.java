@@ -53,8 +53,8 @@ public class JobLogServiceImpl implements JobLogService {
 
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW, rollbackFor = Exception.class)
-    public void record(SysJob job, JobTriggerType triggerType, JobLogStatus status,
-                       LocalDateTime startTime, LocalDateTime endTime, String errorMsg) {
+    public SysJobLog record(SysJob job, JobTriggerType triggerType, JobLogStatus status,
+                            LocalDateTime startTime, LocalDateTime endTime, String errorMsg) {
         SysJobLog jobLog = new SysJobLog();
         jobLog.setJobId(job.getId());
         jobLog.setJobName(job.getJobName());
@@ -68,6 +68,7 @@ public class JobLogServiceImpl implements JobLogService {
         jobLog.setErrorMsg(truncate(errorMsg));
         jobLog.setCreateTime(endTime);
         jobLogMapper.insert(jobLog);
+        return jobLog;
     }
 
     private String truncate(String value) {

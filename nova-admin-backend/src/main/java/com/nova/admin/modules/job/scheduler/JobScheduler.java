@@ -2,8 +2,10 @@ package com.nova.admin.modules.job.scheduler;
 
 import com.nova.admin.common.exception.BizException;
 import com.nova.admin.modules.job.entity.SysJob;
+import com.nova.admin.modules.job.entity.SysJobLog;
 import com.nova.admin.modules.job.enums.JobLogStatus;
 import com.nova.admin.modules.job.enums.JobTriggerType;
+import com.nova.admin.modules.job.service.JobFailureNotificationService;
 import com.nova.admin.modules.job.service.JobLogService;
 import jakarta.annotation.PreDestroy;
 import lombok.extern.slf4j.Slf4j;
@@ -37,6 +39,7 @@ public class JobScheduler implements ApplicationContextAware {
     /** 正在执行（禁止并发）的任务 */
     private final Map<Long, Boolean> running = new ConcurrentHashMap<>();
     private final JobLogService jobLogService;
+    private final JobFailureNotificationService jobFailureNotificationService;
     private ApplicationContext applicationContext;
 
     {
@@ -97,7 +100,9 @@ public class JobScheduler implements ApplicationContextAware {
             recordExecution(job, triggerType, JobLogStatus.SUCCESS, startTime, LocalDateTime.now(), null);
         } catch (Exception e) {
             log.error("定时任务执行失败: id={}, name={}", job.getId(), job.getJobName(), e);
-            recordExecution(job, triggerType, JobLogStatus.FAILED, startTime, LocalDateTime.now(), e.getMessage());
+            SysJobLog jobLog = recordExecution(
+                    job, triggerType, JobLogStatus.FAILED, startTime, LocalDateTime.now(), e.getMessage());
+            notifyFailure(job, jobLog, triggerType, e.getMessage());
         } finally {
             if (job.getConcurrent() != null && job.getConcurrent() == 0) {
                 running.remove(job.getId());
@@ -105,12 +110,21 @@ public class JobScheduler implements ApplicationContextAware {
         }
     }
 
-    private void recordExecution(SysJob job, JobTriggerType triggerType, JobLogStatus status,
-                                 LocalDateTime startTime, LocalDateTime endTime, String errorMsg) {
+    private SysJobLog recordExecution(SysJob job, JobTriggerType triggerType, JobLogStatus status,
+                                      LocalDateTime startTime, LocalDateTime endTime, String errorMsg) {
         try {
-            jobLogService.record(job, triggerType, status, startTime, endTime, errorMsg);
+            return jobLogService.record(job, triggerType, status, startTime, endTime, errorMsg);
         } catch (Exception e) {
             log.warn("定时任务执行历史记录失败: id={}, name={}", job.getId(), job.getJobName(), e);
+            return null;
+        }
+    }
+
+    private void notifyFailure(SysJob job, SysJobLog jobLog, JobTriggerType triggerType, String errorMessage) {
+        try {
+            jobFailureNotificationService.notifyFailure(job, jobLog, triggerType, errorMessage);
+        } catch (Exception e) {
+            log.warn("定时任务失败通知发送失败: id={}, name={}", job.getId(), job.getJobName(), e);
         }
     }
 
