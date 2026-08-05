@@ -426,7 +426,10 @@ VALUES
     (36, 35, '删除日志', 'F', 'system:log:remove', '', '', '', 0, 0, 1, NOW()),
     -- 系统设置
     (37, 1, '系统设置', 'C', 'system:settings:view', '/system/settings', 'system/settings/index', 'ControlOutlined', 6, 1, 1, NOW()),
-    (38, 37, '修改设置', 'F', 'system:settings:edit', '', '', '', 0, 0, 1, NOW());
+    (38, 37, '修改设置', 'F', 'system:settings:edit', '', '', '', 0, 0, 1, NOW()),
+    -- 站内消息发布
+    (57, 1, '消息发布', 'C', 'system:notification:publish', '/system/notification', 'system/notification/index', 'NotificationOutlined', 7, 1, 1, NOW()),
+    (58, 57, '发布消息', 'F', 'system:notification:publish', '', '', '', 0, 0, 1, NOW());
 
 -- 系统配置默认值
 INSERT INTO sys_config (id, config_key, config_value, config_group, value_type, description, builtin, create_time, update_time, deleted)

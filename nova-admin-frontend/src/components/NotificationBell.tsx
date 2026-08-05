@@ -87,7 +87,7 @@ export default function NotificationBell() {
   };
 
   const content = (
-    <div className="w-[min(360px,calc(100vw-32px))]">
+    <div className="notification-popover-content">
       {isLoading ? (
         <div className="flex min-h-32 items-center justify-center">
           <Spin size="small" />
@@ -100,44 +100,41 @@ export default function NotificationBell() {
           </Button>
         </div>
       ) : data.records.length === 0 ? (
-        <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={t('notification.empty')} />
+        <div className="notification-empty-state">
+          <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={t('notification.empty')} />
+        </div>
       ) : (
-        <div className="max-h-96 overflow-y-auto pr-1">
-          <Space direction="vertical" size={4} className="w-full">
+        <div className="notification-list">
+          <Space orientation="vertical" size={0} className="w-full">
             {data.records.map((record) => (
               <button
                 key={record.id}
                 type="button"
-                className={`w-full rounded-lg border-0 px-3 py-2 text-left transition-colors hover:bg-slate-50 ${
-                  record.read ? 'bg-white' : 'bg-blue-50/70'
-                }`}
+                className={`notification-item ${record.read ? '' : 'notification-item-unread'}`}
                 disabled={markReadMutation.isPending}
                 onClick={() => void handleMessageClick(record)}
               >
-                <div className="flex items-start gap-2">
-                  <span
-                    className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${
-                      record.read ? 'bg-slate-200' : 'bg-blue-500'
-                    }`}
-                    aria-hidden="true"
-                  />
-                  <span className="min-w-0 flex-1">
-                    <span className="flex items-center justify-between gap-3">
-                      <Typography.Text strong={!record.read} ellipsis>
-                        {record.title}
-                      </Typography.Text>
-                      <Typography.Text type="secondary" className="shrink-0 text-xs">
-                        {dayjs(record.createdAt).format('MM-DD HH:mm')}
-                      </Typography.Text>
-                    </span>
-                    <Typography.Paragraph ellipsis={{ rows: 2 }} className="mt-1 mb-1 text-xs">
-                      {record.content}
-                    </Typography.Paragraph>
-                    <Typography.Text type="secondary" className="text-xs">
-                      {typeLabel(record.type)}
+                <span
+                  className={`notification-item-dot ${record.read ? '' : 'notification-item-dot-unread'}`}
+                  aria-hidden="true"
+                />
+                <span className="notification-item-main">
+                  <span className="notification-item-header">
+                    <Typography.Text strong={!record.read} ellipsis>
+                      {record.title}
+                    </Typography.Text>
+                    <Typography.Text type="secondary" className="notification-item-time">
+                      {dayjs(record.createdAt).format('MM-DD HH:mm')}
                     </Typography.Text>
                   </span>
-                </div>
+                  <Typography.Paragraph
+                    ellipsis={{ rows: 2 }}
+                    className="notification-item-content"
+                  >
+                    {record.content}
+                  </Typography.Paragraph>
+                  <span className="notification-item-type">{typeLabel(record.type)}</span>
+                </span>
               </button>
             ))}
           </Space>
@@ -150,9 +147,21 @@ export default function NotificationBell() {
     <Popover
       trigger="click"
       placement="bottomRight"
+      classNames={{
+        root: 'notification-popover',
+        title: 'notification-popover-title',
+        content: 'notification-popover-body',
+      }}
       title={
-        <div className="flex items-center justify-between gap-6">
-          <span>{t('notification.title')}</span>
+        <div className="notification-popover-heading">
+          <div className="notification-popover-title-group">
+            <span>{t('notification.title')}</span>
+            {data.unreadCount > 0 && (
+              <span className="notification-unread-count">
+                {t('notification.unreadCount', { count: data.unreadCount })}
+              </span>
+            )}
+          </div>
           <Button
             type="link"
             size="small"
@@ -166,10 +175,16 @@ export default function NotificationBell() {
       }
       content={content}
     >
-      <Badge count={data.unreadCount} overflowCount={99} size="small" offset={[-2, 4]}>
+      <Badge
+        className="notification-bell-badge"
+        size="small"
+        count={data.unreadCount}
+        overflowCount={99}
+        offset={[-13, 13]}
+      >
         <Button
           type="text"
-          size="large"
+          size="middle"
           className="notification-bell-button"
           icon={<BellOutlined />}
           aria-label={t('notification.open')}

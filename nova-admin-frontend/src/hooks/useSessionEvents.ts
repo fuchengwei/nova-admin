@@ -8,13 +8,21 @@ interface UseSessionEventsOptions {
   onSessionRevoked: () => boolean;
   /** 权限变更时刷新用户信息和菜单，不影响当前登录会话。 */
   onAuthorizationChanged?: () => void;
+  /** 收到站内消息后刷新通知摘要。 */
+  onNotificationCreated?: () => void;
 }
 
-export function useSessionEvents({ onSessionRevoked, onAuthorizationChanged }: UseSessionEventsOptions): void {
+export function useSessionEvents({
+  onSessionRevoked,
+  onAuthorizationChanged,
+  onNotificationCreated,
+}: UseSessionEventsOptions): void {
   const revokedCallbackRef = useRef(onSessionRevoked);
   const authorizationCallbackRef = useRef(onAuthorizationChanged);
+  const notificationCallbackRef = useRef(onNotificationCreated);
   revokedCallbackRef.current = onSessionRevoked;
   authorizationCallbackRef.current = onAuthorizationChanged;
+  notificationCallbackRef.current = onNotificationCreated;
 
   useEffect(() => {
     let stopped = false;
@@ -52,6 +60,8 @@ export function useSessionEvents({ onSessionRevoked, onAuthorizationChanged }: U
           buffer = buffer.slice(boundary + 2);
           if (/event:\s*authorization-changed/.test(event)) {
             authorizationCallbackRef.current?.();
+          } else if (/event:\s*notification-created/.test(event)) {
+            notificationCallbackRef.current?.();
           } else if (/event:\s*session-revoked/.test(event)) {
             if (!handleRevoked()) scheduleReconnect();
             return;

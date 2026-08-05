@@ -10,7 +10,7 @@ import {
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { ProLayout } from '@ant-design/pro-components';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { getPublicBasicSettings } from '@/api/settings';
 import NotificationBell from '@/components/NotificationBell';
 import SystemNotice from '@/components/SystemNotice';
@@ -36,6 +36,7 @@ export default function AdminLayout() {
   const { setUserInfo, menus, setMenus, permissions, reset } = useUserStore();
   const userInfo = useUserStore((s) => s.userInfo);
   const { modal } = AntdApp.useApp();
+  const queryClient = useQueryClient();
   const { token } = antdTheme.useToken();
   const [menusLoaded, setMenusLoaded] = useState(false);
   const ignoreSessionRevocationRef = useRef(false);
@@ -74,6 +75,9 @@ export default function AdminLayout() {
   useSessionEvents({
     onAuthorizationChanged: () => {
       void loadIdentity();
+    },
+    onNotificationCreated: () => {
+      void queryClient.invalidateQueries({ queryKey: ['notifications', 'summary'] });
     },
     onSessionRevoked: () => {
       if (ignoreSessionRevocationRef.current || !getToken()) return false;
@@ -240,7 +244,7 @@ export default function AdminLayout() {
                 </Button>
               </Dropdown>,
               <Dropdown key="user" menu={userMenu} placement="bottomRight">
-                <Space className="cursor-pointer">
+                <Space className="cursor-pointer p-0!">
                   <Avatar src={safeAvatarSrc} icon={<UserOutlined />} />
                   <span>{userInfo?.nickname ?? userInfo?.account ?? 'Admin'}</span>
                 </Space>

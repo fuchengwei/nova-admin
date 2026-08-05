@@ -70,3 +70,6 @@ secrets/
 
 # ===== MinIO data =====
 .minio-data/
+
+# ===== Local design previews =====
+.superpowers/

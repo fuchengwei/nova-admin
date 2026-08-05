@@ -5,6 +5,7 @@ import com.nova.admin.modules.system.dto.NotificationSummaryDTO;
 import com.nova.admin.modules.system.entity.SysMessage;
 import com.nova.admin.modules.system.mapper.SysMessageMapper;
 import com.nova.admin.modules.system.mapper.SysMessageRecipientMapper;
+import com.nova.admin.modules.system.event.NotificationCreatedEvent;
 import com.nova.admin.modules.system.service.impl.NotificationServiceImpl;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -12,6 +13,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 
 import java.util.Arrays;
 import java.util.List;
@@ -31,6 +33,9 @@ class NotificationServiceImplTest {
 
     @Mock
     private SysMessageRecipientMapper recipientMapper;
+
+    @Mock
+    private ApplicationEventPublisher eventPublisher;
 
     @InjectMocks
     private NotificationServiceImpl service;
@@ -80,6 +85,12 @@ class NotificationServiceImplTest {
         ArgumentCaptor<com.nova.admin.modules.system.entity.SysMessageRecipient> captor =
                 ArgumentCaptor.forClass(com.nova.admin.modules.system.entity.SysMessageRecipient.class);
         verify(recipientMapper, org.mockito.Mockito.times(2)).insert(captor.capture());
-        assertThat(captor.getAllValues()).extracting("userId").containsExactly(7L, 8L);
+        assertThat(captor.getAllValues()).extracting("userId").containsExactlyInAnyOrder(7L, 8L);
+
+        ArgumentCaptor<NotificationCreatedEvent> eventCaptor =
+                ArgumentCaptor.forClass(NotificationCreatedEvent.class);
+        verify(eventPublisher).publishEvent(eventCaptor.capture());
+        assertThat(eventCaptor.getValue().messageId()).isEqualTo(100L);
+        assertThat(eventCaptor.getValue().userIds()).containsExactlyInAnyOrder(7L, 8L);
     }
 }

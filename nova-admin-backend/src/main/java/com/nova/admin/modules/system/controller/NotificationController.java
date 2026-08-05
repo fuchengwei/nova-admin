@@ -3,15 +3,22 @@ package com.nova.admin.modules.system.controller;
 import com.nova.admin.common.api.R;
 import com.nova.admin.common.base.BaseController;
 import com.nova.admin.modules.system.dto.NotificationSummaryDTO;
+import com.nova.admin.modules.system.dto.NotificationPublishRequest;
+import com.nova.admin.modules.system.dto.NotificationRecipientOptionsDTO;
+import com.nova.admin.modules.system.service.NotificationPublishService;
 import com.nova.admin.modules.system.service.NotificationService;
 import com.nova.admin.security.SecurityUtils;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import jakarta.validation.Valid;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -23,6 +30,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class NotificationController extends BaseController {
 
     private final NotificationService notificationService;
+    private final NotificationPublishService notificationPublishService;
 
     @GetMapping("/summary")
     @Operation(summary = "获取当前用户站内消息摘要")
@@ -43,5 +51,19 @@ public class NotificationController extends BaseController {
     @Operation(summary = "标记全部站内消息已读")
     public R<Integer> markAllRead() {
         return ok(notificationService.markAllRead(SecurityUtils.requireUserId()));
+    }
+
+    @GetMapping("/recipients")
+    @PreAuthorize("hasRole('super_admin') or hasAuthority('system:notification:publish')")
+    @Operation(summary = "获取站内消息接收对象")
+    public R<NotificationRecipientOptionsDTO> getRecipientOptions() {
+        return ok(notificationPublishService.getRecipientOptions());
+    }
+
+    @PostMapping("/publish")
+    @PreAuthorize("hasRole('super_admin') or hasAuthority('system:notification:publish')")
+    @Operation(summary = "发布站内消息")
+    public R<Integer> publish(@Valid @RequestBody NotificationPublishRequest request) {
+        return ok(notificationPublishService.publish(request));
     }
 }

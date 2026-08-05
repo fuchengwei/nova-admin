@@ -1,7 +1,10 @@
 package com.nova.admin.modules.auth.service;
 
+import com.nova.admin.modules.system.event.NotificationCreatedEvent;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.event.TransactionPhase;
+import org.springframework.transaction.event.TransactionalEventListener;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.io.IOException;
@@ -14,14 +17,17 @@ import java.util.concurrent.ConcurrentHashMap;
 public class AuthSessionEventService {
 
     private final ConcurrentHashMap<String, Set<SseEmitter>> emitters = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<Long, Set<SseEmitter>> userEmitters = new ConcurrentHashMap<>();
 
-    public SseEmitter subscribe(String accessJti) {
+    public SseEmitter subscribe(String accessJti, Long userId) {
         SseEmitter emitter = new SseEmitter(0L);
         Set<SseEmitter> sessionEmitters = emitters.computeIfAbsent(accessJti, ignored -> ConcurrentHashMap.newKeySet());
         sessionEmitters.add(emitter);
-        emitter.onCompletion(() -> remove(accessJti, emitter));
-        emitter.onTimeout(() -> remove(accessJti, emitter));
-        emitter.onError(error -> remove(accessJti, emitter));
+        Set<SseEmitter> recipientEmitters = userEmitters.computeIfAbsent(userId, ignored -> ConcurrentHashMap.newKeySet());
+        recipientEmitters.add(emitter);
+        emitter.onCompletion(() -> remove(accessJti, userId, emitter));
+        emitter.onTimeout(() -> remove(accessJti, userId, emitter));
+        emitter.onError(error -> remove(accessJti, userId, emitter));
         return emitter;
     }
 
@@ -57,10 +63,50 @@ public class AuthSessionEventService {
         }
     }
 
+    /** 事务提交后通知用户刷新站内消息摘要。 */
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    public void onNotificationCreated(NotificationCreatedEvent event) {
+        for (Long userId : event.userIds()) {
+            notifyUser(userId, event.messageId());
+        }
+    }
+
+    void notifyUser(Long userId, Long messageId) {
+        Set<SseEmitter> recipientEmitters = userEmitters.get(userId);
+        if (recipientEmitters == null) {
+            return;
+        }
+        for (SseEmitter emitter : recipientEmitters) {
+            try {
+                emitter.send(SseEmitter.event().name("notification-created").data(messageId));
+            } catch (IOException e) {
+                removeEmitter(userId, emitter);
+                log.debug("发送站内消息通知失败: {}", e.getMessage());
+            }
+        }
+    }
+
+    private void remove(String accessJti, Long userId, SseEmitter emitter) {
+        removeSessionEmitter(accessJti, emitter);
+        removeEmitter(userId, emitter);
+    }
+
     private void remove(String accessJti, SseEmitter emitter) {
+        removeSessionEmitter(accessJti, emitter);
+        userEmitters.forEach((userId, recipientEmitters) -> removeEmitter(userId, emitter));
+    }
+
+    private void removeSessionEmitter(String accessJti, SseEmitter emitter) {
         emitters.computeIfPresent(accessJti, (ignored, sessionEmitters) -> {
             sessionEmitters.remove(emitter);
             return sessionEmitters.isEmpty() ? null : sessionEmitters;
+        });
+    }
+
+    private void removeEmitter(Long userId, SseEmitter emitter) {
+        userEmitters.computeIfPresent(userId, (ignored, recipientEmitters) -> {
+            recipientEmitters.remove(emitter);
+            return recipientEmitters.isEmpty() ? null : recipientEmitters;
         });
     }
 }

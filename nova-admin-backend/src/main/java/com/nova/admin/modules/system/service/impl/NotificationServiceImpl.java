@@ -3,10 +3,12 @@ package com.nova.admin.modules.system.service.impl;
 import com.nova.admin.modules.system.dto.NotificationSummaryDTO;
 import com.nova.admin.modules.system.entity.SysMessage;
 import com.nova.admin.modules.system.entity.SysMessageRecipient;
+import com.nova.admin.modules.system.event.NotificationCreatedEvent;
 import com.nova.admin.modules.system.mapper.SysMessageMapper;
 import com.nova.admin.modules.system.mapper.SysMessageRecipientMapper;
 import com.nova.admin.modules.system.service.NotificationService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -24,6 +26,7 @@ public class NotificationServiceImpl implements NotificationService {
 
     private final SysMessageMapper messageMapper;
     private final SysMessageRecipientMapper recipientMapper;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Override
     @Transactional(readOnly = true)
@@ -64,8 +67,9 @@ public class NotificationServiceImpl implements NotificationService {
         messageMapper.insert(message);
 
         LocalDateTime now = LocalDateTime.now();
-        for (Long userId : new LinkedHashSet<>(userIds)) {
-            if (userId == null) {
+        LinkedHashSet<Long> recipientUserIds = new LinkedHashSet<>();
+        for (Long userId : userIds) {
+            if (userId == null || !recipientUserIds.add(userId)) {
                 continue;
             }
             SysMessageRecipient recipient = new SysMessageRecipient();
@@ -73,6 +77,9 @@ public class NotificationServiceImpl implements NotificationService {
             recipient.setUserId(userId);
             recipient.setCreateTime(now);
             recipientMapper.insert(recipient);
+        }
+        if (!recipientUserIds.isEmpty()) {
+            eventPublisher.publishEvent(new NotificationCreatedEvent(message.getId(), recipientUserIds));
         }
     }
 }

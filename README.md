@@ -66,7 +66,7 @@
 
 ## 站内消息
 
-Header 通知铃铛展示当前用户最近 10 条站内消息和未读数量，支持单条已读与全部已读。消息按用户收件记录隔离，基础接口为 `GET /api/system/notification/summary`、`PUT /api/system/notification/{id}/read` 和 `PUT /api/system/notification/read-all`。定时任务执行失败时，系统会向启用的超级管理员投递消息；点击消息可直接打开对应执行详情。暂不提供管理员发布页面、实时推送或其他业务事件接入。
+Header 通知铃铛展示当前用户最近 10 条站内消息和未读数量，支持单条已读与全部已读，并通过现有 SSE 会话事件连接实时刷新角标。管理员可在「消息发布」菜单向全部启用用户、指定角色或指定用户发布站内消息。消息按用户收件记录隔离，定时任务执行失败时也会向启用的超级管理员投递消息；点击消息可直接打开对应执行详情。基础接口为 `GET /api/system/notification/summary`、`PUT /api/system/notification/{id}/read`、`PUT /api/system/notification/read-all` 和 `POST /api/system/notification/publish`。
 
 ## 用户导入导出
 

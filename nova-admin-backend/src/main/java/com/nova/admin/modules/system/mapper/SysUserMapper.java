@@ -9,6 +9,7 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 
+import java.util.Collection;
 import java.util.List;
 
 @Mapper
@@ -46,4 +47,13 @@ public interface SysUserMapper extends BaseMapper<SysUser> {
               AND r.code = #{roleCode}
             """)
     List<Long> selectEnabledUserIdsByRoleCode(@Param("roleCode") String roleCode);
+
+    /** 查询全部启用用户的 ID。 */
+    List<Long> selectEnabledUserIds();
+
+    /** 查询指定 ID 中仍处于启用状态的用户。 */
+    List<Long> selectEnabledUserIdsByIds(@Param("userIds") Collection<Long> userIds);
+
+    /** 查询指定启用角色下的启用用户，结果按用户去重。 */
+    List<Long> selectEnabledUserIdsByRoleIds(@Param("roleIds") Collection<Long> roleIds);
 }

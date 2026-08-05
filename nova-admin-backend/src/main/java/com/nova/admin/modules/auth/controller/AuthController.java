@@ -109,6 +109,6 @@ public class AuthController extends BaseController {
     public SseEmitter sessionEvents() {
         LoginUser loginUser = SecurityUtils.getLoginUser()
                 .orElseThrow(() -> new IllegalStateException("未登录"));
-        return authSessionEventService.subscribe(loginUser.getJti());
+        return authSessionEventService.subscribe(loginUser.getJti(), loginUser.getUserId());
     }
 }

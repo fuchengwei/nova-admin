@@ -16,6 +16,7 @@ import DictPage from '@/pages/system/dict';
 import LogPage from '@/pages/system/log';
 import ProfilePage from '@/pages/profile';
 import SystemSettingsPage from '@/pages/system/settings';
+import NotificationPage from '@/pages/system/notification';
 
 // 基础设施
 import FilePage from '@/pages/infra/file';
@@ -36,6 +37,7 @@ const componentMap: Record<string, () => React.JSX.Element> = {
   '/system/log': LogPage,
   '/profile': ProfilePage,
   '/system/settings': SystemSettingsPage,
+  '/system/notification': NotificationPage,
   '/infra/file': FilePage,
   '/monitor/job': JobPage,
   '/monitor/server': ServerMonitorPage,
@@ -85,6 +87,7 @@ export const router = createBrowserRouter([
       { path: 'system/log', element: <LogPage /> },
       { path: 'profile', element: <ProfilePage /> },
       { path: 'system/settings', element: <SystemSettingsPage /> },
+      { path: 'system/notification', element: <NotificationPage /> },
       { path: 'infra/file', element: <FilePage /> },
       { path: 'monitor/job', element: <JobPage /> },
       { path: 'monitor/server', element: <ServerMonitorPage /> },
