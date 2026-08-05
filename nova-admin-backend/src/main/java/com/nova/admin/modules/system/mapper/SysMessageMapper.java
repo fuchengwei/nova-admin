@@ -1,7 +1,10 @@
 package com.nova.admin.modules.system.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.nova.admin.modules.system.dto.NotificationPageQuery;
 import com.nova.admin.modules.system.dto.NotificationRecordDTO;
+import com.nova.admin.modules.system.dto.NotificationRecordSummaryDTO;
 import com.nova.admin.modules.system.entity.SysMessage;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
@@ -12,6 +15,11 @@ import java.util.List;
 /** 站内消息 Mapper。 */
 @Mapper
 public interface SysMessageMapper extends BaseMapper<SysMessage> {
+
+    IPage<NotificationRecordSummaryDTO> selectRecordPage(
+            IPage<NotificationRecordSummaryDTO> page, @Param("query") NotificationPageQuery query);
+
+    NotificationRecordSummaryDTO selectRecordById(@Param("messageId") Long messageId);
 
     @Select("""
             SELECT COUNT(1)

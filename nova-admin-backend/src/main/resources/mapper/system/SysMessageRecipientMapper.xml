@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.nova.admin.modules.system.mapper.SysMessageRecipientMapper">
+
+    <select id="selectRecipientPage" resultType="com.nova.admin.modules.system.dto.NotificationRecipientRecordDTO">
+        SELECT r.id,
+               r.user_id,
+               u.account,
+               u.nickname,
+               r.create_time,
+               r.read_at,
+               CASE WHEN r.read_at IS NULL THEN FALSE ELSE TRUE END AS read
+        FROM sys_message_recipient r
+        INNER JOIN sys_user u ON u.id = r.user_id AND u.deleted = 0
+        <where>
+            r.message_id = #{query.messageId}
+            <if test="query.keyword != null and query.keyword != ''">
+                AND (u.account ILIKE CONCAT('%', #{query.keyword}, '%')
+                     OR u.nickname ILIKE CONCAT('%', #{query.keyword}, '%'))
+            </if>
+            <if test="query.read != null">
+                <choose>
+                    <when test="query.read">
+                        AND r.read_at IS NOT NULL
+                    </when>
+                    <otherwise>
+                        AND r.read_at IS NULL
+                    </otherwise>
+                </choose>
+            </if>
+        </where>
+        ORDER BY r.create_time DESC, r.id DESC
+    </select>
+
+</mapper>

@@ -1,10 +1,15 @@
 package com.nova.admin.modules.system.controller;
 
 import com.nova.admin.common.api.R;
+import com.nova.admin.common.api.PageResult;
 import com.nova.admin.common.base.BaseController;
 import com.nova.admin.modules.system.dto.NotificationSummaryDTO;
 import com.nova.admin.modules.system.dto.NotificationPublishRequest;
 import com.nova.admin.modules.system.dto.NotificationRecipientOptionsDTO;
+import com.nova.admin.modules.system.dto.NotificationPageQuery;
+import com.nova.admin.modules.system.dto.NotificationRecipientPageQuery;
+import com.nova.admin.modules.system.dto.NotificationRecipientRecordDTO;
+import com.nova.admin.modules.system.dto.NotificationRecordSummaryDTO;
 import com.nova.admin.modules.system.service.NotificationPublishService;
 import com.nova.admin.modules.system.service.NotificationService;
 import com.nova.admin.security.SecurityUtils;
@@ -64,6 +69,31 @@ public class NotificationController extends BaseController {
     @PreAuthorize("hasRole('super_admin') or hasAuthority('system:notification:publish')")
     @Operation(summary = "发布站内消息")
     public R<Integer> publish(@Valid @RequestBody NotificationPublishRequest request) {
-        return ok(notificationPublishService.publish(request));
+        return ok(notificationPublishService.publish(request, SecurityUtils.requireUserId()));
+    }
+
+    @GetMapping("/page")
+    @PreAuthorize("hasRole('super_admin') or hasAuthority('system:notification:publish')")
+    @Operation(summary = "消息发布记录分页列表")
+    public R<PageResult<NotificationRecordSummaryDTO>> page(NotificationPageQuery query) {
+        return ok(notificationService.getRecordPage(query));
+    }
+
+    @GetMapping("/{id}")
+    @PreAuthorize("hasRole('super_admin') or hasAuthority('system:notification:publish')")
+    @Operation(summary = "消息发布记录详情")
+    public R<NotificationRecordSummaryDTO> detail(
+            @Parameter(description = "消息 ID", required = true) @PathVariable Long id) {
+        return ok(notificationService.getRecord(id));
+    }
+
+    @GetMapping("/{id}/recipients")
+    @PreAuthorize("hasRole('super_admin') or hasAuthority('system:notification:publish')")
+    @Operation(summary = "消息收件明细分页列表")
+    public R<PageResult<NotificationRecipientRecordDTO>> recipients(
+            @Parameter(description = "消息 ID", required = true) @PathVariable Long id,
+            NotificationRecipientPageQuery query) {
+        query.setMessageId(id);
+        return ok(notificationService.getRecipientPage(query));
     }
 }

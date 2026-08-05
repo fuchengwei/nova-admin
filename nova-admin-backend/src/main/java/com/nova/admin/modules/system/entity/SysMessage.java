@@ -28,6 +28,10 @@ public class SysMessage implements Serializable {
     private String title;
     private String content;
     private String link;
+
+    @JsonSerialize(using = ToStringSerializer.class)
+    private Long publisherId;
+
     private LocalDateTime createTime;
 
     @TableLogic

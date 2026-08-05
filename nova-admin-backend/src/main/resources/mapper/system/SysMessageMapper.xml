@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.nova.admin.modules.system.mapper.SysMessageMapper">
+
+    <select id="selectRecordPage" resultType="com.nova.admin.modules.system.dto.NotificationRecordSummaryDTO">
+        SELECT m.id,
+               m.type,
+               m.title,
+               m.content,
+               m.link,
+               m.publisher_id,
+               COALESCE(NULLIF(p.nickname, ''), p.account, '系统') AS publisher_name,
+               m.create_time,
+               COUNT(r.id) AS recipient_count,
+               COUNT(r.id) FILTER (WHERE r.read_at IS NOT NULL) AS read_count,
+               COUNT(r.id) FILTER (WHERE r.read_at IS NULL) AS unread_count
+        FROM sys_message m
+        LEFT JOIN sys_user p ON p.id = m.publisher_id AND p.deleted = 0
+        LEFT JOIN sys_message_recipient r ON r.message_id = m.id
+        <where>
+            m.deleted = 0
+            <if test="query.title != null and query.title != ''">
+                AND m.title ILIKE CONCAT('%', #{query.title}, '%')
+            </if>
+            <if test="query.type != null and query.type != ''">
+                AND m.type = #{query.type}
+            </if>
+            <if test="query.createTimeStart != null">
+                AND m.create_time &gt;= #{query.createTimeStart}
+            </if>
+            <if test="query.createTimeEnd != null">
+                AND m.create_time &lt;= #{query.createTimeEnd}
+            </if>
+        </where>
+        GROUP BY m.id, p.nickname, p.account
+        ORDER BY m.create_time DESC, m.id DESC
+    </select>
+
+    <select id="selectRecordById" resultType="com.nova.admin.modules.system.dto.NotificationRecordSummaryDTO">
+        SELECT m.id,
+               m.type,
+               m.title,
+               m.content,
+               m.link,
+               m.publisher_id,
+               COALESCE(NULLIF(p.nickname, ''), p.account, '系统') AS publisher_name,
+               m.create_time,
+               COUNT(r.id) AS recipient_count,
+               COUNT(r.id) FILTER (WHERE r.read_at IS NOT NULL) AS read_count,
+               COUNT(r.id) FILTER (WHERE r.read_at IS NULL) AS unread_count
+        FROM sys_message m
+        LEFT JOIN sys_user p ON p.id = m.publisher_id AND p.deleted = 0
+        LEFT JOIN sys_message_recipient r ON r.message_id = m.id
+        WHERE m.id = #{messageId}
+          AND m.deleted = 0
+        GROUP BY m.id, p.nickname, p.account
+    </select>
+
+</mapper>

@@ -1,6 +1,11 @@
 package com.nova.admin.modules.system.service;
 
 import com.nova.admin.modules.system.dto.NotificationSummaryDTO;
+import com.nova.admin.common.api.PageResult;
+import com.nova.admin.modules.system.dto.NotificationPageQuery;
+import com.nova.admin.modules.system.dto.NotificationRecipientPageQuery;
+import com.nova.admin.modules.system.dto.NotificationRecipientRecordDTO;
+import com.nova.admin.modules.system.dto.NotificationRecordSummaryDTO;
 
 import java.util.Collection;
 
@@ -16,6 +21,17 @@ public interface NotificationService {
     /** 标记当前用户的全部消息为已读。 */
     int markAllRead(Long userId);
 
+    PageResult<NotificationRecordSummaryDTO> getRecordPage(NotificationPageQuery query);
+
+    NotificationRecordSummaryDTO getRecord(Long messageId);
+
+    PageResult<NotificationRecipientRecordDTO> getRecipientPage(NotificationRecipientPageQuery query);
+
     /** 创建消息并投递给指定用户，供后续业务事件调用。 */
-    void publish(String type, String title, String content, String link, Collection<Long> userIds);
+    default void publish(String type, String title, String content, String link, Collection<Long> userIds) {
+        publish(type, title, content, link, null, userIds);
+    }
+
+    void publish(String type, String title, String content, String link, Long publisherId,
+                 Collection<Long> userIds);
 }

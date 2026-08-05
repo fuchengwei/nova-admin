@@ -1,6 +1,9 @@
 package com.nova.admin.modules.system.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.nova.admin.modules.system.dto.NotificationRecipientPageQuery;
+import com.nova.admin.modules.system.dto.NotificationRecipientRecordDTO;
 import com.nova.admin.modules.system.entity.SysMessageRecipient;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
@@ -11,6 +14,10 @@ import java.time.LocalDateTime;
 /** 站内消息收件记录 Mapper。 */
 @Mapper
 public interface SysMessageRecipientMapper extends BaseMapper<SysMessageRecipient> {
+
+    IPage<NotificationRecipientRecordDTO> selectRecipientPage(
+            IPage<NotificationRecipientRecordDTO> page,
+            @Param("query") NotificationRecipientPageQuery query);
 
     @Update("""
             UPDATE sys_message_recipient

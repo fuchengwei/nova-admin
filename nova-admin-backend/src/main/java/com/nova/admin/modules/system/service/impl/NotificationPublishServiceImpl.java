@@ -57,12 +57,18 @@ public class NotificationPublishServiceImpl implements NotificationPublishServic
 
     @Override
     @Transactional
-    public int publish(NotificationPublishRequest request) {
+    public int publish(NotificationPublishRequest request, Long publisherId) {
         Set<Long> userIds = resolveRecipientUserIds(request.getRecipientType(), request.getRecipientIds());
         if (userIds.isEmpty()) {
             throw new BizException(ResultCode.BAD_REQUEST, "没有可接收消息的启用用户");
         }
-        notificationService.publish(MESSAGE_TYPE, request.getTitle(), request.getContent(), request.getLink(), userIds);
+        if (publisherId == null) {
+            notificationService.publish(MESSAGE_TYPE, request.getTitle(), request.getContent(), request.getLink(),
+                    userIds);
+        } else {
+            notificationService.publish(MESSAGE_TYPE, request.getTitle(), request.getContent(), request.getLink(),
+                    publisherId, userIds);
+        }
         return userIds.size();
     }
 

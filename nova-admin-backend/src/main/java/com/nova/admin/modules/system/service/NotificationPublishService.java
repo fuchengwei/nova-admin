@@ -8,5 +8,9 @@ public interface NotificationPublishService {
 
     NotificationRecipientOptionsDTO getRecipientOptions();
 
-    int publish(NotificationPublishRequest request);
+    default int publish(NotificationPublishRequest request) {
+        return publish(request, null);
+    }
+
+    int publish(NotificationPublishRequest request, Long publisherId);
 }

@@ -1,48 +1,15 @@
-import { NotificationOutlined } from '@ant-design/icons';
-import {
-  PageContainer,
-  ProCard,
-  ProForm,
-  ProFormDependency,
-  ProFormRadio,
-  ProFormSelect,
-  ProFormText,
-  ProFormTextArea,
-} from '@ant-design/pro-components';
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { HistoryOutlined, NotificationOutlined, SendOutlined } from '@ant-design/icons';
+import { PageContainer } from '@ant-design/pro-components';
+import { Tabs } from 'antd';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import {
-  getNotificationRecipientOptions,
-  publishNotification,
-  type NotificationPublishRequest,
-  type NotificationRecipientOption,
-  type NotificationRecipientType,
-} from '@/api/notification';
-import { message } from '@/utils/message';
-
-const recipientTypeOptions: NotificationRecipientType[] = ['ALL', 'ROLE', 'USER'];
-
-const toSelectOptions = (options: NotificationRecipientOption[]) =>
-  options.map(({ id, label }) => ({ label, value: id }));
+import NotificationHistoryTable from './components/NotificationHistoryTable';
+import NotificationPublishForm from './components/NotificationPublishForm';
 
 export default function NotificationPage() {
   const { t } = useTranslation();
-  const { data: recipientOptions = { users: [], roles: [] }, isLoading: recipientOptionsLoading } =
-    useQuery({
-      queryKey: ['notification', 'recipient-options'],
-      queryFn: async () => {
-        const result = await getNotificationRecipientOptions();
-        return result.code === 0 ? result.data : { users: [], roles: [] };
-      },
-    });
-  const publishMutation = useMutation({ mutationFn: publishNotification });
-
-  const recipientTypeLabels: Record<NotificationRecipientType, string> = {
-    ALL: t('notification.recipientAll'),
-    ROLE: t('notification.recipientRole'),
-    USER: t('notification.recipientUser'),
-  };
+  const [historyRefreshToken, setHistoryRefreshToken] = useState(0);
 
   return (
     <PageContainer
@@ -54,86 +21,51 @@ export default function NotificationPage() {
         </span>
       }
     >
-      <ProCard className="max-w-4xl">
-        <ProForm<NotificationPublishRequest>
-          initialValues={{ recipientType: 'ALL' }}
-          layout="vertical"
-          submitter={{ searchConfig: { submitText: t('notification.publish') } }}
-          onFinish={async (values) => {
-            const result = await publishMutation.mutateAsync(values);
-            if (result.code !== 0) {
-              message.error(result.msg || t('notification.publishFailed'));
-              return false;
-            }
-            message.success(t('notification.publishSuccess', { count: result.data }));
-            return true;
-          }}
-        >
-          <ProFormText
-            name="title"
-            label={t('notification.messageTitle')}
-            fieldProps={{ maxLength: 200, showCount: true }}
-            rules={[{ required: true, message: t('notification.messageTitleRequired') }]}
-          />
-          <ProFormTextArea
-            name="content"
-            label={t('notification.messageContent')}
-            fieldProps={{ autoSize: { minRows: 6, maxRows: 12 }, maxLength: 5000, showCount: true }}
-            rules={[{ required: true, message: t('notification.messageContentRequired') }]}
-          />
-          <ProFormText
-            name="link"
-            label={t('notification.messageLink')}
-            fieldProps={{ maxLength: 500 }}
-            tooltip={t('notification.messageLinkHint')}
-          />
-          <ProFormRadio.Group
-            name="recipientType"
-            label={t('notification.recipientType')}
-            options={recipientTypeOptions.map((value) => ({
-              label: recipientTypeLabels[value],
-              value,
-            }))}
-            rules={[{ required: true }]}
-          />
-          <ProFormDependency name={['recipientType']}>
-            {({ recipientType }) => {
-              if (recipientType === 'ROLE') {
-                return (
-                  <ProFormSelect
-                    name="recipientIds"
-                    label={t('notification.recipientRoles')}
-                    preserve={false}
-                    fieldProps={{
-                      loading: recipientOptionsLoading,
-                      mode: 'multiple',
-                      options: toSelectOptions(recipientOptions.roles),
-                    }}
-                    rules={[{ required: true, message: t('notification.recipientRequired') }]}
+      <div className="notification-workspace">
+        <div className="notification-workspace-intro">
+          <div className="notification-workspace-mark" aria-hidden="true">
+            <NotificationOutlined />
+          </div>
+          <div className="min-w-0">
+            <div className="notification-workspace-eyebrow">
+              {t('notification.workspaceEyebrow')}
+            </div>
+            <h1 className="notification-workspace-title">{t('notification.workspaceTitle')}</h1>
+            <p className="notification-workspace-subtitle">{t('notification.workspaceSubtitle')}</p>
+          </div>
+        </div>
+        <Tabs
+          className="notification-workspace-tabs tabs-fill"
+          items={[
+            {
+              key: 'publish',
+              label: (
+                <span className="flex items-center gap-2">
+                  <SendOutlined />
+                  {t('notification.publishTab')}
+                </span>
+              ),
+              children: (
+                <div className="max-w-4xl">
+                  <NotificationPublishForm
+                    onPublished={() => setHistoryRefreshToken((value) => value + 1)}
                   />
-                );
-              }
-              if (recipientType === 'USER') {
-                return (
-                  <ProFormSelect
-                    name="recipientIds"
-                    label={t('notification.recipientUsers')}
-                    preserve={false}
-                    fieldProps={{
-                      loading: recipientOptionsLoading,
-                      mode: 'multiple',
-                      options: toSelectOptions(recipientOptions.users),
-                      showSearch: true,
-                    }}
-                    rules={[{ required: true, message: t('notification.recipientRequired') }]}
-                  />
-                );
-              }
-              return null;
-            }}
-          </ProFormDependency>
-        </ProForm>
-      </ProCard>
+                </div>
+              ),
+            },
+            {
+              key: 'history',
+              label: (
+                <span className="flex items-center gap-2">
+                  <HistoryOutlined />
+                  {t('notification.historyTab')}
+                </span>
+              ),
+              children: <NotificationHistoryTable refreshToken={historyRefreshToken} />,
+            },
+          ]}
+        />
+      </div>
     </PageContainer>
   );
 }

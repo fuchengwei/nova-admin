@@ -1,5 +1,13 @@
 package com.nova.admin.modules.system.service.impl;
 
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.nova.admin.common.api.PageResult;
+import com.nova.admin.common.exception.BizException;
+import com.nova.admin.common.api.ResultCode;
+import com.nova.admin.modules.system.dto.NotificationPageQuery;
+import com.nova.admin.modules.system.dto.NotificationRecipientPageQuery;
+import com.nova.admin.modules.system.dto.NotificationRecipientRecordDTO;
+import com.nova.admin.modules.system.dto.NotificationRecordSummaryDTO;
 import com.nova.admin.modules.system.dto.NotificationSummaryDTO;
 import com.nova.admin.modules.system.entity.SysMessage;
 import com.nova.admin.modules.system.entity.SysMessageRecipient;
@@ -50,8 +58,36 @@ public class NotificationServiceImpl implements NotificationService {
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public PageResult<NotificationRecordSummaryDTO> getRecordPage(NotificationPageQuery query) {
+        Page<NotificationRecordSummaryDTO> page = new Page<>(query.getCurrent(), query.getSize());
+        return PageResult.of(messageMapper.selectRecordPage(page, query));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public NotificationRecordSummaryDTO getRecord(Long messageId) {
+        NotificationRecordSummaryDTO record = messageMapper.selectRecordById(messageId);
+        if (record == null) {
+            throw new BizException(ResultCode.NOT_FOUND, "消息记录不存在");
+        }
+        return record;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public PageResult<NotificationRecipientRecordDTO> getRecipientPage(NotificationRecipientPageQuery query) {
+        if (query.getMessageId() == null || messageMapper.selectRecordById(query.getMessageId()) == null) {
+            throw new BizException(ResultCode.NOT_FOUND, "消息记录不存在");
+        }
+        Page<NotificationRecipientRecordDTO> page = new Page<>(query.getCurrent(), query.getSize());
+        return PageResult.of(recipientMapper.selectRecipientPage(page, query));
+    }
+
+    @Override
     @Transactional
-    public void publish(String type, String title, String content, String link, Collection<Long> userIds) {
+    public void publish(String type, String title, String content, String link, Long publisherId,
+                        Collection<Long> userIds) {
         if (!StringUtils.hasText(type) || !StringUtils.hasText(title)
                 || !StringUtils.hasText(content) || userIds == null || userIds.isEmpty()) {
             return;
@@ -62,6 +98,7 @@ public class NotificationServiceImpl implements NotificationService {
         message.setTitle(title.trim());
         message.setContent(content);
         message.setLink(StringUtils.hasText(link) ? link.trim() : null);
+        message.setPublisherId(publisherId);
         message.setCreateTime(LocalDateTime.now());
         message.setDeleted(0);
         messageMapper.insert(message);

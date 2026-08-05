@@ -1,5 +1,5 @@
 import { request } from '@/utils/request';
-import type { R } from '@/types/api';
+import type { PageResult, R } from '@/types/api';
 
 export interface NotificationRecord {
   id: string;
@@ -36,6 +36,46 @@ export interface NotificationPublishRequest {
   recipientIds?: string[];
 }
 
+export interface NotificationHistoryRecord {
+  id: string;
+  type: string;
+  title: string;
+  content: string;
+  link?: string;
+  publisherId?: string;
+  publisherName: string;
+  createTime: string;
+  recipientCount: number;
+  readCount: number;
+  unreadCount: number;
+}
+
+export interface NotificationHistoryQuery {
+  current?: number;
+  size?: number;
+  title?: string;
+  type?: string;
+  createTimeStart?: string;
+  createTimeEnd?: string;
+}
+
+export interface NotificationRecipientRecord {
+  id: string;
+  userId: string;
+  account: string;
+  nickname?: string;
+  createTime: string;
+  readAt?: string;
+  read: boolean;
+}
+
+export interface NotificationRecipientQuery {
+  current?: number;
+  size?: number;
+  keyword?: string;
+  read?: boolean;
+}
+
 export const getNotificationSummary = () =>
   request<R<NotificationSummary>>({ url: '/system/notification/summary', method: 'GET' });
 
@@ -53,3 +93,20 @@ export const getNotificationRecipientOptions = () =>
 
 export const publishNotification = (data: NotificationPublishRequest) =>
   request<R<number>>({ url: '/system/notification/publish', method: 'POST', data });
+
+export const getNotificationHistoryPage = (params: NotificationHistoryQuery) =>
+  request<R<PageResult<NotificationHistoryRecord>>>({
+    url: '/system/notification/page',
+    method: 'GET',
+    params,
+  });
+
+export const getNotificationHistory = (id: string) =>
+  request<R<NotificationHistoryRecord>>({ url: '/system/notification/' + id, method: 'GET' });
+
+export const getNotificationRecipientsPage = (id: string, params: NotificationRecipientQuery) =>
+  request<R<PageResult<NotificationRecipientRecord>>>({
+    url: '/system/notification/' + id + '/recipients',
+    method: 'GET',
+    params,
+  });

@@ -330,11 +330,13 @@ CREATE TABLE sys_message (
     title           VARCHAR(200) NOT NULL,
     content         TEXT NOT NULL,
     link            VARCHAR(500),
+    publisher_id    BIGINT,
     create_time     TIMESTAMP NOT NULL,
     deleted         SMALLINT NOT NULL DEFAULT 0
 );
 COMMENT ON TABLE sys_message IS '站内消息表';
 CREATE INDEX idx_message_created ON sys_message(create_time DESC) WHERE deleted = 0;
+CREATE INDEX idx_message_publisher_created ON sys_message(publisher_id, create_time DESC) WHERE deleted = 0;
 
 CREATE TABLE sys_message_recipient (
     id              BIGINT PRIMARY KEY,

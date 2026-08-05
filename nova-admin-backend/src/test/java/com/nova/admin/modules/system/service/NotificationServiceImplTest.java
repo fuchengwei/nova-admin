@@ -1,6 +1,8 @@
 package com.nova.admin.modules.system.service;
 
 import com.nova.admin.modules.system.dto.NotificationRecordDTO;
+import com.nova.admin.modules.system.dto.NotificationRecipientPageQuery;
+import com.nova.admin.modules.system.dto.NotificationRecordSummaryDTO;
 import com.nova.admin.modules.system.dto.NotificationSummaryDTO;
 import com.nova.admin.modules.system.entity.SysMessage;
 import com.nova.admin.modules.system.mapper.SysMessageMapper;
@@ -24,6 +26,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 
 @ExtendWith(MockitoExtension.class)
 class NotificationServiceImplTest {
@@ -70,6 +73,33 @@ class NotificationServiceImplTest {
 
         assertThat(result).isEqualTo(4);
         verify(recipientMapper).markAllRead(eq(7L), any());
+    }
+
+    @Test
+    void getRecipientPage_rejectsMissingMessageBeforeQueryingRecipients() {
+        NotificationRecipientPageQuery query = new NotificationRecipientPageQuery();
+        query.setMessageId(99L);
+        given(messageMapper.selectRecordById(99L)).willReturn(null);
+
+        org.assertj.core.api.Assertions.assertThatThrownBy(() -> service.getRecipientPage(query))
+                .hasMessage("消息记录不存在");
+
+        verifyNoInteractions(recipientMapper);
+    }
+
+    @Test
+    void getRecord_returnsPublishedRecordWithDeliveryStatistics() {
+        NotificationRecordSummaryDTO record = new NotificationRecordSummaryDTO();
+        record.setId(10L);
+        record.setRecipientCount(3L);
+        record.setReadCount(1L);
+        record.setUnreadCount(2L);
+        given(messageMapper.selectRecordById(10L)).willReturn(record);
+
+        NotificationRecordSummaryDTO result = service.getRecord(10L);
+
+        assertThat(result).isSameAs(record);
+        assertThat(result.getUnreadCount()).isEqualTo(2L);
     }
 
     @Test
