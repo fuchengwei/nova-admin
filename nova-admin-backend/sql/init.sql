@@ -139,6 +139,7 @@ CREATE TABLE sys_api_permission (
     permission      VARCHAR(128) NOT NULL,
     name            VARCHAR(128),
     status          SMALLINT NOT NULL DEFAULT 1,
+    public_access   SMALLINT NOT NULL DEFAULT 0,
     create_by       BIGINT,
     create_time     TIMESTAMP,
     update_by       BIGINT,
@@ -156,6 +157,15 @@ CREATE TABLE sys_role_api_permission (
 );
 COMMENT ON TABLE sys_role_api_permission IS '角色接口权限关联';
 CREATE INDEX idx_role_api_permission_key ON sys_role_api_permission(api_permission_id);
+
+DROP TABLE IF EXISTS sys_user_api_permission CASCADE;
+CREATE TABLE sys_user_api_permission (
+    user_id             BIGINT NOT NULL,
+    api_permission_id   BIGINT NOT NULL,
+    PRIMARY KEY (user_id, api_permission_id)
+);
+COMMENT ON TABLE sys_user_api_permission IS '用户接口权限关联';
+CREATE INDEX idx_user_api_permission_key ON sys_user_api_permission(api_permission_id);
 
 DROP TABLE IF EXISTS sys_role_dept CASCADE;
 CREATE TABLE sys_role_dept (

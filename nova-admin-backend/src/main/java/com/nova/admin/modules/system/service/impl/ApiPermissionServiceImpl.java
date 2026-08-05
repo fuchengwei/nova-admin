@@ -6,14 +6,17 @@ import com.nova.admin.common.exception.BizException;
 import com.nova.admin.modules.auth.event.AuthorizationChangedEvent;
 import com.nova.admin.modules.system.dto.ApiPermissionDTO;
 import com.nova.admin.modules.system.dto.ApiPermissionEndpointDTO;
+import com.nova.admin.modules.system.dto.ApiPermissionUserOptionDTO;
 import com.nova.admin.modules.system.entity.SysApiPermission;
 import com.nova.admin.modules.system.entity.SysRole;
 import com.nova.admin.modules.system.entity.SysRoleApiPermission;
-import com.nova.admin.modules.system.entity.SysUserRole;
+import com.nova.admin.modules.system.entity.SysUser;
+import com.nova.admin.modules.system.entity.SysUserApiPermission;
 import com.nova.admin.modules.system.mapper.SysApiPermissionMapper;
 import com.nova.admin.modules.system.mapper.SysRoleApiPermissionMapper;
 import com.nova.admin.modules.system.mapper.SysRoleMapper;
-import com.nova.admin.modules.system.mapper.SysUserRoleMapper;
+import com.nova.admin.modules.system.mapper.SysUserApiPermissionMapper;
+import com.nova.admin.modules.system.mapper.SysUserMapper;
 import com.nova.admin.modules.system.permission.ApiPermissionScanner;
 import com.nova.admin.modules.system.service.ApiPermissionService;
 import com.nova.admin.security.SecurityUtils;
@@ -21,16 +24,18 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-/** 独立接口权限发现、注册与角色分配服务。 */
+/** 独立接口权限发现、注册与授权范围配置服务。 */
 @Service
 @RequiredArgsConstructor
 public class ApiPermissionServiceImpl implements ApiPermissionService {
@@ -43,7 +48,8 @@ public class ApiPermissionServiceImpl implements ApiPermissionService {
     private final SysApiPermissionMapper apiPermissionMapper;
     private final SysRoleMapper roleMapper;
     private final SysRoleApiPermissionMapper roleApiPermissionMapper;
-    private final SysUserRoleMapper userRoleMapper;
+    private final SysUserMapper userMapper;
+    private final SysUserApiPermissionMapper userApiPermissionMapper;
     private final ApplicationEventPublisher eventPublisher;
 
     @Override
@@ -52,8 +58,20 @@ public class ApiPermissionServiceImpl implements ApiPermissionService {
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public List<ApiPermissionUserOptionDTO> getAssignableUsers() {
+        return userMapper.selectList(new LambdaQueryWrapper<SysUser>()
+                        .eq(SysUser::getStatus, 1)
+                        .orderByAsc(SysUser::getAccount))
+                .stream()
+                .map(user -> new ApiPermissionUserOptionDTO(user.getId(), userLabel(user)))
+                .toList();
+    }
+
+    @Override
     @Transactional(rollbackFor = Exception.class)
-    public void updatePermissionRoles(String permission, List<Long> roleIds) {
+    public void updatePermissionAccess(String permission, boolean publicAccess, List<Long> roleIds,
+                                       List<Long> userIds) {
         SysApiPermission apiPermission = apiPermissionMapper.selectOne(new LambdaQueryWrapper<SysApiPermission>()
                 .eq(SysApiPermission::getPermission, permission)
                 .eq(SysApiPermission::getStatus, 1));
@@ -61,10 +79,8 @@ public class ApiPermissionServiceImpl implements ApiPermissionService {
             throw new BizException(ResultCode.DATA_NOT_FOUND, "接口权限尚未注册");
         }
 
-        List<Long> normalizedRoleIds = roleIds == null ? List.of() : roleIds.stream()
-                .filter(Objects::nonNull)
-                .distinct()
-                .toList();
+        List<Long> normalizedRoleIds = normalizeIds(roleIds);
+        List<Long> normalizedUserIds = normalizeIds(userIds);
         List<SysRole> roles = normalizedRoleIds.isEmpty()
                 ? List.of()
                 : roleMapper.selectList(new LambdaQueryWrapper<SysRole>()
@@ -72,6 +88,12 @@ public class ApiPermissionServiceImpl implements ApiPermissionService {
                         .eq(SysRole::getStatus, 1));
         if (roles.size() != normalizedRoleIds.size()) {
             throw new BizException(ResultCode.BAD_REQUEST, "只能分配给启用角色");
+        }
+        List<Long> enabledUserIds = normalizedUserIds.isEmpty()
+                ? List.of()
+                : userMapper.selectEnabledUserIdsByIds(normalizedUserIds);
+        if (enabledUserIds.size() != normalizedUserIds.size()) {
+            throw new BizException(ResultCode.BAD_REQUEST, "只能分配给启用用户");
         }
 
         List<SysRoleApiPermission> existingRelations = roleApiPermissionMapper
@@ -82,16 +104,40 @@ public class ApiPermissionServiceImpl implements ApiPermissionService {
                 .collect(Collectors.toSet());
         affectedRoleIds.addAll(normalizedRoleIds);
 
+        List<SysUserApiPermission> existingUserRelations = userApiPermissionMapper
+                .selectList(new LambdaQueryWrapper<SysUserApiPermission>()
+                        .eq(SysUserApiPermission::getApiPermissionId, apiPermission.getId()));
+        Set<Long> affectedUserIds = new HashSet<>(normalizedUserIds);
+        existingUserRelations.stream().map(SysUserApiPermission::getUserId).forEach(affectedUserIds::add);
+
         roleApiPermissionMapper.delete(new LambdaQueryWrapper<SysRoleApiPermission>()
                 .eq(SysRoleApiPermission::getApiPermissionId, apiPermission.getId()));
+        userApiPermissionMapper.delete(new LambdaQueryWrapper<SysUserApiPermission>()
+                .eq(SysUserApiPermission::getApiPermissionId, apiPermission.getId()));
         for (Long roleId : normalizedRoleIds) {
             SysRoleApiPermission relation = new SysRoleApiPermission();
             relation.setRoleId(roleId);
             relation.setApiPermissionId(apiPermission.getId());
             roleApiPermissionMapper.insert(relation);
         }
+        for (Long userId : normalizedUserIds) {
+            SysUserApiPermission relation = new SysUserApiPermission();
+            relation.setUserId(userId);
+            relation.setApiPermissionId(apiPermission.getId());
+            userApiPermissionMapper.insert(relation);
+        }
 
-        publishPermissionRefresh(affectedRoleIds);
+        boolean publicAccessChanged = !Objects.equals(apiPermission.getPublicAccess(), publicAccess ? 1 : 0);
+        apiPermission.setPublicAccess(publicAccess ? 1 : 0);
+        apiPermissionMapper.updateById(apiPermission);
+
+        if (!affectedRoleIds.isEmpty()) {
+            affectedUserIds.addAll(userMapper.selectEnabledUserIdsByRoleIds(affectedRoleIds));
+        }
+        if (publicAccessChanged) {
+            affectedUserIds.addAll(userMapper.selectEnabledUserIds());
+        }
+        publishPermissionRefresh(affectedUserIds);
     }
 
     @Override
@@ -144,15 +190,24 @@ public class ApiPermissionServiceImpl implements ApiPermissionService {
         Map<Long, List<Long>> roleIdsByPermission = roleRelations.stream()
                 .collect(Collectors.groupingBy(SysRoleApiPermission::getApiPermissionId,
                         Collectors.mapping(SysRoleApiPermission::getRoleId, Collectors.toList())));
+        List<SysUserApiPermission> userRelations = userApiPermissionMapper.selectList(null);
+        if (userRelations == null) {
+            userRelations = List.of();
+        }
+        Map<Long, List<Long>> userIdsByPermission = userRelations.stream()
+                .collect(Collectors.groupingBy(SysUserApiPermission::getApiPermissionId,
+                        Collectors.mapping(SysUserApiPermission::getUserId, Collectors.toList())));
         return discovered.entrySet().stream()
-                .map(entry -> toPermission(entry.getKey(), entry.getValue(), registered, roleIdsByPermission))
+                .map(entry -> toPermission(entry.getKey(), entry.getValue(), registered, roleIdsByPermission,
+                        userIdsByPermission))
                 .sorted(Comparator.comparing(ApiPermissionDTO::getPermission))
                 .toList();
     }
 
     private ApiPermissionDTO toPermission(String permission, List<ApiPermissionEndpointDTO> endpoints,
                                           Map<String, SysApiPermission> registered,
-                                          Map<Long, List<Long>> roleIdsByPermission) {
+                                          Map<Long, List<Long>> roleIdsByPermission,
+                                          Map<Long, List<Long>> userIdsByPermission) {
         SysApiPermission registeredPermission = registered.get(permission);
         return ApiPermissionDTO.builder()
                 .permission(permission)
@@ -162,6 +217,11 @@ public class ApiPermissionServiceImpl implements ApiPermissionService {
                 .roleIds(registeredPermission == null
                         ? List.of()
                         : roleIdsByPermission.getOrDefault(registeredPermission.getId(), List.of()))
+                .publicAccess(registeredPermission != null
+                        && Integer.valueOf(1).equals(registeredPermission.getPublicAccess()))
+                .userIds(registeredPermission == null
+                        ? List.of()
+                        : userIdsByPermission.getOrDefault(registeredPermission.getId(), List.of()))
                 .build();
     }
 
@@ -178,18 +238,30 @@ public class ApiPermissionServiceImpl implements ApiPermissionService {
             relation.setApiPermissionId(apiPermission.getId());
             roleApiPermissionMapper.insert(relation);
         }
-        publishPermissionRefresh(Set.of(superAdmin.getId()));
+        publishRolePermissionRefresh(Set.of(superAdmin.getId()));
     }
 
-    private void publishPermissionRefresh(Set<Long> roleIds) {
+    private List<Long> normalizeIds(List<Long> ids) {
+        return ids == null ? List.of() : ids.stream()
+                .filter(Objects::nonNull)
+                .distinct()
+                .toList();
+    }
+
+    private String userLabel(SysUser user) {
+        return StringUtils.hasText(user.getNickname())
+                ? user.getNickname() + " (" + user.getAccount() + ")"
+                : user.getAccount();
+    }
+
+    private void publishRolePermissionRefresh(Set<Long> roleIds) {
         if (roleIds.isEmpty()) {
             return;
         }
-        Set<Long> userIds = userRoleMapper.selectList(new LambdaQueryWrapper<SysUserRole>()
-                        .in(SysUserRole::getRoleId, roleIds))
-                .stream()
-                .map(SysUserRole::getUserId)
-                .collect(Collectors.toSet());
+        publishPermissionRefresh(new HashSet<>(userMapper.selectEnabledUserIdsByRoleIds(roleIds)));
+    }
+
+    private void publishPermissionRefresh(Set<Long> userIds) {
         if (!userIds.isEmpty()) {
             eventPublisher.publishEvent(AuthorizationChangedEvent.permissionsOf(userIds));
         }

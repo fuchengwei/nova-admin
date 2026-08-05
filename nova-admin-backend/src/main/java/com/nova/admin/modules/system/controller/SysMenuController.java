@@ -6,8 +6,9 @@ import com.nova.admin.modules.system.dto.MenuCreateRequest;
 import com.nova.admin.modules.system.dto.MenuTreeDTO;
 import com.nova.admin.modules.system.dto.MenuUpdateRequest;
 import com.nova.admin.modules.system.dto.ApiPermissionDTO;
-import com.nova.admin.modules.system.dto.ApiPermissionRoleBindingRequest;
+import com.nova.admin.modules.system.dto.ApiPermissionAccessBindingRequest;
 import com.nova.admin.modules.system.dto.ApiPermissionSyncRequest;
+import com.nova.admin.modules.system.dto.ApiPermissionUserOptionDTO;
 import com.nova.admin.modules.system.service.ApiPermissionService;
 import com.nova.admin.modules.system.service.SysMenuService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -53,6 +54,13 @@ public class SysMenuController extends BaseController {
         return ok(apiPermissionService.getApiPermissions());
     }
 
+    @GetMapping("/api-permissions/users")
+    @PreAuthorize("hasRole('super_admin') or hasAuthority('system:menu:edit')")
+    @Operation(summary = "获取接口权限可授权用户")
+    public R<List<ApiPermissionUserOptionDTO>> getApiPermissionUsers() {
+        return ok(apiPermissionService.getAssignableUsers());
+    }
+
     @PostMapping("/api-permissions/sync")
     @PreAuthorize("hasRole('super_admin') or hasAuthority('system:menu:edit')")
     @Operation(summary = "注册发现的接口权限")
@@ -60,12 +68,13 @@ public class SysMenuController extends BaseController {
         return ok(apiPermissionService.syncApiPermissions(request.getPermissions()));
     }
 
-    @PutMapping("/api-permissions/roles")
+    @PutMapping("/api-permissions/access")
     @PreAuthorize("hasRole('super_admin') or hasAuthority('system:menu:edit')")
-    @Operation(summary = "分配接口权限角色")
-    public R<Void> updateApiPermissionRoles(
-            @Valid @RequestBody ApiPermissionRoleBindingRequest request) {
-        apiPermissionService.updatePermissionRoles(request.getPermission(), request.getRoleIds());
+    @Operation(summary = "更新接口权限授权范围")
+    public R<Void> updateApiPermissionAccess(
+            @Valid @RequestBody ApiPermissionAccessBindingRequest request) {
+        apiPermissionService.updatePermissionAccess(request.getPermission(),
+                Boolean.TRUE.equals(request.getPublicAccess()), request.getRoleIds(), request.getUserIds());
         return ok();
     }
 

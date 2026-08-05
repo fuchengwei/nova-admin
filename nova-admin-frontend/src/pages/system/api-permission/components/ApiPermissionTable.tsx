@@ -7,8 +7,9 @@ import { useTranslation } from 'react-i18next';
 
 import {
   getApiPermissions,
+  getApiPermissionUsers,
   syncApiPermissions,
-  updateApiPermissionRoles,
+  updateApiPermissionAccess,
   type ApiPermissionRecord,
 } from '@/api/menu';
 import { getAllRoles } from '@/api/role';
@@ -26,15 +27,26 @@ export default function ApiPermissionTable({ canEdit }: ApiPermissionTableProps)
   const { t } = useTranslation();
   const actionRef = useRef<ActionType>(null);
   const [records, setRecords] = useState<ApiPermissionRecord[]>([]);
-  const [roleModalOpen, setRoleModalOpen] = useState(false);
+  const [accessModalOpen, setAccessModalOpen] = useState(false);
   const [activePermission, setActivePermission] = useState<ApiPermissionRecord | null>(null);
+  const [publicAccess, setPublicAccess] = useState(false);
   const [selectedRoleIds, setSelectedRoleIds] = useState<string[]>([]);
+  const [selectedUserIds, setSelectedUserIds] = useState<string[]>([]);
   const syncMutation = useMutation({ mutationFn: syncApiPermissions });
-  const roleMutation = useMutation({ mutationFn: updateApiPermissionRoles });
+  const accessMutation = useMutation({ mutationFn: updateApiPermissionAccess });
   const { data: roles = [], isLoading: rolesLoading } = useQuery({
     queryKey: ['roleAll'],
+    enabled: canEdit,
     queryFn: async () => {
       const result = await getAllRoles();
+      return result.code === 0 ? result.data : [];
+    },
+  });
+  const { data: users = [], isLoading: usersLoading } = useQuery({
+    queryKey: ['apiPermission', 'users'],
+    enabled: canEdit,
+    queryFn: async () => {
+      const result = await getApiPermissionUsers();
       return result.code === 0 ? result.data : [];
     },
   });
@@ -44,22 +56,31 @@ export default function ApiPermissionTable({ canEdit }: ApiPermissionTableProps)
     value: role.id,
   }));
   const roleLabels = new Map(roleOptions.map((role) => [role.value, role.label]));
+  const userOptions = users.map((user) => ({ label: user.label, value: user.id }));
+  const userLabels = new Map(userOptions.map((user) => [user.value, user.label]));
 
-  const openRoleModal = (record: ApiPermissionRecord) => {
+  const openAccessModal = (record: ApiPermissionRecord) => {
     setActivePermission(record);
+    setPublicAccess(record.publicAccess);
     setSelectedRoleIds(record.roleIds ?? []);
-    setRoleModalOpen(true);
+    setSelectedUserIds(record.userIds ?? []);
+    setAccessModalOpen(true);
   };
 
-  const closeRoleModal = () => {
-    setRoleModalOpen(false);
+  const closeAccessModal = () => {
+    setAccessModalOpen(false);
     setActivePermission(null);
   };
 
-  const saveRoles = () => {
+  const saveAccess = () => {
     if (!activePermission) return;
-    roleMutation.mutate(
-      { permission: activePermission.permission, roleIds: selectedRoleIds },
+    accessMutation.mutate(
+      {
+        permission: activePermission.permission,
+        publicAccess,
+        roleIds: selectedRoleIds,
+        userIds: selectedUserIds,
+      },
       {
         onSuccess: (result) => {
           if (result.code !== 0) {
@@ -69,12 +90,17 @@ export default function ApiPermissionTable({ canEdit }: ApiPermissionTableProps)
           setRecords((current) =>
             current.map((item) =>
               item.permission === activePermission.permission
-                ? { ...item, roleIds: selectedRoleIds }
+                ? {
+                    ...item,
+                    publicAccess,
+                    roleIds: selectedRoleIds,
+                    userIds: selectedUserIds,
+                  }
                 : item,
             ),
           );
-          message.success(t('menu.apiPermissionRoleUpdateSuccess'));
-          closeRoleModal();
+          message.success(t('menu.apiPermissionAccessUpdateSuccess'));
+          closeAccessModal();
           actionRef.current?.reload();
         },
       },
@@ -100,10 +126,12 @@ export default function ApiPermissionTable({ canEdit }: ApiPermissionTableProps)
   const columns = getApiPermissionColumns({
     t,
     roleLabels,
+    userLabels,
     canEdit,
     rolesLoading,
-    roleMutationPending: roleMutation.isPending,
-    onConfigure: openRoleModal,
+    usersLoading,
+    accessMutationPending: accessMutation.isPending,
+    onConfigure: openAccessModal,
   });
   const { wrapperRef, scrollY } = useTableScrollY();
 
@@ -165,15 +193,21 @@ export default function ApiPermissionTable({ canEdit }: ApiPermissionTableProps)
         />
       </div>
       <ApiPermissionRoleModal
-        open={roleModalOpen}
+        open={accessModalOpen}
         permission={activePermission}
+        publicAccess={publicAccess}
         selectedRoleIds={selectedRoleIds}
+        selectedUserIds={selectedUserIds}
         roleOptions={roleOptions}
+        userOptions={userOptions}
         rolesLoading={rolesLoading}
-        pending={roleMutation.isPending}
+        usersLoading={usersLoading}
+        pending={accessMutation.isPending}
+        onPublicAccessChange={setPublicAccess}
         onRoleIdsChange={setSelectedRoleIds}
-        onCancel={closeRoleModal}
-        onSave={saveRoles}
+        onUserIdsChange={setSelectedUserIds}
+        onCancel={closeAccessModal}
+        onSave={saveAccess}
       />
     </>
   );

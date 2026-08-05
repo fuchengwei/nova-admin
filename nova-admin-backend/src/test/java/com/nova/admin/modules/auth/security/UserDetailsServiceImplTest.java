@@ -108,4 +108,26 @@ class UserDetailsServiceImplTest {
         assertThat(result.getLoginUser().getDataScope()).isEqualTo(5);
         assertThat(result.getLoginUser().getCustomDeptIds()).containsExactlyInAnyOrder(10L, 11L);
     }
+
+    @Test
+    void loadUserByUsername_whenApiPermissionIsGranted_addsItToTheLoginUserPermissions() {
+        SysUser user = new SysUser();
+        user.setId(3L);
+        user.setAccount("member");
+        user.setNickname("Member");
+        user.setSuperAdmin(0);
+        given(redisTemplate.opsForValue()).willReturn(valueOperations);
+        given(valueOperations.get("nova:user:member")).willReturn(null);
+        given(userMapper.selectByAccount("member")).willReturn(user);
+        given(roleMapper.selectRoleCodesByUserId(3L)).willReturn(List.of());
+        given(menuMapper.selectPermsByUserId(3L)).willReturn(List.of("system:user:list"));
+        given(apiPermissionMapper.selectPermsByUserId(3L)).willReturn(List.of("system:user:export"));
+        given(roleMapper.selectDataScopesByUserId(3L)).willReturn(List.of(5));
+        given(roleMapper.selectCustomDeptIdsByUserId(3L)).willReturn(List.of());
+
+        SecurityUser result = (SecurityUser) userDetailsService.loadUserByUsername("member");
+
+        assertThat(result.getLoginUser().getPermissions())
+                .containsExactlyInAnyOrder("system:user:list", "system:user:export");
+    }
 }

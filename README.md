@@ -50,7 +50,9 @@
 
 ## 接口权限发现
 
-系统管理下的“接口权限”菜单会扫描带 `@PreAuthorize` 的后端接口，并将接口权限独立于菜单按钮存储。管理员可以注册发现的接口权限，并为已注册权限直接分配角色；接口权限表、菜单种子数据和旧 `F` 类型权限迁移均由 `nova-admin-backend/sql/init.sql` 初始化，旧菜单数据保留。发现接口为 `GET /api/system/menu/api-permissions`，注册接口为 `POST /api/system/menu/api-permissions/sync`，角色分配接口为 `PUT /api/system/menu/api-permissions/roles`；页面访问需要菜单查看权限，注册和分配需要菜单编辑权限，超级管理员可直接注册和分配。
+系统管理下的“接口权限”菜单会扫描带 `@PreAuthorize` 的后端接口，并将接口权限独立于菜单按钮存储。管理员可以注册发现的接口权限，并为已注册权限配置三类可组合授权：所有已登录用户可访问、指定角色访问、指定用户访问。接口权限表、菜单种子数据和旧 `F` 类型权限迁移均由 `nova-admin-backend/sql/init.sql` 初始化，旧菜单数据保留。发现接口为 `GET /api/system/menu/api-permissions`，可授权用户接口为 `GET /api/system/menu/api-permissions/users`，注册接口为 `POST /api/system/menu/api-permissions/sync`，授权保存接口为 `PUT /api/system/menu/api-permissions/access`；页面访问需要菜单查看权限，注册和授权配置需要菜单编辑权限，超级管理员可直接执行这些操作。
+
+已有 PostgreSQL 数据卷需在升级后执行 `nova-admin-backend/sql/migrations/2026-08-05-api-permission-access.sql`，以增加公开访问字段和用户直接授权关联表。新建数据卷会由 `init.sql` 自动创建这些结构。
 
 ## 定时任务执行历史
 

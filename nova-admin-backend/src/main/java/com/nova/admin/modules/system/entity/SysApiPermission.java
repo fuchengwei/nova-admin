@@ -27,4 +27,5 @@ public class SysApiPermission extends BaseDO {
     private String permission;
     private String name;
     private Integer status;
+    private Integer publicAccess;
 }

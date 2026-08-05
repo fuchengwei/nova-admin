@@ -29,4 +29,11 @@ public class ApiPermissionDTO {
     @JsonSerialize(contentUsing = ToStringSerializer.class)
     @Schema(description = "已分配角色ID列表")
     private List<Long> roleIds;
+
+    @Schema(description = "是否允许所有已登录用户访问")
+    private Boolean publicAccess;
+
+    @JsonSerialize(contentUsing = ToStringSerializer.class)
+    @Schema(description = "已直接授权用户ID列表")
+    private List<Long> userIds;
 }

@@ -16,9 +16,11 @@ export interface ApiPermissionTableRow extends ApiPermissionRecord {
 interface ApiPermissionColumnOptions {
   t: TFunction;
   roleLabels: Map<string, string>;
+  userLabels: Map<string, string>;
   canEdit: boolean;
   rolesLoading: boolean;
-  roleMutationPending: boolean;
+  usersLoading: boolean;
+  accessMutationPending: boolean;
   onConfigure: (record: ApiPermissionRecord) => void;
 }
 
@@ -48,9 +50,11 @@ const methodValueEnum = {
 export function getApiPermissionColumns({
   t,
   roleLabels,
+  userLabels,
   canEdit,
   rolesLoading,
-  roleMutationPending,
+  usersLoading,
+  accessMutationPending,
   onConfigure,
 }: ApiPermissionColumnOptions): ProColumns<ApiPermissionTableRow>[] {
   return [
@@ -104,38 +108,86 @@ export function getApiPermissionColumns({
     {
       title: t('menu.apiPermissionRoles'),
       dataIndex: 'roleIds',
-      width: 280,
+      width: 300,
       search: false,
       render: (_, record) => {
         const assignedRoles = (record.roleIds ?? [])
           .map((roleId) => roleLabels.get(roleId))
           .filter((label): label is string => Boolean(label));
         return assignedRoles.length > 0 ? (
-          <Space size={[4, 4]} wrap>
-            {assignedRoles.slice(0, 2).map((label) => (
-              <Tag key={label} color="blue">
-                {label}
-              </Tag>
-            ))}
-            {assignedRoles.length > 2 && <Tag>+{assignedRoles.length - 2}</Tag>}
-          </Space>
+          <Tooltip title={assignedRoles.join('、')} placement="topLeft">
+            <div className="max-w-full overflow-hidden whitespace-nowrap">
+              <Space size={4} wrap={false}>
+                {assignedRoles.slice(0, 2).map((label) => (
+                  <Tag key={label} color="blue">
+                    {label}
+                  </Tag>
+                ))}
+                {assignedRoles.length > 2 && <Tag>+{assignedRoles.length - 2}</Tag>}
+              </Space>
+            </div>
+          </Tooltip>
         ) : (
           <span className="text-slate-400">{t('menu.apiPermissionNoAssignedRole')}</span>
         );
       },
     },
     {
+      title: t('menu.apiPermissionUsers'),
+      dataIndex: 'userIds',
+      width: 300,
+      search: false,
+      render: (_, record) => {
+        const assignedUsers = (record.userIds ?? [])
+          .map((userId) => userLabels.get(userId))
+          .filter((label): label is string => Boolean(label));
+        return assignedUsers.length > 0 ? (
+          <Tooltip title={assignedUsers.join('、')} placement="topLeft">
+            <div className="max-w-full overflow-hidden whitespace-nowrap">
+              <Space size={4} wrap={false}>
+                {assignedUsers.slice(0, 2).map((label) => (
+                  <Tag key={label} color="cyan">
+                    {label}
+                  </Tag>
+                ))}
+                {assignedUsers.length > 2 && <Tag>+{assignedUsers.length - 2}</Tag>}
+              </Space>
+            </div>
+          </Tooltip>
+        ) : (
+          <span className="text-slate-400">{t('menu.apiPermissionNoAssignedUser')}</span>
+        );
+      },
+    },
+    {
+      title: t('menu.apiPermissionPublicAccess'),
+      dataIndex: 'publicAccess',
+      width: 160,
+      valueType: 'select',
+      valueEnum: {
+        true: { text: t('menu.apiPermissionPublicEnabled'), status: 'Success' },
+        false: { text: t('menu.apiPermissionPublicDisabled'), status: 'Default' },
+      },
+      render: (_, record) => (
+        <Tag color={record.publicAccess ? 'green' : 'default'}>
+          {record.publicAccess
+            ? t('menu.apiPermissionPublicEnabled')
+            : t('menu.apiPermissionPublicDisabled')}
+        </Tag>
+      ),
+    },
+    {
       title: t('common.action'),
       valueType: 'option',
-      key: 'roleAction',
-      width: 120,
+      key: 'accessAction',
+      width: 150,
       fixed: 'right',
       search: false,
       render: (_, record) => (
         <Tooltip
           title={
             record.status === 'REGISTERED'
-              ? t('menu.apiPermissionAssignRole')
+              ? t('menu.apiPermissionConfigureAccess')
               : t('menu.apiPermissionRoleSyncFirst')
           }
         >
@@ -144,11 +196,15 @@ export function getApiPermissionColumns({
             size="small"
             icon={<SettingOutlined />}
             disabled={
-              !canEdit || record.status !== 'REGISTERED' || rolesLoading || roleMutationPending
+              !canEdit ||
+              record.status !== 'REGISTERED' ||
+              rolesLoading ||
+              usersLoading ||
+              accessMutationPending
             }
             onClick={() => onConfigure(record)}
           >
-            {t('menu.apiPermissionConfigureRoles')}
+            {t('menu.apiPermissionConfigureAccess')}
           </Button>
         </Tooltip>
       ),

@@ -5,6 +5,7 @@ import com.nova.admin.modules.system.entity.SysUser;
 import com.nova.admin.modules.system.mapper.SysDeptMapper;
 import com.nova.admin.modules.system.mapper.SysRoleMapper;
 import com.nova.admin.modules.system.mapper.SysUserMapper;
+import com.nova.admin.modules.system.mapper.SysUserApiPermissionMapper;
 import com.nova.admin.modules.system.mapper.SysUserRoleMapper;
 import com.nova.admin.modules.system.service.impl.SysUserServiceImpl;
 import com.nova.admin.security.LoginUser;
@@ -42,6 +43,8 @@ class SysUserImportServiceTest {
     @Mock
     private SysUserRoleMapper userRoleMapper;
     @Mock
+    private SysUserApiPermissionMapper userApiPermissionMapper;
+    @Mock
     private SysDeptMapper deptMapper;
     @Mock
     private SysRoleMapper roleMapper;
@@ -57,7 +60,8 @@ class SysUserImportServiceTest {
     @BeforeEach
     void setUp() {
         userService = spy(new SysUserServiceImpl(
-                userRoleMapper, deptMapper, roleMapper, passwordEncoder, sysConfigService, eventPublisher));
+                userRoleMapper, userApiPermissionMapper, deptMapper, roleMapper, passwordEncoder,
+                sysConfigService, eventPublisher));
         doReturn(userMapper).when(userService).getBaseMapper();
         doReturn(true).when(userService).save(any(SysUser.class));
         given(deptMapper.selectListBySortOrder()).willReturn(List.of());

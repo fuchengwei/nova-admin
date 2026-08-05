@@ -15,10 +15,12 @@ import com.nova.admin.modules.system.dto.UserUpdateRequest;
 import com.nova.admin.modules.system.entity.SysDept;
 import com.nova.admin.modules.system.entity.SysRole;
 import com.nova.admin.modules.system.entity.SysUser;
+import com.nova.admin.modules.system.entity.SysUserApiPermission;
 import com.nova.admin.modules.system.entity.SysUserRole;
 import com.nova.admin.modules.system.mapper.SysDeptMapper;
 import com.nova.admin.modules.system.mapper.SysRoleMapper;
 import com.nova.admin.modules.system.mapper.SysUserMapper;
+import com.nova.admin.modules.system.mapper.SysUserApiPermissionMapper;
 import com.nova.admin.modules.system.mapper.SysUserRoleMapper;
 import com.nova.admin.modules.system.service.SysConfigService;
 import com.nova.admin.modules.system.service.SysUserService;
@@ -54,6 +56,7 @@ import java.util.stream.Collectors;
 public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> implements SysUserService {
 
     private final SysUserRoleMapper userRoleMapper;
+    private final SysUserApiPermissionMapper userApiPermissionMapper;
     private final SysDeptMapper deptMapper;
     private final SysRoleMapper roleMapper;
     private final PasswordEncoder passwordEncoder;
@@ -257,6 +260,8 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
         // 删除用户角色关联
         userRoleMapper.delete(new LambdaQueryWrapper<SysUserRole>()
                 .eq(SysUserRole::getUserId, id));
+        userApiPermissionMapper.delete(new LambdaQueryWrapper<SysUserApiPermission>()
+                .eq(SysUserApiPermission::getUserId, id));
 
         eventPublisher.publishEvent(AuthorizationChangedEvent.revokeSessionsOf(id));
 

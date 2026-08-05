@@ -13,7 +13,14 @@ export interface ApiPermissionRecord {
   name: string;
   status: 'REGISTERED' | 'SYNCABLE';
   endpoints: ApiPermissionEndpoint[];
+  publicAccess: boolean;
   roleIds: string[];
+  userIds: string[];
+}
+
+export interface ApiPermissionUserOption {
+  id: string;
+  label: string;
 }
 
 export interface MenuCreateRequest {
@@ -58,5 +65,15 @@ export const syncApiPermissions = (permissions: string[] = []) =>
     data: { permissions },
   });
 
-export const updateApiPermissionRoles = (data: { permission: string; roleIds: string[] }) =>
-  request<R<void>>({ url: '/system/menu/api-permissions/roles', method: 'PUT', data });
+export const getApiPermissionUsers = () =>
+  request<R<ApiPermissionUserOption[]>>({
+    url: '/system/menu/api-permissions/users',
+    method: 'GET',
+  });
+
+export const updateApiPermissionAccess = (data: {
+  permission: string;
+  publicAccess: boolean;
+  roleIds: string[];
+  userIds: string[];
+}) => request<R<void>>({ url: '/system/menu/api-permissions/access', method: 'PUT', data });

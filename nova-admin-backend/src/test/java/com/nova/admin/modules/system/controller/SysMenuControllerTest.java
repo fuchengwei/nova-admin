@@ -1,7 +1,7 @@
 package com.nova.admin.modules.system.controller;
 
 import com.nova.admin.modules.system.dto.ApiPermissionSyncRequest;
-import com.nova.admin.modules.system.dto.ApiPermissionRoleBindingRequest;
+import com.nova.admin.modules.system.dto.ApiPermissionAccessBindingRequest;
 import org.junit.jupiter.api.Test;
 import org.springframework.security.access.prepost.PreAuthorize;
 
@@ -28,9 +28,9 @@ class SysMenuControllerTest {
     }
 
     @Test
-    void apiPermissionRoleBinding_requiresMenuEditPermission() throws NoSuchMethodException {
+    void apiPermissionAccessBinding_requiresMenuEditPermission() throws NoSuchMethodException {
         Method method = SysMenuController.class.getMethod(
-                "updateApiPermissionRoles", ApiPermissionRoleBindingRequest.class);
+                "updateApiPermissionAccess", ApiPermissionAccessBindingRequest.class);
 
         assertThat(method.getAnnotation(PreAuthorize.class).value())
                 .isEqualTo("hasRole('super_admin') or hasAuthority('system:menu:edit')");
