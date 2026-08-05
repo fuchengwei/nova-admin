@@ -2,6 +2,20 @@ import { request } from '@/utils/request';
 import type { R } from '@/types/api';
 import type { MenuInfo } from '@/types/api';
 
+export interface ApiPermissionEndpoint {
+  method: string;
+  path: string;
+  summary?: string;
+}
+
+export interface ApiPermissionRecord {
+  permission: string;
+  name: string;
+  status: 'REGISTERED' | 'SYNCABLE';
+  endpoints: ApiPermissionEndpoint[];
+  roleIds: string[];
+}
+
 export interface MenuCreateRequest {
   parentId: string;
   name: string;
@@ -33,3 +47,16 @@ export const updateMenu = (data: MenuUpdateRequest) =>
 
 export const deleteMenu = (id: string) =>
   request<R<void>>({ url: `/system/menu/${id}`, method: 'DELETE' });
+
+export const getApiPermissions = () =>
+  request<R<ApiPermissionRecord[]>>({ url: '/system/menu/api-permissions', method: 'GET' });
+
+export const syncApiPermissions = (permissions: string[] = []) =>
+  request<R<number>>({
+    url: '/system/menu/api-permissions/sync',
+    method: 'POST',
+    data: { permissions },
+  });
+
+export const updateApiPermissionRoles = (data: { permission: string; roleIds: string[] }) =>
+  request<R<void>>({ url: '/system/menu/api-permissions/roles', method: 'PUT', data });

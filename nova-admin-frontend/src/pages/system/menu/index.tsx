@@ -97,9 +97,11 @@ export default function MenuPage() {
     <div className="flex h-full flex-col">
       <div className="mb-4 flex items-center justify-between">
         <h2 className="m-0 text-lg font-semibold">{t('menu.menu')}</h2>
-        <Button type="primary" icon={<PlusOutlined />} onClick={handleAdd}>
-          {t('menu.addMenu')}
-        </Button>
+        <Space>
+          <Button type="primary" icon={<PlusOutlined />} onClick={handleAdd}>
+            {t('menu.addMenu')}
+          </Button>
+        </Space>
       </div>
 
       <div className="flex min-h-0 flex-1 gap-4">

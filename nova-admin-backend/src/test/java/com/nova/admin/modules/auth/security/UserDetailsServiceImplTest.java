@@ -2,6 +2,7 @@ package com.nova.admin.modules.auth.security;
 
 import com.nova.admin.modules.system.entity.SysUser;
 import com.nova.admin.modules.system.mapper.SysMenuMapper;
+import com.nova.admin.modules.system.mapper.SysApiPermissionMapper;
 import com.nova.admin.modules.system.mapper.SysRoleMapper;
 import com.nova.admin.modules.system.mapper.SysUserMapper;
 import com.nova.admin.security.LoginUser;
@@ -32,6 +33,9 @@ class UserDetailsServiceImplTest {
 
     @Mock
     private SysMenuMapper menuMapper;
+
+    @Mock
+    private SysApiPermissionMapper apiPermissionMapper;
 
     @Mock
     private RedisTemplate<String, Object> redisTemplate;

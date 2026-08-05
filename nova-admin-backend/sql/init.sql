@@ -133,6 +133,30 @@ CREATE TABLE sys_role_menu (
 );
 COMMENT ON TABLE sys_role_menu IS '角色菜单关联';
 
+DROP TABLE IF EXISTS sys_api_permission CASCADE;
+CREATE TABLE sys_api_permission (
+    id              BIGINT PRIMARY KEY,
+    permission      VARCHAR(128) NOT NULL,
+    name            VARCHAR(128),
+    status          SMALLINT NOT NULL DEFAULT 1,
+    create_by       BIGINT,
+    create_time     TIMESTAMP,
+    update_by       BIGINT,
+    update_time     TIMESTAMP,
+    deleted         SMALLINT NOT NULL DEFAULT 0
+);
+COMMENT ON TABLE sys_api_permission IS '独立接口权限';
+CREATE UNIQUE INDEX uk_api_permission_key ON sys_api_permission(permission);
+
+DROP TABLE IF EXISTS sys_role_api_permission CASCADE;
+CREATE TABLE sys_role_api_permission (
+    role_id             BIGINT NOT NULL,
+    api_permission_id   BIGINT NOT NULL,
+    PRIMARY KEY (role_id, api_permission_id)
+);
+COMMENT ON TABLE sys_role_api_permission IS '角色接口权限关联';
+CREATE INDEX idx_role_api_permission_key ON sys_role_api_permission(api_permission_id);
+
 DROP TABLE IF EXISTS sys_role_dept CASCADE;
 CREATE TABLE sys_role_dept (
     role_id         BIGINT NOT NULL,
@@ -361,6 +385,8 @@ VALUES
     (25, 24, '新增菜单', 'F', 'system:menu:add',    '', '', '', 0, 0, 1, NOW()),
     (26, 24, '修改菜单', 'F', 'system:menu:edit',   '', '', '', 1, 0, 1, NOW()),
     (27, 24, '删除菜单', 'F', 'system:menu:remove', '', '', '', 2, 0, 1, NOW()),
+    -- 接口权限管理
+    (56, 1, '接口权限', 'C', 'system:menu:list',   '/system/api-permission', 'system/api-permission/index', 'ApiOutlined', 4, 1, 1, NOW()),
     -- 字典管理
     (28, 1, '字典管理', 'C', 'system:dict:list',   '/system/dict', 'system/dict/index', 'BookOutlined', 4, 1, 1, NOW()),
     (29, 28, '新增字典', 'F', 'system:dict:add',    '', '', '', 0, 0, 1, NOW()),
@@ -444,6 +470,26 @@ INSERT INTO sys_user_role (user_id, role_id) VALUES (1, 1), (2, 1);
 -- 角色菜单关联（全部菜单给超管）
 INSERT INTO sys_role_menu (role_id, menu_id)
 SELECT 1, id FROM sys_menu
+ON CONFLICT DO NOTHING;
+
+-- 将旧菜单按钮权限迁移到独立接口权限表，保留原菜单和角色菜单关联
+INSERT INTO sys_api_permission (id, permission, name, status, create_by, create_time, update_by, update_time, deleted)
+SELECT m.id, m.perms, m.name, m.status, m.create_by, m.create_time,
+       m.update_by, m.update_time, m.deleted
+FROM sys_menu m
+WHERE m.type = 'F'
+  AND m.perms IS NOT NULL
+  AND m.perms <> ''
+ON CONFLICT (permission) DO NOTHING;
+
+INSERT INTO sys_role_api_permission (role_id, api_permission_id)
+SELECT rm.role_id, ap.id
+FROM sys_role_menu rm
+INNER JOIN sys_menu m ON m.id = rm.menu_id
+INNER JOIN sys_api_permission ap ON ap.permission = m.perms
+WHERE m.type = 'F'
+  AND m.perms IS NOT NULL
+  AND m.perms <> ''
 ON CONFLICT DO NOTHING;
 
 -- =====================================================

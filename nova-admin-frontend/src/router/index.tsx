@@ -11,6 +11,7 @@ import DeptPage from '@/pages/system/dept';
 import UserPage from '@/pages/system/user';
 import RolePage from '@/pages/system/role';
 import MenuPage from '@/pages/system/menu';
+import ApiPermissionPage from '@/pages/system/api-permission';
 import DictPage from '@/pages/system/dict';
 import LogPage from '@/pages/system/log';
 import ProfilePage from '@/pages/profile';
@@ -30,6 +31,7 @@ const componentMap: Record<string, () => React.JSX.Element> = {
   '/system/user': UserPage,
   '/system/role': RolePage,
   '/system/menu': MenuPage,
+  '/system/api-permission': ApiPermissionPage,
   '/system/dict': DictPage,
   '/system/log': LogPage,
   '/profile': ProfilePage,
@@ -78,6 +80,7 @@ export const router = createBrowserRouter([
       { path: 'system/user', element: <UserPage /> },
       { path: 'system/role', element: <RolePage /> },
       { path: 'system/menu', element: <MenuPage /> },
+      { path: 'system/api-permission', element: <ApiPermissionPage /> },
       { path: 'system/dict', element: <DictPage /> },
       { path: 'system/log', element: <LogPage /> },
       { path: 'profile', element: <ProfilePage /> },

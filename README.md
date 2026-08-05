@@ -46,6 +46,10 @@
 
 操作日志会对密码、验证码和 Token 等敏感字段逐项脱敏；日志管理页支持查看完整审计详情，并只能按指定保留天数清理过期的操作日志或登录日志。
 
+## 接口权限发现
+
+系统管理下的“接口权限”菜单会扫描带 `@PreAuthorize` 的后端接口，并将接口权限独立于菜单按钮存储。管理员可以注册发现的接口权限，并为已注册权限直接分配角色；接口权限表、菜单种子数据和旧 `F` 类型权限迁移均由 `nova-admin-backend/sql/init.sql` 初始化，旧菜单数据保留。发现接口为 `GET /api/system/menu/api-permissions`，注册接口为 `POST /api/system/menu/api-permissions/sync`，角色分配接口为 `PUT /api/system/menu/api-permissions/roles`；页面访问需要菜单查看权限，注册和分配需要菜单编辑权限，超级管理员可直接注册和分配。
+
 ## 定时任务执行历史
 
 定时任务管理页可查看每个任务的执行历史。系统会记录 CRON 自动触发、手动执行和因禁止并发而跳过的执行，保留触发类型、开始/结束时间、耗时、状态及失败原因。历史列表接口为 `GET /api/monitor/job/log/page`，详情接口为 `GET /api/monitor/job/log/{id}`，二者沿用 `monitor:job:list` 查看权限。

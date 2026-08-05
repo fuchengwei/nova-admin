@@ -15,6 +15,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.context.request.async.AsyncRequestNotUsableException;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 import java.util.stream.Collectors;
@@ -89,6 +90,12 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.FORBIDDEN)
                 .body(R.fail(ResultCode.FORBIDDEN.getCode(),
                         ex.getMessage() == null ? ResultCode.FORBIDDEN.getMsg() : ex.getMessage()));
+    }
+
+    /** SSE 客户端主动断开连接时不再尝试写入 JSON 响应。 */
+    @ExceptionHandler(AsyncRequestNotUsableException.class)
+    public void handleAsyncRequestNotUsable(AsyncRequestNotUsableException ex, HttpServletRequest req) {
+        log.debug("异步请求客户端已断开: {} {} -> {}", req.getMethod(), req.getRequestURI(), ex.getMessage());
     }
 
     /** 兜底 */

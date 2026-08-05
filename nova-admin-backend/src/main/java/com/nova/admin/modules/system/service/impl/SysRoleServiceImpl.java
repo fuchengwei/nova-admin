@@ -13,11 +13,13 @@ import com.nova.admin.modules.system.dto.RolePageQuery;
 import com.nova.admin.modules.system.dto.RoleUpdateRequest;
 import com.nova.admin.modules.system.entity.SysRole;
 import com.nova.admin.modules.system.entity.SysRoleDept;
+import com.nova.admin.modules.system.entity.SysRoleApiPermission;
 import com.nova.admin.modules.system.entity.SysRoleMenu;
 import com.nova.admin.modules.system.entity.SysUserRole;
 import com.nova.admin.modules.system.entity.SysDept;
 import com.nova.admin.modules.system.mapper.SysDeptMapper;
 import com.nova.admin.modules.system.mapper.SysRoleDeptMapper;
+import com.nova.admin.modules.system.mapper.SysRoleApiPermissionMapper;
 import com.nova.admin.modules.system.mapper.SysRoleMapper;
 import com.nova.admin.modules.system.mapper.SysRoleMenuMapper;
 import com.nova.admin.modules.system.mapper.SysUserRoleMapper;
@@ -43,6 +45,7 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impl
 
     private final SysRoleMenuMapper roleMenuMapper;
     private final SysRoleDeptMapper roleDeptMapper;
+    private final SysRoleApiPermissionMapper roleApiPermissionMapper;
     private final SysDeptMapper deptMapper;
     private final SysUserRoleMapper userRoleMapper;
     private final ApplicationEventPublisher eventPublisher;
@@ -151,6 +154,8 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impl
         // 删除角色部门关联
         roleDeptMapper.delete(new LambdaQueryWrapper<SysRoleDept>()
                 .eq(SysRoleDept::getRoleId, id));
+        roleApiPermissionMapper.delete(new LambdaQueryWrapper<SysRoleApiPermission>()
+                .eq(SysRoleApiPermission::getRoleId, id));
 
         Long operatorId = SecurityUtils.requireUserId();
         log.info("删除角色成功，id={}, operator={}", id, operatorId);

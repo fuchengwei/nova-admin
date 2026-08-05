@@ -4,8 +4,10 @@ import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.web.context.request.async.AsyncRequestNotUsableException;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 
 class GlobalExceptionHandlerTest {
 
@@ -25,5 +27,15 @@ class GlobalExceptionHandlerTest {
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
         assertThat(response.getBody()).extracting("code", "msg").containsExactly(403, "denied");
+    }
+
+    @Test
+    void handleAsyncRequestNotUsable_returnsNoJsonBody() {
+        var request = new org.springframework.mock.web.MockHttpServletRequest();
+        request.setMethod("GET");
+        request.setRequestURI("/api/auth/session-events");
+
+        assertThatCode(() -> handler.handleAsyncRequestNotUsable(
+                new AsyncRequestNotUsableException("Broken pipe"), request)).doesNotThrowAnyException();
     }
 }

@@ -5,6 +5,7 @@ import com.nova.admin.modules.system.entity.SysRoleDept;
 import com.nova.admin.modules.system.entity.SysRoleMenu;
 import com.nova.admin.modules.system.mapper.SysDeptMapper;
 import com.nova.admin.modules.system.mapper.SysRoleDeptMapper;
+import com.nova.admin.modules.system.mapper.SysRoleApiPermissionMapper;
 import com.nova.admin.modules.system.mapper.SysRoleMapper;
 import com.nova.admin.modules.system.mapper.SysRoleMenuMapper;
 import com.nova.admin.modules.system.mapper.SysUserRoleMapper;
@@ -34,6 +35,9 @@ class SysRoleServiceImplTest {
 
     @Mock
     private SysRoleDeptMapper roleDeptMapper;
+
+    @Mock
+    private SysRoleApiPermissionMapper roleApiPermissionMapper;
 
     @Mock
     private SysDeptMapper deptMapper;

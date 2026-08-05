@@ -7,6 +7,7 @@ import com.nova.admin.security.LoginUser;
 import com.nova.admin.security.SecurityUser;
 import com.nova.admin.modules.system.entity.SysUser;
 import com.nova.admin.modules.system.mapper.SysMenuMapper;
+import com.nova.admin.modules.system.mapper.SysApiPermissionMapper;
 import com.nova.admin.modules.system.mapper.SysRoleMapper;
 import com.nova.admin.modules.system.mapper.SysUserMapper;
 import lombok.RequiredArgsConstructor;
@@ -34,6 +35,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
     private final SysUserMapper userMapper;
     private final SysRoleMapper roleMapper;
     private final SysMenuMapper menuMapper;
+    private final SysApiPermissionMapper apiPermissionMapper;
     private final RedisTemplate<String, Object> redisTemplate;
 
     @Override
@@ -90,8 +92,13 @@ public class UserDetailsServiceImpl implements UserDetailsService {
         List<String> roleCodes = roleMapper.selectRoleCodesByUserId(user.getId());
         Set<String> roles = new HashSet<>(roleCodes);
         // 加载权限
-        List<String> perms = menuMapper.selectPermsByUserId(user.getId());
-        Set<String> permissions = perms.stream().filter(p -> p != null && !p.isBlank()).collect(Collectors.toSet());
+        List<String> menuPerms = menuMapper.selectPermsByUserId(user.getId());
+        List<String> apiPerms = apiPermissionMapper.selectPermsByUserId(user.getId());
+        Set<String> permissions = java.util.stream.Stream.concat(
+                        menuPerms == null ? java.util.stream.Stream.empty() : menuPerms.stream(),
+                        apiPerms == null ? java.util.stream.Stream.empty() : apiPerms.stream())
+                .filter(p -> p != null && !p.isBlank())
+                .collect(Collectors.toSet());
 
         // 超管直接拥有全部数据权限，无需查角色
         Integer dataScope = Integer.valueOf(1).equals(user.getSuperAdmin())
