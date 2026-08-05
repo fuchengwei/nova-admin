@@ -115,7 +115,7 @@ export default function ApiPermissionTable({ canEdit }: ApiPermissionTableProps)
           rowKey="rowKey"
           columns={columns}
           style={{ height: '100%' }}
-          scroll={{ x: 1100, y: scrollY }}
+          scroll={{ x: 1300, y: scrollY }}
           request={async (params) => {
             const result = await getApiPermissions();
             const data = result.code === 0 ? result.data : [];

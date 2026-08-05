@@ -26,6 +26,29 @@ body,
   background: transparent !important;
 }
 
+/* ProLayout actions already supplies the hover surface for header controls. */
+.notification-bell-button.ant-btn {
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  background-color: transparent !important;
+  box-shadow: none !important;
+}
+.notification-bell-button.ant-btn .anticon {
+  font-size: 18px;
+}
+.notification-bell-button.ant-btn:hover,
+.notification-bell-button.ant-btn:active {
+  background-color: transparent !important;
+  box-shadow: none !important;
+}
+.notification-bell-button.ant-btn:focus-visible {
+  background-color: transparent !important;
+  box-shadow: none !important;
+  outline: 2px solid var(--ant-color-primary, #1677ff);
+  outline-offset: 2px;
+}
+
 /* 页面内容撑满剩余高度：PageContainer 作为全高 flex 列，内容区独立滚动 */
 .page-fill.ant-pro-page-container {
   height: 100%;

@@ -310,7 +310,36 @@ CREATE INDEX idx_joblog_job_time ON sys_job_log(job_id, start_time DESC);
 CREATE INDEX idx_joblog_status ON sys_job_log(status);
 
 -- =====================================================
--- 10. 系统配置
+-- 10. 站内消息
+-- =====================================================
+DROP TABLE IF EXISTS sys_message_recipient CASCADE;
+DROP TABLE IF EXISTS sys_message CASCADE;
+CREATE TABLE sys_message (
+    id              BIGINT PRIMARY KEY,
+    type            VARCHAR(32) NOT NULL,
+    title           VARCHAR(200) NOT NULL,
+    content         TEXT NOT NULL,
+    link            VARCHAR(500),
+    create_time     TIMESTAMP NOT NULL,
+    deleted         SMALLINT NOT NULL DEFAULT 0
+);
+COMMENT ON TABLE sys_message IS '站内消息表';
+CREATE INDEX idx_message_created ON sys_message(create_time DESC) WHERE deleted = 0;
+
+CREATE TABLE sys_message_recipient (
+    id              BIGINT PRIMARY KEY,
+    message_id      BIGINT NOT NULL,
+    user_id         BIGINT NOT NULL,
+    read_at         TIMESTAMP,
+    create_time     TIMESTAMP NOT NULL
+);
+COMMENT ON TABLE sys_message_recipient IS '站内消息收件人表';
+CREATE UNIQUE INDEX uk_message_recipient ON sys_message_recipient(message_id, user_id);
+CREATE INDEX idx_message_recipient_user_read
+    ON sys_message_recipient(user_id, read_at, create_time DESC);
+
+-- =====================================================
+-- 11. 系统配置
 -- =====================================================
 DROP TABLE IF EXISTS sys_config CASCADE;
 CREATE TABLE sys_config (
@@ -332,7 +361,7 @@ CREATE UNIQUE INDEX uk_config_key ON sys_config(config_key) WHERE deleted = 0;
 CREATE INDEX idx_config_group ON sys_config(config_group);
 
 -- =====================================================
--- 11. 初始化数据
+-- 12. 初始化数据
 -- =====================================================
 -- 根部门
 INSERT INTO sys_dept (id, parent_id, name, code, leader, sort, status, create_time)

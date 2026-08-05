@@ -12,6 +12,7 @@ import { useTranslation } from 'react-i18next';
 import { ProLayout } from '@ant-design/pro-components';
 import { useQuery } from '@tanstack/react-query';
 import { getPublicBasicSettings } from '@/api/settings';
+import NotificationBell from '@/components/NotificationBell';
 import SystemNotice from '@/components/SystemNotice';
 import PasswordChangeGate from '@/components/PasswordChangeGate';
 import { useAppStore, type Locale } from '@/stores/appStore';
@@ -232,6 +233,7 @@ export default function AdminLayout() {
         props.isMobile
           ? []
           : [
+              <NotificationBell key="notifications" />,
               <Dropdown key="lang" menu={langMenu} placement="bottomRight">
                 <Button type="text" icon={<GlobalOutlined />}>
                   {locale === 'zh_CN' ? '中文' : 'English'}
