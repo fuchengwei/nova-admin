@@ -153,7 +153,7 @@ export default function NotificationHistoryTable({
     {
       title: t('common.action'),
       valueType: 'option',
-      width: 260,
+      width: 120,
       fixed: 'right',
       render: (_, record) => (
         <NotificationHistoryActions
