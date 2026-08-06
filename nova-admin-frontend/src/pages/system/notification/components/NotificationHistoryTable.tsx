@@ -56,11 +56,7 @@ export default function NotificationHistoryTable({
         permission: { text: t('notification.typePermission') },
         job: { text: t('notification.typeJob') },
       },
-      render: (_, record) => (
-        <Tag className="notification-type-tag" color="blue">
-          {typeLabels[record.type] ?? record.type}
-        </Tag>
-      ),
+      render: (_, record) => <Tag color="blue">{typeLabels[record.type] ?? record.type}</Tag>,
     },
     {
       title: t('notification.status'),
@@ -112,11 +108,11 @@ export default function NotificationHistoryTable({
       width: 90,
       search: false,
       render: (value, record) => (
-        <div className="notification-count-cell">
-          <strong className="notification-count-read">{value}</strong>
-          <span className="notification-count-bar">
+        <div className="grid w-[54px] gap-[5px]">
+          <strong className="text-[13px] font-bold text-emerald-600">{value}</strong>
+          <span className="block h-[3px] w-full overflow-hidden rounded-full bg-slate-200">
             <span
-              className="notification-count-bar-read"
+              className="block h-full rounded-[inherit] bg-emerald-400"
               style={{
                 width:
                   String(
@@ -134,11 +130,11 @@ export default function NotificationHistoryTable({
       width: 90,
       search: false,
       render: (value, record) => (
-        <div className="notification-count-cell">
-          <strong className="notification-count-unread">{value}</strong>
-          <span className="notification-count-bar">
+        <div className="grid w-[54px] gap-[5px]">
+          <strong className="text-[13px] font-bold text-amber-600">{value}</strong>
+          <span className="block h-[3px] w-full overflow-hidden rounded-full bg-slate-200">
             <span
-              className="notification-count-bar-unread"
+              className="block h-full rounded-[inherit] bg-amber-500"
               style={{
                 width:
                   String(

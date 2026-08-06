@@ -14,6 +14,8 @@ import {
 } from '@/api/notification';
 import { message } from '@/utils/message';
 
+import styles from './NotificationBell.module.css';
+
 const notificationTypeKeys: Record<string, string> = {
   system: 'notification.typeSystem',
   permission: 'notification.typePermission',
@@ -87,7 +89,7 @@ export default function NotificationBell() {
   };
 
   const content = (
-    <div className="notification-popover-content">
+    <div className="w-[340px] max-w-[calc(100vw-32px)]">
       {isLoading ? (
         <div className="flex min-h-32 items-center justify-center">
           <Spin size="small" />
@@ -100,40 +102,51 @@ export default function NotificationBell() {
           </Button>
         </div>
       ) : data.records.length === 0 ? (
-        <div className="notification-empty-state">
+        <div className="px-3 pt-[18px] pb-5">
           <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={t('notification.empty')} />
         </div>
       ) : (
-        <div className="notification-list">
+        <div className={`max-h-[340px] overflow-y-auto ${styles.list}`}>
           <Space orientation="vertical" size={0} className="w-full">
             {data.records.map((record) => (
               <button
                 key={record.id}
                 type="button"
-                className={`notification-item ${record.read ? '' : 'notification-item-unread'}`}
+                className={`flex w-full min-w-0 items-start gap-2 border-0 border-b border-slate-100 bg-white px-[13px] py-[9px] text-left text-inherit transition-colors duration-150 last:border-b-0 hover:bg-slate-50 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-blue-600 motion-reduce:transition-none ${record.read ? '' : 'bg-[#f7faff] hover:bg-[#e8f0ff] focus-visible:bg-[#e8f0ff]'}`}
                 disabled={markReadMutation.isPending}
                 onClick={() => void handleMessageClick(record)}
               >
                 <span
-                  className={`notification-item-dot ${record.read ? '' : 'notification-item-dot-unread'}`}
+                  className={`mt-[5px] block h-1.5 w-1.5 shrink-0 rounded-full bg-slate-200 ${record.read ? '' : 'bg-blue-600'}`}
                   aria-hidden="true"
                 />
-                <span className="notification-item-main">
-                  <span className="notification-item-header">
-                    <Typography.Text strong={!record.read} ellipsis>
+                <span className="min-w-0 flex-1">
+                  <span className="flex items-baseline justify-between gap-2">
+                    <Typography.Text
+                      strong={!record.read}
+                      ellipsis
+                      className="min-w-0 !text-xs !text-slate-800"
+                    >
                       {record.title}
                     </Typography.Text>
-                    <Typography.Text type="secondary" className="notification-item-time">
+                    <Typography.Text
+                      type="secondary"
+                      className="shrink-0 !text-[10px] !leading-[1.3]"
+                    >
                       {dayjs(record.createdAt).format('MM-DD HH:mm')}
                     </Typography.Text>
                   </span>
                   <Typography.Paragraph
                     ellipsis={{ rows: 2 }}
-                    className="notification-item-content"
+                    className="!mt-0.5 !mb-1 !text-[11px] !leading-[1.4] !text-slate-500"
                   >
                     {record.content}
                   </Typography.Paragraph>
-                  <span className="notification-item-type">{typeLabel(record.type)}</span>
+                  <span
+                    className={`text-[10px] leading-[1.3] ${record.read ? 'text-slate-400' : 'text-slate-500'}`}
+                  >
+                    {typeLabel(record.type)}
+                  </span>
                 </span>
               </button>
             ))}
@@ -148,16 +161,16 @@ export default function NotificationBell() {
       trigger="click"
       placement="bottomRight"
       classNames={{
-        root: 'notification-popover',
-        title: 'notification-popover-title',
-        content: 'notification-popover-body',
+        root: styles.popover,
+        title: styles.popoverTitle,
+        content: styles.popoverBody,
       }}
       title={
-        <div className="notification-popover-heading">
-          <div className="notification-popover-title-group">
+        <div className="flex items-center justify-between gap-4 text-[13px] font-bold text-slate-900">
+          <div className="inline-flex items-baseline gap-1.5">
             <span>{t('notification.title')}</span>
             {data.unreadCount > 0 && (
-              <span className="notification-unread-count">
+              <span className="text-[10px] font-medium text-slate-500">
                 {t('notification.unreadCount', { count: data.unreadCount })}
               </span>
             )}
@@ -176,7 +189,7 @@ export default function NotificationBell() {
       content={content}
     >
       <Badge
-        className="notification-bell-badge"
+        className="inline-flex items-center justify-center leading-none"
         size="small"
         count={data.unreadCount}
         overflowCount={99}
@@ -184,9 +197,8 @@ export default function NotificationBell() {
       >
         <Button
           type="text"
-          size="middle"
-          className="notification-bell-button"
-          icon={<BellOutlined />}
+          className={`${styles.bellButton}`}
+          icon={<BellOutlined className="!h-5 !w-5 !text-xl" />}
           aria-label={t('notification.open')}
           title={t('notification.open')}
         />

@@ -25,6 +25,7 @@ import {
 import { message } from '@/utils/message';
 
 import NotificationAudienceFields from './NotificationAudienceFields';
+import styles from '../notification.module.css';
 
 interface NotificationPublishFormProps {
   draft: NotificationDraft | null;
@@ -93,7 +94,7 @@ export default function NotificationPublishForm({
   return (
     <ProForm<NotificationPublishRequest>
       key={draft?.id ?? 'new-notification'}
-      className="notification-publish-form"
+      className={styles.publishForm}
       formRef={formRef}
       initialValues={
         draft ? { ...draft, mode: 'DRAFT' } : { recipientType: 'ALL', mode: 'IMMEDIATE' }
@@ -143,13 +144,19 @@ export default function NotificationPublishForm({
         return true;
       }}
     >
-      <div className="notification-publish-layout">
-        <section className="notification-compose-panel">
-          <div className="notification-panel-heading">
+      <div className="grid items-start gap-4 px-0.5 pt-3.5 pb-1 max-[900px]:grid-cols-1 min-[901px]:grid-cols-[minmax(0,1.25fr)_minmax(380px,0.95fr)]">
+        <section className="min-w-0 rounded-[10px] border border-slate-200 bg-white px-[18px] pt-4 pb-1 max-[560px]:px-[13px] max-[560px]:pt-3.5">
+          <div className="mb-3.5 flex items-start justify-between gap-3">
             <div>
-              <div className="notification-panel-kicker">{t('notification.composeKicker')}</div>
-              <h2>{draft ? t('notification.editDraftTitle') : t('notification.composeTitle')}</h2>
-              <p>{draft ? t('notification.editDraftHint') : t('notification.composeHint')}</p>
+              <div className="text-[10px] leading-[1.4] font-bold tracking-[0.12em] text-slate-500 uppercase">
+                {t('notification.composeKicker')}
+              </div>
+              <h2 className="mt-[3px] mb-[3px] text-[15px] font-bold text-slate-800">
+                {draft ? t('notification.editDraftTitle') : t('notification.composeTitle')}
+              </h2>
+              <p className="m-0 max-w-[42ch] text-xs leading-[1.55] text-slate-500">
+                {draft ? t('notification.editDraftHint') : t('notification.composeHint')}
+              </p>
             </div>
           </div>
           <ProFormRadio.Group

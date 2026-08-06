@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 
 import { hasPermission } from '@/utils/layout';
 import { useUserStore } from '@/stores/userStore';
+import layoutStyles from '@/styles/layout.module.css';
 
 import ApiPermissionTable from './components/ApiPermissionTable';
 
@@ -21,7 +22,7 @@ export default function ApiPermissionPage() {
           {t('menu.apiPermissionTitle')}
         </span>
       }
-      className="page-fill"
+      className={layoutStyles.pageFill}
     >
       <ApiPermissionTable canEdit={canEdit} />
     </PageContainer>

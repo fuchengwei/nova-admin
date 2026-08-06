@@ -1,5 +1,8 @@
 import { useMemo } from 'react';
+
 import { sanitizeRichHtml } from '@/utils/richText';
+
+import styles from './RichTextContent.module.css';
 
 interface RichTextContentProps {
   content?: string;
@@ -11,7 +14,9 @@ export default function RichTextContent({ content, className }: RichTextContentP
 
   return (
     <div
-      className={['notice-rich-content', className].filter(Boolean).join(' ')}
+      className={['text-sm leading-[1.8] text-slate-600', styles.content, className]
+        .filter(Boolean)
+        .join(' ')}
       dangerouslySetInnerHTML={{ __html: sanitizedHtml }}
     />
   );

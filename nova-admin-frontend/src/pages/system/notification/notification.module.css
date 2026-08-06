@@ -1,0 +1,120 @@
+.workspaceTabs :global(.ant-tabs-nav) {
+  margin: 0;
+  padding-top: 4px;
+}
+
+.workspaceTabs :global(.ant-tabs-tab) {
+  padding: 12px 4px 11px;
+  color: #64748b;
+  font-size: 13px;
+}
+
+.workspaceTabs :global(.ant-tabs-tab-active) {
+  color: #1d4ed8;
+  font-weight: 650;
+}
+
+.publishForm > :global(.ant-form-item:last-child) {
+  margin: 20px 0 0;
+  padding: 0 2px;
+}
+
+.publishForm > :global(.ant-form-item:last-child .ant-form-item-control-input) {
+  min-height: 0;
+}
+
+.recipientModeGroup {
+  scrollbar-width: none;
+}
+
+.recipientModeGroup:global(.ant-radio-group) {
+  display: flex !important;
+  flex-direction: row !important;
+  flex-wrap: nowrap !important;
+  width: 100%;
+}
+
+.recipientModeGroup::-webkit-scrollbar {
+  display: none;
+}
+
+.recipientModeGroup :global(.ant-radio-button-wrapper) {
+  display: flex;
+  min-width: 0;
+  flex: 1 1 0;
+  height: 36px;
+  align-items: center;
+  justify-content: center;
+  padding: 0 8px;
+  border: 1px solid #dbe4ef;
+  color: #475569;
+  font-size: 12px;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.recipientModeGroup :global(.ant-radio-button-wrapper:first-child) {
+  flex-grow: 1.35;
+  border-radius: 7px 0 0 7px;
+}
+
+.recipientModeGroup :global(.ant-radio-button-wrapper:nth-child(2)),
+.recipientModeGroup :global(.ant-radio-button-wrapper:nth-child(3)) {
+  flex-grow: 1;
+}
+
+.recipientModeGroup :global(.ant-radio-button-wrapper > span) {
+  min-width: 0;
+  white-space: nowrap;
+}
+
+.recipientModeGroup :global(.ant-radio-button-wrapper .anticon) {
+  margin-inline-end: 5px;
+  font-size: 13px;
+}
+
+.recipientModeGroup :global(.ant-radio-button-wrapper:last-child) {
+  border-radius: 0 7px 7px 0;
+}
+
+.recipientModeGroup :global(.ant-radio-button-wrapper:not(:first-child)::before) {
+  display: none;
+}
+
+.recipientModeGroup :global(.ant-radio-button-wrapper-checked) {
+  border-color: #2563eb;
+  background: #eff6ff;
+  color: #1d4ed8;
+  box-shadow: none;
+}
+
+.previewSamples > div {
+  min-width: 0;
+  flex: 1 1 auto;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.previewSamples > div > span {
+  min-width: 0;
+  max-width: 150px;
+  flex: 0 1 auto;
+  overflow: hidden;
+  border-radius: 99px;
+  background: #e8f0ff;
+  padding: 2px 7px;
+  color: #1d4ed8;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.previewSamples > div > .previewMore {
+  max-width: none;
+  flex: 0 0 auto;
+  background: #dbeafe;
+  font-weight: 650;
+}
+
+.detailDeliveryStat + .detailDeliveryStat {
+  border-left: 1px solid #e2e8f0;
+}

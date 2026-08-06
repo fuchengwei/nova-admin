@@ -111,7 +111,15 @@ src/
 
 排序基于 `src/styles/index.css` 中的 Tailwind 入口文件，配置见 `.prettierrc` 的 `tailwindStylesheet` 字段。
 
-### 4.2 其它约束
+### 4.2 Tailwind 与 CSS Modules
+
+- **Tailwind 优先**：布局、间距、尺寸、颜色、排版、边框、圆角、阴影、响应式和常规状态样式必须优先写在组件 `className`。
+- **CSS Modules 仅用于局部复杂样式**：伪元素、富文本标签选择器、编辑器工具栏、滚动条，以及 Ant Design 等第三方组件的深层结构覆盖，放在组件或功能目录旁的 `*.module.css`。
+- CSS Module 内的第三方选择器必须由局部根 class 限定，并使用 `:global(...)` 标记；禁止创建无作用域限制的第三方覆盖。
+- `src/styles/index.css` 只保留 Tailwind 入口、设计令牌、根节点基础样式、浏览器级行为和真正跨页面的第三方兼容规则；禁止在其中新增业务专用 class。
+- 业务局部样式不得使用全局 CSS class；两处以上复用的组合优先抽为组件，其次才考虑共享 CSS Module。
+
+### 4.3 其它约束
 
 - 禁止在多处复制相同的类名组合 → 提取为公共组件
 - 使用 `tailwind-merge`（`cn()` / `twMerge()`）合并动态类名，避免冲突

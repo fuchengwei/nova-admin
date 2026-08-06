@@ -23,7 +23,7 @@ export default function DashboardPage() {
 
   if (isLoading) {
     return (
-      <div className="h-full overflow-auto p-6">
+      <div className="min-h-0 flex-1 overflow-y-auto p-6">
         <Skeleton active paragraph={{ rows: 14 }} />
       </div>
     );
@@ -31,7 +31,7 @@ export default function DashboardPage() {
 
   if (isError || !data) {
     return (
-      <div className="flex h-full items-center justify-center p-6">
+      <div className="flex min-h-0 flex-1 items-center justify-center overflow-y-auto p-6">
         <Result
           status="error"
           title={t('dashboard.loadFailed')}
@@ -46,7 +46,7 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="h-full overflow-auto">
+    <div className="min-h-0 flex-1 overflow-y-auto">
       <div className="flex w-full flex-col gap-5 pb-6">
         <DashboardHeader runtime={data.runtime.data} updatedAt={data.updatedAt} />
         <DashboardStatCards

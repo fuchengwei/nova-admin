@@ -9,6 +9,7 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { clearTokens } from '@/utils/request';
 import { useUserStore } from '@/stores/userStore';
+import layoutStyles from '@/styles/layout.module.css';
 import {
   updateCurrentUserProfile,
   uploadCurrentUserAvatar,
@@ -128,7 +129,10 @@ export default function ProfilePage() {
   }, [userInfo?.lastLoginTime]);
 
   return (
-    <PageContainer title={t('header.profile')} className="page-fill min-h-0 overflow-y-auto">
+    <PageContainer
+      title={t('header.profile')}
+      className={`${layoutStyles.pageFill} min-h-0 overflow-y-auto`}
+    >
       <div className="grid gap-6 xl:grid-cols-[360px_1fr]">
         <ProfileSummary
           userInfo={userInfo}

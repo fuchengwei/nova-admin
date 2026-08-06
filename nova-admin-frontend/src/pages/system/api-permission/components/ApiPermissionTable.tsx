@@ -15,6 +15,7 @@ import {
 import { getAllRoles } from '@/api/role';
 import { useTableScrollY } from '@/hooks/useTableScrollY';
 import { message } from '@/utils/message';
+import layoutStyles from '@/styles/layout.module.css';
 
 import ApiPermissionRoleModal from './ApiPermissionRoleModal';
 import { getApiPermissionColumns, type ApiPermissionTableRow } from './columns';
@@ -137,7 +138,7 @@ export default function ApiPermissionTable({ canEdit }: ApiPermissionTableProps)
 
   return (
     <>
-      <div ref={wrapperRef} className="table-fill h-full min-h-0">
+      <div ref={wrapperRef} className={`${layoutStyles.tableFill} h-full min-h-0`}>
         <ProTable<ApiPermissionTableRow>
           actionRef={actionRef}
           rowKey="rowKey"

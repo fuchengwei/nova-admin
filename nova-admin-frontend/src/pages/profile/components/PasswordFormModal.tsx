@@ -13,7 +13,12 @@ export interface PasswordFormModalProps {
   forceChange?: boolean;
 }
 
-export default function PasswordFormModal({ open, onSubmit, onClose, forceChange = false }: PasswordFormModalProps) {
+export default function PasswordFormModal({
+  open,
+  onSubmit,
+  onClose,
+  forceChange = false,
+}: PasswordFormModalProps) {
   const { t } = useTranslation();
 
   return (

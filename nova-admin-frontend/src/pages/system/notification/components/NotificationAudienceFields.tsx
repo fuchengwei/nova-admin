@@ -5,7 +5,7 @@ import {
   type ProFormInstance,
 } from '@ant-design/pro-components';
 import { GlobalOutlined, TeamOutlined, UserOutlined } from '@ant-design/icons';
-import type { MutableRefObject } from 'react';
+import type { RefObject } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import type {
@@ -16,9 +16,10 @@ import type {
 } from '@/api/notification';
 
 import NotificationRecipientPreviewPanel from './NotificationRecipientPreview';
+import styles from '../notification.module.css';
 
 interface NotificationAudienceFieldsProps {
-  formRef: MutableRefObject<ProFormInstance<NotificationPublishRequest> | undefined>;
+  formRef: RefObject<ProFormInstance<NotificationPublishRequest> | undefined>;
   recipientOptions: { users: NotificationRecipientOption[]; roles: NotificationRecipientOption[] };
   recipientOptionsLoading: boolean;
   recipientPreview?: NotificationRecipientPreview;
@@ -49,30 +50,39 @@ export default function NotificationAudienceFields({
   };
 
   return (
-    <section className="notification-audience-panel">
-      <div className="notification-panel-heading">
+    <section className="min-w-0 rounded-[10px] border border-slate-200 bg-[#fbfdff] px-[18px] pt-4 pb-1 max-[560px]:px-[13px] max-[560px]:pt-3.5">
+      <div className="mb-3.5 flex items-start justify-between gap-3">
         <div>
-          <div className="notification-panel-kicker">{t('notification.audienceKicker')}</div>
-          <h2>{t('notification.audienceTitle')}</h2>
-          <p>{t('notification.audienceHint')}</p>
+          <div className="text-[10px] leading-[1.4] font-bold tracking-[0.12em] text-slate-500 uppercase">
+            {t('notification.audienceKicker')}
+          </div>
+          <h2 className="mt-[3px] mb-[3px] text-[15px] font-bold text-slate-800">
+            {t('notification.audienceTitle')}
+          </h2>
+          <p className="m-0 max-w-[42ch] text-xs leading-[1.55] text-slate-500">
+            {t('notification.audienceHint')}
+          </p>
         </div>
-        <span className="notification-audience-signal" aria-hidden="true">
+        <span
+          className="grid h-[30px] w-[30px] shrink-0 place-items-center rounded-lg bg-blue-50 text-blue-600"
+          aria-hidden="true"
+        >
           <GlobalOutlined />
         </span>
       </div>
       <ProFormRadio.Group
         name="recipientType"
         label={t('notification.recipientType')}
-        className="notification-recipient-mode"
+        className="w-full"
         fieldProps={{
           optionType: 'button',
           buttonStyle: 'solid',
-          className: 'notification-recipient-mode-group',
+          className: `flex w-full flex-nowrap overflow-x-auto ${styles.recipientModeGroup}`,
           onChange: () => formRef.current?.setFieldValue('recipientIds', undefined),
         }}
         options={recipientTypeOptions.map((value) => ({
           label: (
-            <span className="notification-recipient-option">
+            <span className="inline-flex min-w-0 items-center gap-[5px] whitespace-nowrap">
               {value === 'ALL' ? (
                 <GlobalOutlined />
               ) : value === 'ROLE' ? (
@@ -126,7 +136,7 @@ export default function NotificationAudienceFields({
             );
           }
           return (
-            <div className="notification-all-audience">
+            <div className="mt-[7px] mb-[13px] flex items-center gap-[9px] rounded-lg border border-dashed border-blue-200 bg-blue-50 p-3 text-xs text-blue-700">
               <GlobalOutlined />
               <span>{t('notification.recipientAllHint')}</span>
             </div>

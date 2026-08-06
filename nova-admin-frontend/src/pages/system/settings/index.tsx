@@ -32,6 +32,7 @@ import RichTextContent from '@/components/RichTextContent';
 import { useUserStore } from '@/stores/userStore';
 import { useAppStore, type Locale } from '@/stores/appStore';
 import { hasPermission } from '@/utils/layout';
+import layoutStyles from '@/styles/layout.module.css';
 import { displayText } from '@/utils/display';
 import BasicSettingsFormModal from './components/BasicSettingsFormModal';
 import DetailSection from './components/DetailSection';
@@ -246,8 +247,11 @@ export default function SystemSettingsPage() {
   const noticeInitialValues: NoticeSettings = useMemo(() => noticeData ?? {}, [noticeData]);
 
   return (
-    <PageContainer title={t('settings.title')} className="page-fill overflow-y-auto">
-      <div className="h-full overflow-y-auto pb-6">
+    <PageContainer
+      title={t('settings.title')}
+      className={`${layoutStyles.pageFill} ${layoutStyles.notificationPageScroll}`}
+    >
+      <div className="pb-6">
         <div className="space-y-6 pr-1">
           {!canEdit ? (
             <Alert

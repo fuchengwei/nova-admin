@@ -1,6 +1,7 @@
 import { Button, Modal } from 'antd';
 import { useTranslation } from 'react-i18next';
 import type { ActiveNotice } from '@/api/settings';
+
 import RichTextContent from './RichTextContent';
 
 interface AnnouncementDialogProps {
@@ -22,13 +23,15 @@ export default function AnnouncementDialog({ notice, onDismiss, open }: Announce
       title={null}
       width={560}
     >
-      <article className="announcement-dialog">
-        <header className="announcement-dialog-header">
-          <h2>{notice?.title?.trim() || t('notice.defaultTitle')}</h2>
+      <article className="px-[30px] pt-7 pb-[22px]">
+        <header className="pr-[34px]">
+          <h2 className="m-0 text-[22px] leading-[1.4] font-semibold text-slate-900">
+            {notice?.title?.trim() || t('notice.defaultTitle')}
+          </h2>
         </header>
-        <RichTextContent className="announcement-dialog-content" content={notice?.content} />
-        <footer className="announcement-dialog-actions">
-          <Button onClick={onDismiss} type="primary">
+        <RichTextContent className="mt-[22px] text-slate-600" content={notice?.content} />
+        <footer className="mt-[26px] flex justify-end">
+          <Button className="min-w-[88px]" onClick={onDismiss} type="primary">
             {t('notice.dismiss')}
           </Button>
         </footer>

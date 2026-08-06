@@ -28,6 +28,7 @@ import UserFormModal from './components/UserFormModal';
 import ResetPwdModal from './components/ResetPwdModal';
 import { useUserColumns } from './components/columns';
 import { useTableScrollY } from '@/hooks/useTableScrollY';
+import layoutStyles from '@/styles/layout.module.css';
 
 export default function UserPage() {
   const { t } = useTranslation();
@@ -223,7 +224,7 @@ export default function UserPage() {
     <div className="flex h-full min-h-0 flex-col">
       <h2 className="mb-4 text-lg font-semibold">{t('menu.user')}</h2>
       <div ref={wrapperRef} className="min-h-0 flex-1">
-        <div className="table-fill h-full">
+        <div className={`${layoutStyles.tableFill} h-full`}>
           <ProTable<UserRecord>
             actionRef={actionRef}
             rowKey="id"

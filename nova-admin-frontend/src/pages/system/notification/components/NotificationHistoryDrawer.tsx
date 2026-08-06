@@ -10,6 +10,8 @@ import {
 } from '@/api/notification';
 import { displayText } from '@/utils/display';
 
+import styles from '../notification.module.css';
+
 interface NotificationHistoryDrawerProps {
   record: NotificationHistoryRecord | null;
   onClose: () => void;
@@ -42,16 +44,20 @@ export default function NotificationHistoryDrawer({
     >
       {record && (
         <div className="space-y-5">
-          <div className="notification-detail-hero">
-            <div className="notification-detail-hero-copy">
-              <div className="notification-panel-kicker">{t('notification.detailKicker')}</div>
-              <h2>{record.title}</h2>
-              <div className="notification-detail-meta">
+          <div className="flex items-start justify-between gap-3.5 border-b border-slate-200 pb-[17px]">
+            <div>
+              <div className="text-[10px] leading-[1.4] font-bold tracking-[0.12em] text-slate-500 uppercase">
+                {t('notification.detailKicker')}
+              </div>
+              <h2 className="mt-[3px] mb-[5px] text-[19px] leading-[1.4] font-bold text-slate-800">
+                {record.title}
+              </h2>
+              <div className="flex flex-wrap gap-x-3.5 gap-y-2 text-xs text-slate-500">
                 <span>{record.publisherName}</span>
                 <span>{formatDateTime(record.createTime)}</span>
               </div>
             </div>
-            <span className="notification-detail-type">
+            <span className="shrink-0 rounded-full bg-blue-50 px-[9px] py-1 text-[11px] font-semibold text-blue-700">
               {record.type === 'system'
                 ? t('notification.typeSystem')
                 : record.type === 'permission'
@@ -61,7 +67,7 @@ export default function NotificationHistoryDrawer({
                     : record.type}
             </span>
           </div>
-          <div className="notification-detail-status-row">
+          <div className="flex flex-wrap items-center gap-2 text-sm text-slate-500">
             <Tag
               color={
                 record.status === 'SENT' ? 'green' : record.status === 'FAILED' ? 'red' : 'blue'
@@ -76,8 +82,8 @@ export default function NotificationHistoryDrawer({
             )}
             {record.errorMsg && <span className="text-red-500">{record.errorMsg}</span>}
           </div>
-          <div className="notification-delivery-summary">
-            <div className="notification-delivery-stats">
+          <div className="rounded-[9px] border border-slate-200 bg-slate-50 p-[3px]">
+            <div className="grid grid-cols-3">
               {[
                 [t('notification.recipientCount'), record.recipientCount, 'total'],
                 [t('notification.readCount'), record.readCount, 'read'],
@@ -85,20 +91,32 @@ export default function NotificationHistoryDrawer({
               ].map(([label, value, tone]) => (
                 <div
                   key={String(label)}
-                  className={'notification-delivery-stat notification-delivery-stat-' + tone}
+                  className={`flex min-w-0 flex-col items-center gap-px px-1.5 pt-2 pb-[7px] ${styles.detailDeliveryStat}`}
                 >
-                  <strong>{value}</strong>
-                  <span>{label}</span>
+                  <strong
+                    className={`text-lg leading-[1.1] font-bold ${tone === 'read' ? 'text-emerald-600' : tone === 'unread' ? 'text-amber-600' : 'text-slate-800'}`}
+                  >
+                    {value}
+                  </strong>
+                  <span className="text-[11px] leading-[1.4] whitespace-nowrap text-slate-500">
+                    {label}
+                  </span>
                 </div>
               ))}
             </div>
           </div>
-          <div className="notification-message-reading">
-            <div className="notification-message-reading-label">
+          <div className="rounded-r-lg border-l-[3px] border-blue-600 bg-slate-50 px-3.5 py-3">
+            <div className="text-[10px] font-bold tracking-[0.1em] text-slate-500 uppercase">
               {t('notification.messageContent')}
             </div>
-            <div className="notification-message-reading-body">{displayText(record.content)}</div>
-            {record.link && <div className="notification-message-reading-link">{record.link}</div>}
+            <div className="mt-1.5 text-[13px] leading-[1.7] whitespace-pre-wrap text-slate-700">
+              {displayText(record.content)}
+            </div>
+            {record.link && (
+              <div className="mt-2 font-mono text-[11px] break-all text-blue-600">
+                {record.link}
+              </div>
+            )}
           </div>
           <ProTable<NotificationRecipientRecord>
             rowKey="id"

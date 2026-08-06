@@ -1,17 +1,14 @@
 import { useEffect, useState } from 'react';
 import { EyeOutlined } from '@ant-design/icons';
 import { App as AntdApp, Button, Collapse, Form } from 'antd';
-import {
-  ModalForm,
-  ProFormDigit,
-  ProFormSwitch,
-  ProFormText,
-} from '@ant-design/pro-components';
+import { ModalForm, ProFormDigit, ProFormSwitch, ProFormText } from '@ant-design/pro-components';
 import { useTranslation } from 'react-i18next';
 import AnnouncementDialog from '@/components/AnnouncementDialog';
 import type { NoticeSettings } from '@/api/settings';
 import { getRichTextPlainText, sanitizeRichHtml } from '@/utils/richText';
+
 import RichNoticeEditor from './RichNoticeEditor';
+import styles from './NoticeSettingsFormModal.module.css';
 
 export interface NoticeSettingsFormModalProps {
   open: boolean;
@@ -65,12 +62,14 @@ export default function NoticeSettingsFormModal({
       title={t('settings.noticePublishTitle')}
       width={1180}
     >
-      <div className="notice-publish-header">
+      <div className="mb-6 flex items-start justify-between gap-6 border-b border-slate-200 pb-[18px] max-md:block">
         <div>
-          <div className="notice-publish-kicker">{t('settings.noticeWorkspace')}</div>
-          <div className="notice-publish-intro">{t('settings.noticeWorkspaceDescription')}</div>
+          <div className="text-xs font-bold text-amber-700">{t('settings.noticeWorkspace')}</div>
+          <div className="mt-1.5 text-sm text-slate-500">
+            {t('settings.noticeWorkspaceDescription')}
+          </div>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 max-md:mt-4">
           <ProFormSwitch name="enabled" label={t('settings.noticeEnabled')} />
           <Button icon={<EyeOutlined />} onClick={() => setPreviewOpen(true)}>
             {t('settings.previewNotice')}
@@ -91,7 +90,7 @@ export default function NoticeSettingsFormModal({
       </Form.Item>
 
       <Collapse
-        className="notice-channel-collapse"
+        className={`mt-6 border-slate-200 bg-slate-50 ${styles.channelCollapse}`}
         items={[
           {
             key: 'channels',

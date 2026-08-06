@@ -93,7 +93,10 @@ export default function BasicSettingsFormModal({
               ),
               labelRender: ({ label, value }) => (
                 <span className="flex items-center gap-2">
-                  <span className="h-3 w-3 rounded-full" style={{ backgroundColor: String(value) }} />
+                  <span
+                    className="h-3 w-3 rounded-full"
+                    style={{ backgroundColor: String(value) }}
+                  />
                   {label}
                 </span>
               ),

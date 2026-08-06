@@ -9,6 +9,8 @@ import { useTranslation } from 'react-i18next';
 
 import type { NotificationRecipientPreview } from '@/api/notification';
 
+import styles from '../notification.module.css';
+
 interface NotificationRecipientPreviewProps {
   data?: NotificationRecipientPreview;
   hasSelection: boolean;
@@ -31,37 +33,43 @@ export default function NotificationRecipientPreview({
 
   return (
     <div
-      className={`notification-recipient-preview ${
-        isError || isEmpty ? 'notification-recipient-preview-warning' : ''
+      className={`mt-2.5 mb-[13px] rounded-lg border p-3 text-xs ${
+        isError || isEmpty
+          ? 'border-orange-200 bg-orange-50 text-orange-700'
+          : 'border-blue-200 bg-[#f8fbff] text-blue-700'
       }`}
     >
       {isFetching ? (
-        <div className="notification-recipient-preview-row">
+        <div className="flex min-h-5 items-center gap-[7px]">
           <LoadingOutlined spin />
           <span>{t('notification.recipientPreviewLoading')}</span>
         </div>
       ) : isError ? (
-        <div className="notification-recipient-preview-row">
+        <div className="flex min-h-5 items-center gap-[7px]">
           <WarningOutlined />
           <span>{t('notification.recipientPreviewFailed')}</span>
         </div>
       ) : !hasSelection ? (
-        <div className="notification-recipient-preview-row">
+        <div className="flex min-h-5 items-center gap-[7px]">
           <InfoCircleOutlined />
           <span>{t('notification.recipientPreviewSelect')}</span>
         </div>
       ) : data?.recipientCount ? (
         <>
-          <div className="notification-recipient-preview-row">
+          <div className="flex min-h-5 items-center gap-[7px]">
             <CheckCircleOutlined />
             <strong>
               {t('notification.recipientPreviewSuccess', { count: data.recipientCount })}
             </strong>
           </div>
           {visibleSamples.length > 0 && (
-            <div className="notification-recipient-preview-samples">
-              <span>{t('notification.recipientPreviewSamples')}</span>
-              <div>
+            <div
+              className={`mt-2 flex items-center gap-2 text-[11px] text-slate-500 ${styles.previewSamples}`}
+            >
+              <span className="w-[72px] shrink-0 whitespace-nowrap">
+                {t('notification.recipientPreviewSamples')}
+              </span>
+              <div className="flex items-center gap-[5px]">
                 {visibleSamples.map((sample) => (
                   <Tooltip key={sample.id} title={sample.label} placement="top">
                     <span>{sample.label}</span>
@@ -70,7 +78,7 @@ export default function NotificationRecipientPreview({
                 {hiddenSampleCount > 0 && (
                   <Tooltip
                     title={
-                      <div className="notification-recipient-preview-tooltip">
+                      <div className="max-h-[220px] overflow-y-auto py-0.5 pr-1 leading-[1.7]">
                         {hiddenSamples.map((sample) => (
                           <div key={sample.id}>{sample.label}</div>
                         ))}
@@ -85,9 +93,7 @@ export default function NotificationRecipientPreview({
                     }
                     placement="top"
                   >
-                    <span className="notification-recipient-preview-more">
-                      +{hiddenSampleCount}
-                    </span>
+                    <span className={styles.previewMore}>+{hiddenSampleCount}</span>
                   </Tooltip>
                 )}
               </div>
@@ -95,7 +101,7 @@ export default function NotificationRecipientPreview({
           )}
         </>
       ) : (
-        <div className="notification-recipient-preview-row">
+        <div className="flex min-h-5 items-center gap-[7px]">
           <WarningOutlined />
           <span>{t('notification.recipientPreviewEmpty')}</span>
         </div>

@@ -1,0 +1,119 @@
+.pageFill:global(.ant-pro-page-container) {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.pageFill:global(.ant-pro-page-container) :global(.ant-pro-grid-content),
+.pageFill:global(.ant-pro-page-container) :global(.ant-pro-grid-content-children) {
+  display: flex;
+  min-height: 0;
+  flex: 1;
+  flex-direction: column;
+}
+
+.pageFill:global(.ant-pro-page-container) :global(.ant-pro-page-container-children-container) {
+  display: flex;
+  min-height: 0;
+  flex: 1;
+  flex-direction: column;
+  overflow: auto;
+}
+
+.notificationPageScroll:global(.ant-pro-page-container) {
+  height: 100%;
+  min-height: 100%;
+  display: block;
+  overflow-y: auto;
+}
+
+.notificationPageScroll:global(.ant-pro-page-container) :global(.ant-pro-grid-content),
+.notificationPageScroll:global(.ant-pro-page-container) :global(.ant-pro-grid-content-children),
+.notificationPageScroll:global(.ant-pro-page-container)
+  :global(.ant-pro-page-container-children-container) {
+  display: block;
+  height: auto;
+  min-height: 0;
+  overflow: visible;
+}
+
+.tabsFill :global(.ant-tabs-nav) {
+  flex: 0 0 auto;
+}
+
+.tabsFill :global(.ant-tabs-body-holder) {
+  min-height: 0;
+  flex: 1;
+}
+
+.tabsFill :global(.ant-tabs-body),
+.tabsFill :global(.ant-tabs-content:not(.ant-tabs-content-hidden)) {
+  height: 100%;
+}
+
+.tabsFill :global(.ant-tabs-content:not(.ant-tabs-content-hidden)) {
+  display: flex;
+  flex-direction: column;
+}
+
+.tabsFill :global(.ant-tabs-tabpane-active) {
+  display: flex;
+  min-height: 0;
+  flex: 1;
+  flex-direction: column;
+}
+
+/* Keep ProTable's card and table wrapper inside the available tab height. */
+.tabsFill :global(.ant-pro-table) {
+  display: flex;
+  min-height: 0;
+  flex-direction: column;
+}
+
+.tabsFill :global(.ant-pro-table > .ant-pro-card) {
+  flex-shrink: 0;
+}
+
+.tabsFill :global(.ant-pro-table > .ant-pro-card:has(.ant-table)) {
+  display: flex;
+  min-height: 0;
+  flex: 1;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.tabsFill :global(.ant-pro-table > .ant-pro-card:has(.ant-table) > .ant-pro-card-body),
+.tabsFill :global(.ant-table-wrapper),
+.tabsFill :global(.ant-spin-nested-loading) {
+  display: flex;
+  min-height: 0;
+  flex: 1;
+  flex-direction: column;
+}
+
+.tableFill :global(.ant-pro-table) {
+  display: flex;
+  min-height: 0;
+  flex-direction: column;
+}
+
+.tableFill :global(.ant-pro-table > .ant-pro-card) {
+  flex-shrink: 0;
+}
+
+.tableFill :global(.ant-pro-table > .ant-pro-card:has(.ant-table)) {
+  display: flex;
+  min-height: 0;
+  flex: 1;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.tableFill :global(.ant-pro-table > .ant-pro-card:has(.ant-table) > .ant-pro-card-body),
+.tableFill :global(.ant-table-wrapper),
+.tableFill :global(.ant-spin-nested-loading) {
+  display: flex;
+  min-height: 0;
+  flex: 1;
+  flex-direction: column;
+}

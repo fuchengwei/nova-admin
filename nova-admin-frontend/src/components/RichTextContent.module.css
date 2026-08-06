@@ -1,0 +1,54 @@
+.content > :first-child {
+  margin-top: 0;
+}
+
+.content > :last-child {
+  margin-bottom: 0;
+}
+
+.content h2,
+.content h3 {
+  color: #1e293b;
+  font-weight: 650;
+  line-height: 1.35;
+}
+
+.content h2 {
+  margin: 20px 0 8px;
+  font-size: 18px;
+}
+
+.content h3 {
+  margin: 16px 0 8px;
+  font-size: 16px;
+}
+
+.content p,
+.content ul,
+.content ol {
+  margin: 0 0 12px;
+}
+
+.content ul,
+.content ol {
+  padding-left: 20px;
+}
+
+.content blockquote {
+  margin: 14px 0;
+  border-left: 3px solid #f59e0b;
+  padding-left: 12px;
+  color: #64748b;
+}
+
+.content a {
+  color: #1677ff;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.content hr {
+  margin: 18px 0;
+  border: 0;
+  border-top: 1px solid #e2e8f0;
+}

@@ -1,0 +1,52 @@
+.popover :global(.ant-popover-inner) {
+  overflow: hidden;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 0;
+  box-shadow: 0 14px 32px rgb(15 23 42 / 12%);
+}
+
+.popoverTitle {
+  border-bottom: 1px solid #edf1f5;
+  padding: 10px 13px 8px !important;
+}
+
+.popoverBody {
+  padding: 0 !important;
+}
+
+.bellButton:global(.ant-btn) {
+  width: 40px !important;
+  min-width: 40px !important;
+  height: 40px !important;
+  padding: 0 !important;
+  border-radius: 10px;
+  background: transparent !important;
+  color: #334155;
+  box-shadow: none !important;
+}
+
+.bellButton:hover,
+.bellButton:active,
+.bellButton:focus {
+  background: transparent !important;
+  color: #334155;
+}
+
+.bellButton:focus-visible {
+  background-color: #e8f0ff !important;
+  box-shadow: none !important;
+  outline: 2px solid var(--ant-color-primary, #1677ff);
+  outline-offset: 2px;
+}
+
+.list {
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 transparent;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bellButton {
+    transition: none;
+  }
+}

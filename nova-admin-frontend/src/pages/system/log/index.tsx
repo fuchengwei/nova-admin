@@ -15,6 +15,7 @@ import {
 } from '@/api/log';
 import { message } from '@/utils/message';
 import { useTableScrollY } from '@/hooks/useTableScrollY';
+import layoutStyles from '@/styles/layout.module.css';
 
 import LogCleanupModal, { type LogType } from './components/LogCleanupModal';
 import LogDetailModal, { type LogDetail } from './components/LogDetailModal';
@@ -59,7 +60,7 @@ export default function LogPage() {
       <div ref={wrapperRef} className="min-h-0 flex-1">
         <Tabs
           defaultActiveKey="operation"
-          className="tabs-fill h-full"
+          className={`${layoutStyles.tabsFill} flex h-full min-h-0 flex-col`}
           items={[
             {
               key: 'operation',

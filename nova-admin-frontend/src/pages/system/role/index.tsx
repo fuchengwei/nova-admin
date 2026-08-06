@@ -33,6 +33,7 @@ import { getDeptTree, type DeptTreeNode } from '@/api/dept';
 import { useTableScrollY } from '@/hooks/useTableScrollY';
 import { displayText } from '@/utils/display';
 import { useUserStore } from '@/stores/userStore';
+import layoutStyles from '@/styles/layout.module.css';
 import { hasPermission } from '@/utils/layout';
 
 const DATA_SCOPE_MAP: Record<number, string> = {
@@ -256,7 +257,7 @@ export default function RolePage() {
   const { wrapperRef, scrollY } = useTableScrollY();
 
   return (
-    <PageContainer title={t('menu.role')} className="page-fill">
+    <PageContainer title={t('menu.role')} className={layoutStyles.pageFill}>
       <div ref={wrapperRef} className="flex min-h-0 flex-1 flex-col">
         <ProTable<RoleRecord>
           actionRef={actionRef}
