@@ -44,11 +44,34 @@ class AuthSessionEventServiceTest {
         org.assertj.core.api.Assertions.assertThat(userEmitters(service)).doesNotContainKey(7L);
     }
 
+    @Test
+    void sendHeartbeat_sendsKeepAliveCommentToAllSessionEmitters() throws Exception {
+        AuthSessionEventService service = new AuthSessionEventService();
+        SseEmitter first = mock(SseEmitter.class);
+        SseEmitter second = mock(SseEmitter.class);
+        Set<SseEmitter> emitters = ConcurrentHashMap.newKeySet();
+        emitters.addAll(Set.of(first, second));
+        sessionEmitters(service).put("jti-1", emitters);
+
+        service.sendHeartbeat();
+
+        verify(first).send(any(SseEmitter.SseEventBuilder.class));
+        verify(second).send(any(SseEmitter.SseEventBuilder.class));
+    }
+
     @SuppressWarnings("unchecked")
     private ConcurrentHashMap<Long, Set<SseEmitter>> userEmitters(AuthSessionEventService service)
             throws ReflectiveOperationException {
         Field field = AuthSessionEventService.class.getDeclaredField("userEmitters");
         field.setAccessible(true);
         return (ConcurrentHashMap<Long, Set<SseEmitter>>) field.get(service);
+    }
+
+    @SuppressWarnings("unchecked")
+    private ConcurrentHashMap<String, Set<SseEmitter>> sessionEmitters(AuthSessionEventService service)
+            throws ReflectiveOperationException {
+        Field field = AuthSessionEventService.class.getDeclaredField("emitters");
+        field.setAccessible(true);
+        return (ConcurrentHashMap<String, Set<SseEmitter>>) field.get(service);
     }
 }

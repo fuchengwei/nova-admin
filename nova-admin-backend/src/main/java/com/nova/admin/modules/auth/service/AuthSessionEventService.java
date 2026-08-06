@@ -2,6 +2,7 @@ package com.nova.admin.modules.auth.service;
 
 import com.nova.admin.modules.system.event.NotificationCreatedEvent;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
@@ -16,6 +17,8 @@ import java.util.concurrent.ConcurrentHashMap;
 @Service
 public class AuthSessionEventService {
 
+    private static final long HEARTBEAT_INTERVAL_MS = 15_000L;
+
     private final ConcurrentHashMap<String, Set<SseEmitter>> emitters = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<Long, Set<SseEmitter>> userEmitters = new ConcurrentHashMap<>();
 
@@ -29,6 +32,21 @@ public class AuthSessionEventService {
         emitter.onTimeout(() -> remove(accessJti, userId, emitter));
         emitter.onError(error -> remove(accessJti, userId, emitter));
         return emitter;
+    }
+
+    /** 定期写入 SSE comment，避免反向代理将长期无业务事件的连接判定为空闲。 */
+    @Scheduled(fixedDelay = HEARTBEAT_INTERVAL_MS)
+    void sendHeartbeat() {
+        emitters.forEach((accessJti, sessionEmitters) -> {
+            for (SseEmitter emitter : sessionEmitters) {
+                try {
+                    emitter.send(SseEmitter.event().comment("keep-alive"));
+                } catch (IOException e) {
+                    remove(accessJti, emitter);
+                    log.debug("发送 SSE 心跳失败: {}", e.getMessage());
+                }
+            }
+        });
     }
 
     public void notifyRevoked(String accessJti) {
