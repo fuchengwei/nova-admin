@@ -2,13 +2,17 @@ package com.nova.admin.modules.system.service.impl;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.nova.admin.common.api.PageResult;
-import com.nova.admin.common.exception.BizException;
 import com.nova.admin.common.api.ResultCode;
+import com.nova.admin.common.exception.BizException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.json.JsonMapper;
+import com.nova.admin.modules.system.dto.NotificationDraftDTO;
 import com.nova.admin.modules.system.dto.NotificationPageQuery;
 import com.nova.admin.modules.system.dto.NotificationRecipientPageQuery;
 import com.nova.admin.modules.system.dto.NotificationRecipientRecordDTO;
 import com.nova.admin.modules.system.dto.NotificationRecordSummaryDTO;
 import com.nova.admin.modules.system.dto.NotificationSummaryDTO;
+import com.nova.admin.modules.system.enums.NotificationRecipientType;
 import com.nova.admin.modules.system.entity.SysMessage;
 import com.nova.admin.modules.system.entity.SysMessageRecipient;
 import com.nova.admin.modules.system.event.NotificationCreatedEvent;
@@ -24,6 +28,7 @@ import org.springframework.util.StringUtils;
 import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.LinkedHashSet;
+import java.util.List;
 
 /** 站内消息服务实现。 */
 @Service
@@ -93,15 +98,37 @@ public class NotificationServiceImpl implements NotificationService {
             return;
         }
 
+        SysMessage message = createPending(type, title, content, link, publisherId, "SENT", null, null, null);
+        deliver(message, userIds);
+    }
+
+    @Override
+    @Transactional
+    public SysMessage createPending(String type, String title, String content, String link, Long publisherId,
+                                    String status, LocalDateTime scheduledAt, String recipientType,
+                                    String recipientIds) {
         SysMessage message = new SysMessage();
         message.setType(type.trim());
         message.setTitle(title.trim());
         message.setContent(content);
         message.setLink(StringUtils.hasText(link) ? link.trim() : null);
         message.setPublisherId(publisherId);
+        message.setStatus(status);
+        message.setScheduledAt(scheduledAt);
+        message.setRecipientType(recipientType);
+        message.setRecipientIds(recipientIds);
         message.setCreateTime(LocalDateTime.now());
         message.setDeleted(0);
         messageMapper.insert(message);
+        return message;
+    }
+
+    @Override
+    @Transactional
+    public void deliver(SysMessage message, Collection<Long> userIds) {
+        if (message == null || userIds == null || userIds.isEmpty()) {
+            return;
+        }
 
         LocalDateTime now = LocalDateTime.now();
         LinkedHashSet<Long> recipientUserIds = new LinkedHashSet<>();
@@ -116,7 +143,62 @@ public class NotificationServiceImpl implements NotificationService {
             recipientMapper.insert(recipient);
         }
         if (!recipientUserIds.isEmpty()) {
+            messageMapper.updateStatus(message.getId(), "SENT", null);
             eventPublisher.publishEvent(new NotificationCreatedEvent(message.getId(), recipientUserIds));
+        }
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public NotificationDraftDTO getDraft(Long messageId) {
+        SysMessage message = messageMapper.selectDraftById(messageId);
+        if (message == null) {
+            throw new BizException(ResultCode.NOT_FOUND, "草稿不存在或已不可编辑");
+        }
+        NotificationDraftDTO draft = new NotificationDraftDTO();
+        draft.setId(message.getId());
+        draft.setTitle(message.getTitle());
+        draft.setContent(message.getContent());
+        draft.setLink(message.getLink());
+        try {
+            if (!StringUtils.hasText(message.getRecipientType())) {
+                throw new IllegalArgumentException("recipient type is empty");
+            }
+            draft.setRecipientType(NotificationRecipientType.valueOf(message.getRecipientType()));
+            List<Long> recipientIds = message.getRecipientIds() == null
+                    ? List.of()
+                    : JsonMapper.builder().build().readValue(message.getRecipientIds(), new TypeReference<>() {});
+            draft.setRecipientIds(recipientIds);
+        } catch (Exception ex) {
+            throw new BizException(ResultCode.BAD_REQUEST, "草稿接收范围数据损坏");
+        }
+        return draft;
+    }
+
+    @Override
+    @Transactional
+    public void updateDraft(Long messageId, String title, String content, String link, Long publisherId,
+                            String status, LocalDateTime scheduledAt, String recipientType,
+                            String recipientIds) {
+        if (messageMapper.updateDraft(messageId, title, content, link, publisherId, status, scheduledAt,
+                recipientType, recipientIds) == 0) {
+            throw new BizException(ResultCode.BAD_REQUEST, "草稿不存在或已不可编辑");
+        }
+    }
+
+    @Override
+    @Transactional
+    public void deleteDraft(Long messageId) {
+        if (messageMapper.deleteDraft(messageId) == 0) {
+            throw new BizException(ResultCode.BAD_REQUEST, "仅草稿可以删除");
+        }
+    }
+
+    @Override
+    @Transactional
+    public void cancel(Long messageId) {
+        if (messageMapper.cancel(messageId) == 0) {
+            throw new BizException(ResultCode.BAD_REQUEST, "仅待发送消息可以取消");
         }
     }
 }

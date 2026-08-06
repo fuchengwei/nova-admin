@@ -17,6 +17,7 @@ export interface NotificationSummary {
 }
 
 export type NotificationRecipientType = 'ALL' | 'ROLE' | 'USER';
+export type NotificationPublishMode = 'IMMEDIATE' | 'SCHEDULED' | 'DRAFT';
 
 export interface NotificationRecipientOption {
   id: string;
@@ -34,6 +35,24 @@ export interface NotificationPublishRequest {
   link?: string;
   recipientType: NotificationRecipientType;
   recipientIds?: string[];
+  mode?: NotificationPublishMode;
+  scheduledAt?: string;
+}
+
+export interface NotificationPublishResult {
+  id?: string;
+  status: string;
+  recipientCount: number;
+  scheduledAt?: string;
+}
+
+export interface NotificationDraft {
+  id: string;
+  title: string;
+  content: string;
+  link?: string;
+  recipientType: NotificationRecipientType;
+  recipientIds: string[];
 }
 
 export interface NotificationRecipientPreviewRequest {
@@ -54,6 +73,9 @@ export interface NotificationHistoryRecord {
   link?: string;
   publisherId?: string;
   publisherName: string;
+  status: string;
+  scheduledAt?: string;
+  errorMsg?: string;
   createTime: string;
   recipientCount: number;
   readCount: number;
@@ -65,6 +87,7 @@ export interface NotificationHistoryQuery {
   size?: number;
   title?: string;
   type?: string;
+  status?: string;
   createTimeStart?: string;
   createTimeEnd?: string;
 }
@@ -109,7 +132,27 @@ export const previewNotificationRecipients = (data: NotificationRecipientPreview
   });
 
 export const publishNotification = (data: NotificationPublishRequest) =>
-  request<R<number>>({ url: '/system/notification/publish', method: 'POST', data });
+  request<R<NotificationPublishResult>>({
+    url: '/system/notification/publish',
+    method: 'POST',
+    data,
+  });
+
+export const getNotificationDraft = (id: string) =>
+  request<R<NotificationDraft>>({ url: `/system/notification/${id}/draft`, method: 'GET' });
+
+export const updateNotificationDraft = (id: string, data: NotificationPublishRequest) =>
+  request<R<NotificationPublishResult>>({
+    url: `/system/notification/${id}`,
+    method: 'PUT',
+    data,
+  });
+
+export const deleteNotificationDraft = (id: string) =>
+  request<R<void>>({ url: `/system/notification/${id}`, method: 'DELETE' });
+
+export const cancelNotification = (id: string) =>
+  request<R<void>>({ url: `/system/notification/${id}/cancel`, method: 'POST' });
 
 export const getNotificationHistoryPage = (params: NotificationHistoryQuery) =>
   request<R<PageResult<NotificationHistoryRecord>>>({

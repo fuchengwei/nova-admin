@@ -4,16 +4,31 @@ import { Tabs } from 'antd';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { getNotificationDraft, type NotificationDraft } from '@/api/notification';
+import { message } from '@/utils/message';
+
 import NotificationHistoryTable from './components/NotificationHistoryTable';
 import NotificationPublishForm from './components/NotificationPublishForm';
 
 export default function NotificationPage() {
   const { t } = useTranslation();
   const [historyRefreshToken, setHistoryRefreshToken] = useState(0);
+  const [activeTab, setActiveTab] = useState('publish');
+  const [editingDraft, setEditingDraft] = useState<NotificationDraft | null>(null);
+
+  const openDraft = async (id: string) => {
+    const result = await getNotificationDraft(id);
+    if (result.code !== 0) {
+      message.error(result.msg || t('notification.draftLoadFailed'));
+      return;
+    }
+    setEditingDraft(result.data);
+    setActiveTab('publish');
+  };
 
   return (
     <PageContainer
-      className="page-fill"
+      className="page-fill notification-page-scroll"
       title={
         <span className="flex items-center gap-2">
           <NotificationOutlined className="text-blue-600" />
@@ -35,7 +50,9 @@ export default function NotificationPage() {
           </div>
         </div>
         <Tabs
-          className="notification-workspace-tabs tabs-fill"
+          activeKey={activeTab}
+          className="notification-workspace-tabs"
+          onChange={setActiveTab}
           items={[
             {
               key: 'publish',
@@ -48,7 +65,11 @@ export default function NotificationPage() {
               children: (
                 <div className="max-w-4xl">
                   <NotificationPublishForm
-                    onPublished={() => setHistoryRefreshToken((value) => value + 1)}
+                    draft={editingDraft}
+                    onPublished={() => {
+                      setEditingDraft(null);
+                      setHistoryRefreshToken((value) => value + 1);
+                    }}
                   />
                 </div>
               ),
@@ -61,7 +82,12 @@ export default function NotificationPage() {
                   {t('notification.historyTab')}
                 </span>
               ),
-              children: <NotificationHistoryTable refreshToken={historyRefreshToken} />,
+              children: (
+                <NotificationHistoryTable
+                  refreshToken={historyRefreshToken}
+                  onEditDraft={openDraft}
+                />
+              ),
             },
           ]}
         />

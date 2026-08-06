@@ -25,6 +25,9 @@ public class NotificationRecordSummaryDTO {
     private Long publisherId;
 
     private String publisherName;
+    private String status;
+    private LocalDateTime scheduledAt;
+    private String errorMsg;
     private LocalDateTime createTime;
     private long recipientCount;
     private long readCount;

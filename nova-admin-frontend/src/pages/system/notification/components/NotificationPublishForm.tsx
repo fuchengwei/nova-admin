@@ -1,44 +1,50 @@
 import {
   ProForm,
   ProFormDependency,
+  ProFormDateTimePicker,
   ProFormRadio,
-  ProFormSelect,
   ProFormText,
   ProFormTextArea,
   type ProFormInstance,
 } from '@ant-design/pro-components';
-import { GlobalOutlined, TeamOutlined, UserOutlined } from '@ant-design/icons';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { useRef, useState } from 'react';
+import dayjs from 'dayjs';
+import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import {
   getNotificationRecipientOptions,
   previewNotificationRecipients,
   publishNotification,
+  updateNotificationDraft,
+  type NotificationDraft,
+  type NotificationPublishMode,
   type NotificationPublishRequest,
-  type NotificationRecipientOption,
   type NotificationRecipientPreviewRequest,
-  type NotificationRecipientType,
 } from '@/api/notification';
 import { message } from '@/utils/message';
 
-import NotificationRecipientPreview from './NotificationRecipientPreview';
+import NotificationAudienceFields from './NotificationAudienceFields';
 
 interface NotificationPublishFormProps {
+  draft: NotificationDraft | null;
   onPublished: () => void;
 }
 
-const recipientTypeOptions: NotificationRecipientType[] = ['ALL', 'ROLE', 'USER'];
-
-const toSelectOptions = (options: NotificationRecipientOption[]) =>
-  options.map(({ id, label }) => ({ label, value: id }));
-
-export default function NotificationPublishForm({ onPublished }: NotificationPublishFormProps) {
+export default function NotificationPublishForm({
+  draft,
+  onPublished,
+}: NotificationPublishFormProps) {
   const { t } = useTranslation();
   const formRef = useRef<ProFormInstance<NotificationPublishRequest> | undefined>(undefined);
   const [recipientPreviewRequest, setRecipientPreviewRequest] =
-    useState<NotificationRecipientPreviewRequest>({ recipientType: 'ALL' });
+    useState<NotificationRecipientPreviewRequest>({
+      recipientType: draft?.recipientType ?? 'ALL',
+      recipientIds: draft?.recipientIds,
+    });
+  const [publishMode, setPublishMode] = useState<NotificationPublishMode>(
+    draft ? 'DRAFT' : 'IMMEDIATE',
+  );
   const { data: recipientOptions = { users: [], roles: [] }, isLoading: recipientOptionsLoading } =
     useQuery({
       queryKey: ['notification', 'recipient-options'],
@@ -47,7 +53,17 @@ export default function NotificationPublishForm({ onPublished }: NotificationPub
         return result.code === 0 ? result.data : { users: [], roles: [] };
       },
     });
-  const publishMutation = useMutation({ mutationFn: publishNotification });
+  const publishMutation = useMutation({
+    mutationFn: (data: NotificationPublishRequest) =>
+      draft ? updateNotificationDraft(draft.id, data) : publishNotification(data),
+  });
+  useEffect(() => {
+    setPublishMode(draft ? 'DRAFT' : 'IMMEDIATE');
+    setRecipientPreviewRequest({
+      recipientType: draft?.recipientType ?? 'ALL',
+      recipientIds: draft?.recipientIds,
+    });
+  }, [draft]);
   const hasRecipientSelection =
     recipientPreviewRequest.recipientType === 'ALL' ||
     Boolean(recipientPreviewRequest.recipientIds?.length);
@@ -73,29 +89,35 @@ export default function NotificationPublishForm({ onPublished }: NotificationPub
     !recipientPreviewQuery.isFetching &&
     !recipientPreviewQuery.isError &&
     Boolean(recipientPreview?.recipientCount);
-  const recipientTypeLabels: Record<NotificationRecipientType, string> = {
-    ALL: t('notification.recipientAll'),
-    ROLE: t('notification.recipientRole'),
-    USER: t('notification.recipientUser'),
-  };
-
+  const canSubmit = publishMode === 'DRAFT' || canPublish;
   return (
     <ProForm<NotificationPublishRequest>
+      key={draft?.id ?? 'new-notification'}
       className="notification-publish-form"
       formRef={formRef}
-      initialValues={{ recipientType: 'ALL' }}
+      initialValues={
+        draft ? { ...draft, mode: 'DRAFT' } : { recipientType: 'ALL', mode: 'IMMEDIATE' }
+      }
       layout="vertical"
       submitter={{
         resetButtonProps: false,
-        searchConfig: { submitText: t('notification.publish') },
+        searchConfig: {
+          submitText:
+            publishMode === 'DRAFT'
+              ? t('notification.saveDraft')
+              : publishMode === 'SCHEDULED'
+                ? t('notification.schedulePublish')
+                : t('notification.publish'),
+        },
         submitButtonProps: {
           size: 'middle',
           className: 'mt-2',
-          disabled: !canPublish,
-          loading: recipientPreviewQuery.isFetching,
+          disabled: !canSubmit,
+          loading: recipientPreviewQuery.isFetching || publishMutation.isPending,
         },
       }}
       onValuesChange={(changedValues, values) => {
+        if ('mode' in changedValues) setPublishMode(changedValues.mode ?? 'IMMEDIATE');
         if (!('recipientType' in changedValues) && !('recipientIds' in changedValues)) return;
         setRecipientPreviewRequest({
           recipientType: values.recipientType ?? 'ALL',
@@ -103,12 +125,20 @@ export default function NotificationPublishForm({ onPublished }: NotificationPub
         });
       }}
       onFinish={async (values) => {
-        const result = await publishMutation.mutateAsync(values);
+        const result = await publishMutation.mutateAsync({ ...values, mode: publishMode });
         if (result.code !== 0) {
           message.error(result.msg || t('notification.publishFailed'));
           return false;
         }
-        message.success(t('notification.publishSuccess', { count: result.data }));
+        message.success(
+          publishMode === 'DRAFT'
+            ? draft
+              ? t('notification.draftUpdated')
+              : t('notification.draftSaved')
+            : publishMode === 'SCHEDULED'
+              ? t('notification.scheduleSuccess')
+              : t('notification.publishSuccess', { count: result.data.recipientCount }),
+        );
         onPublished();
         return true;
       }}
@@ -118,10 +148,35 @@ export default function NotificationPublishForm({ onPublished }: NotificationPub
           <div className="notification-panel-heading">
             <div>
               <div className="notification-panel-kicker">{t('notification.composeKicker')}</div>
-              <h2>{t('notification.composeTitle')}</h2>
-              <p>{t('notification.composeHint')}</p>
+              <h2>{draft ? t('notification.editDraftTitle') : t('notification.composeTitle')}</h2>
+              <p>{draft ? t('notification.editDraftHint') : t('notification.composeHint')}</p>
             </div>
           </div>
+          <ProFormRadio.Group
+            name="mode"
+            label={t('notification.publishMode')}
+            fieldProps={{ optionType: 'button', buttonStyle: 'solid' }}
+            options={[
+              { label: t('notification.publishNow'), value: 'IMMEDIATE' },
+              { label: t('notification.publishLater'), value: 'SCHEDULED' },
+              { label: t('notification.saveAsDraft'), value: 'DRAFT' },
+            ]}
+          />
+          <ProFormDependency name={['mode']}>
+            {({ mode }) =>
+              mode === 'SCHEDULED' ? (
+                <ProFormDateTimePicker
+                  name="scheduledAt"
+                  label={t('notification.scheduledAt')}
+                  fieldProps={{ showTime: true, format: 'YYYY-MM-DD HH:mm:ss' }}
+                  transform={(value) =>
+                    value ? dayjs(value as string).format('YYYY-MM-DDTHH:mm:ss') : undefined
+                  }
+                  rules={[{ required: true, message: t('notification.scheduledAtRequired') }]}
+                />
+              ) : null
+            }
+          </ProFormDependency>
           <ProFormText
             name="title"
             label={t('notification.messageTitle')}
@@ -141,97 +196,15 @@ export default function NotificationPublishForm({ onPublished }: NotificationPub
             tooltip={t('notification.messageLinkHint')}
           />
         </section>
-        <section className="notification-audience-panel">
-          <div className="notification-panel-heading">
-            <div>
-              <div className="notification-panel-kicker">{t('notification.audienceKicker')}</div>
-              <h2>{t('notification.audienceTitle')}</h2>
-              <p>{t('notification.audienceHint')}</p>
-            </div>
-            <span className="notification-audience-signal" aria-hidden="true">
-              <GlobalOutlined />
-            </span>
-          </div>
-          <ProFormRadio.Group
-            name="recipientType"
-            label={t('notification.recipientType')}
-            className="notification-recipient-mode"
-            fieldProps={{
-              optionType: 'button',
-              buttonStyle: 'solid',
-              className: 'notification-recipient-mode-group',
-              onChange: () => formRef.current?.setFieldValue('recipientIds', undefined),
-            }}
-            options={recipientTypeOptions.map((value) => ({
-              label: (
-                <span className="notification-recipient-option">
-                  {value === 'ALL' ? (
-                    <GlobalOutlined />
-                  ) : value === 'ROLE' ? (
-                    <TeamOutlined />
-                  ) : (
-                    <UserOutlined />
-                  )}
-                  {recipientTypeLabels[value]}
-                </span>
-              ),
-              value,
-            }))}
-            rules={[{ required: true }]}
-          />
-          <ProFormDependency name={['recipientType']}>
-            {({ recipientType }) => {
-              if (recipientType === 'ROLE') {
-                return (
-                  <ProFormSelect
-                    name="recipientIds"
-                    label={t('notification.recipientRoles')}
-                    preserve={false}
-                    fieldProps={{
-                      loading: recipientOptionsLoading,
-                      mode: 'multiple',
-                      options: toSelectOptions(recipientOptions.roles),
-                      maxTagCount: 'responsive',
-                      showSearch: true,
-                      optionFilterProp: 'label',
-                    }}
-                    rules={[{ required: true, message: t('notification.recipientRequired') }]}
-                  />
-                );
-              }
-              if (recipientType === 'USER') {
-                return (
-                  <ProFormSelect
-                    name="recipientIds"
-                    label={t('notification.recipientUsers')}
-                    preserve={false}
-                    fieldProps={{
-                      loading: recipientOptionsLoading,
-                      mode: 'multiple',
-                      options: toSelectOptions(recipientOptions.users),
-                      maxTagCount: 'responsive',
-                      showSearch: true,
-                      optionFilterProp: 'label',
-                    }}
-                    rules={[{ required: true, message: t('notification.recipientRequired') }]}
-                  />
-                );
-              }
-              return (
-                <div className="notification-all-audience">
-                  <GlobalOutlined />
-                  <span>{t('notification.recipientAllHint')}</span>
-                </div>
-              );
-            }}
-          </ProFormDependency>
-          <NotificationRecipientPreview
-            data={recipientPreview}
-            hasSelection={hasRecipientSelection}
-            isError={recipientPreviewQuery.isError}
-            isFetching={recipientPreviewQuery.isFetching}
-          />
-        </section>
+        <NotificationAudienceFields
+          formRef={formRef}
+          recipientOptions={recipientOptions}
+          recipientOptionsLoading={recipientOptionsLoading}
+          recipientPreview={recipientPreview}
+          hasRecipientSelection={hasRecipientSelection}
+          recipientPreviewError={recipientPreviewQuery.isError}
+          recipientPreviewFetching={recipientPreviewQuery.isFetching}
+        />
       </div>
     </ProForm>
   );

@@ -2,6 +2,16 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.nova.admin.modules.system.mapper.SysMessageMapper">
 
+    <select id="selectDueScheduled" resultType="com.nova.admin.modules.system.entity.SysMessage">
+        SELECT *
+        FROM sys_message
+        WHERE deleted = 0
+          AND status = 'SCHEDULED'
+          AND scheduled_at &lt;= #{now}
+        ORDER BY scheduled_at ASC, id ASC
+        LIMIT 100
+    </select>
+
     <select id="selectRecordPage" resultType="com.nova.admin.modules.system.dto.NotificationRecordSummaryDTO">
         SELECT m.id,
                m.type,
@@ -10,6 +20,9 @@
                m.link,
                m.publisher_id,
                COALESCE(NULLIF(p.nickname, ''), p.account, '系统') AS publisher_name,
+               m.status,
+               m.scheduled_at,
+               m.error_msg,
                m.create_time,
                COUNT(r.id) AS recipient_count,
                COUNT(r.id) FILTER (WHERE r.read_at IS NOT NULL) AS read_count,
@@ -24,6 +37,9 @@
             </if>
             <if test="query.type != null and query.type != ''">
                 AND m.type = #{query.type}
+            </if>
+            <if test="query.status != null and query.status != ''">
+                AND m.status = #{query.status}
             </if>
             <if test="query.createTimeStart != null">
                 AND m.create_time &gt;= #{query.createTimeStart}
@@ -44,6 +60,9 @@
                m.link,
                m.publisher_id,
                COALESCE(NULLIF(p.nickname, ''), p.account, '系统') AS publisher_name,
+               m.status,
+               m.scheduled_at,
+               m.error_msg,
                m.create_time,
                COUNT(r.id) AS recipient_count,
                COUNT(r.id) FILTER (WHERE r.read_at IS NOT NULL) AS read_count,

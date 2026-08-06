@@ -214,10 +214,7 @@ body,
 /* Notification publishing workspace: dense operational layout with one clear accent. */
 .notification-workspace {
   display: flex;
-  min-height: 0;
-  flex: 1;
   flex-direction: column;
-  overflow: hidden;
   border: 1px solid #e2e8f0;
   border-radius: 14px;
   background: #f8fafc;
@@ -270,8 +267,6 @@ body,
 }
 
 .notification-workspace-tabs {
-  min-height: 0;
-  flex: 1;
   padding: 0 20px 14px;
 }
 
@@ -741,6 +736,28 @@ body,
   display: flex;
   flex-direction: column;
   overflow: auto;
+}
+
+/* 消息发布页使用页面级滚动，标题、工作台和卡片保持同一条滚动轴。 */
+.notification-page-scroll.ant-pro-page-container {
+  height: 100%;
+  min-height: 100%;
+  display: block;
+  overflow-y: auto;
+}
+
+.notification-page-scroll.ant-pro-page-container > .ant-pro-grid-content,
+.notification-page-scroll.ant-pro-page-container
+  > .ant-pro-grid-content
+  > .ant-pro-grid-content-children,
+.notification-page-scroll.ant-pro-page-container
+  > .ant-pro-grid-content
+  > .ant-pro-grid-content-children
+  > .ant-pro-page-container-children-container {
+  display: block;
+  height: auto;
+  min-height: 0;
+  overflow: visible;
 }
 
 /* Tabs 占满父容器高度，活动标签面板内表格可撑满并内部滚动 */

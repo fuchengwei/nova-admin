@@ -1,6 +1,7 @@
 package com.nova.admin.modules.system.dto;
 
 import com.nova.admin.modules.system.enums.NotificationRecipientType;
+import com.nova.admin.modules.system.enums.NotificationPublishMode;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -8,6 +9,7 @@ import jakarta.validation.constraints.Size;
 import lombok.Data;
 
 import java.util.List;
+import java.time.LocalDateTime;
 
 /** 站内消息发布请求。 */
 @Data
@@ -34,4 +36,10 @@ public class NotificationPublishRequest {
 
     @Schema(description = "指定角色或用户 ID 列表")
     private List<Long> recipientIds;
+
+    @Schema(description = "发布方式：IMMEDIATE、SCHEDULED、DRAFT")
+    private NotificationPublishMode mode = NotificationPublishMode.IMMEDIATE;
+
+    @Schema(description = "计划发送时间")
+    private LocalDateTime scheduledAt;
 }

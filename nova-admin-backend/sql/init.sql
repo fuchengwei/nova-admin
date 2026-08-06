@@ -331,12 +331,18 @@ CREATE TABLE sys_message (
     content         TEXT NOT NULL,
     link            VARCHAR(500),
     publisher_id    BIGINT,
+    status          VARCHAR(20) NOT NULL DEFAULT 'SENT',
+    scheduled_at    TIMESTAMP,
+    recipient_type  VARCHAR(10),
+    recipient_ids   TEXT,
+    error_msg       TEXT,
     create_time     TIMESTAMP NOT NULL,
     deleted         SMALLINT NOT NULL DEFAULT 0
 );
 COMMENT ON TABLE sys_message IS '站内消息表';
 CREATE INDEX idx_message_created ON sys_message(create_time DESC) WHERE deleted = 0;
 CREATE INDEX idx_message_publisher_created ON sys_message(publisher_id, create_time DESC) WHERE deleted = 0;
+CREATE INDEX idx_message_status_scheduled ON sys_message(status, scheduled_at) WHERE deleted = 0;
 
 CREATE TABLE sys_message_recipient (
     id              BIGINT PRIMARY KEY,

@@ -1,12 +1,15 @@
 package com.nova.admin.modules.system.service;
 
-import com.nova.admin.modules.system.dto.NotificationSummaryDTO;
 import com.nova.admin.common.api.PageResult;
+import com.nova.admin.modules.system.dto.NotificationDraftDTO;
 import com.nova.admin.modules.system.dto.NotificationPageQuery;
 import com.nova.admin.modules.system.dto.NotificationRecipientPageQuery;
 import com.nova.admin.modules.system.dto.NotificationRecipientRecordDTO;
 import com.nova.admin.modules.system.dto.NotificationRecordSummaryDTO;
+import com.nova.admin.modules.system.dto.NotificationSummaryDTO;
+import com.nova.admin.modules.system.entity.SysMessage;
 
+import java.time.LocalDateTime;
 import java.util.Collection;
 
 /** 站内消息服务。 */
@@ -34,4 +37,19 @@ public interface NotificationService {
 
     void publish(String type, String title, String content, String link, Long publisherId,
                  Collection<Long> userIds);
+
+    SysMessage createPending(String type, String title, String content, String link, Long publisherId,
+                             String status, LocalDateTime scheduledAt,
+                             String recipientType, String recipientIds);
+
+    void deliver(SysMessage message, Collection<Long> userIds);
+
+    NotificationDraftDTO getDraft(Long messageId);
+
+    void updateDraft(Long messageId, String title, String content, String link, Long publisherId,
+                     String status, LocalDateTime scheduledAt, String recipientType, String recipientIds);
+
+    void deleteDraft(Long messageId);
+
+    void cancel(Long messageId);
 }

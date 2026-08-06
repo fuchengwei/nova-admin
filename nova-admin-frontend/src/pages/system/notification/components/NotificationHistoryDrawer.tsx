@@ -23,6 +23,14 @@ export default function NotificationHistoryDrawer({
   onClose,
 }: NotificationHistoryDrawerProps) {
   const { t } = useTranslation();
+  const statusLabels: Record<string, string> = {
+    DRAFT: t('notification.statusDraft'),
+    SCHEDULED: t('notification.statusScheduled'),
+    SENDING: t('notification.statusSending'),
+    SENT: t('notification.statusSent'),
+    CANCELED: t('notification.statusCanceled'),
+    FAILED: t('notification.statusFailed'),
+  };
 
   return (
     <Drawer
@@ -52,6 +60,21 @@ export default function NotificationHistoryDrawer({
                     ? t('notification.typeJob')
                     : record.type}
             </span>
+          </div>
+          <div className="notification-detail-status-row">
+            <Tag
+              color={
+                record.status === 'SENT' ? 'green' : record.status === 'FAILED' ? 'red' : 'blue'
+              }
+            >
+              {statusLabels[record.status] ?? record.status ?? t('notification.statusSent')}
+            </Tag>
+            {record.scheduledAt && (
+              <span>
+                {t('notification.scheduledAt')}: {formatDateTime(record.scheduledAt)}
+              </span>
+            )}
+            {record.errorMsg && <span className="text-red-500">{record.errorMsg}</span>}
           </div>
           <div className="notification-delivery-summary">
             <div className="notification-delivery-stats">

@@ -32,6 +32,12 @@ public class SysMessage implements Serializable {
     @JsonSerialize(using = ToStringSerializer.class)
     private Long publisherId;
 
+    private String status;
+    private LocalDateTime scheduledAt;
+    private String recipientType;
+    private String recipientIds;
+    private String errorMsg;
+
     private LocalDateTime createTime;
 
     @TableLogic

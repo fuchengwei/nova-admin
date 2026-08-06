@@ -4,6 +4,7 @@ import com.nova.admin.modules.system.dto.NotificationSummaryDTO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.junit.jupiter.api.Test;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -53,6 +54,24 @@ class NotificationControllerTest {
                 .isEqualTo("hasRole('super_admin') or hasAuthority('system:notification:publish')");
         assertThat(detail.getAnnotation(Operation.class).summary()).contains("详情");
         assertThat(recipients.getParameters()[0].getAnnotation(Parameter.class)).isNotNull();
+    }
+
+    @Test
+    void draftLifecycleEndpoints_areDocumentedAndProtected() throws NoSuchMethodException {
+        Method draft = NotificationController.class.getMethod("draft", Long.class);
+        Method updateDraft = NotificationController.class.getMethod(
+                "updateDraft", Long.class, com.nova.admin.modules.system.dto.NotificationPublishRequest.class);
+        Method deleteDraft = NotificationController.class.getMethod("deleteDraft", Long.class);
+        Method cancel = NotificationController.class.getMethod("cancel", Long.class);
+
+        assertThat(draft.getAnnotation(GetMapping.class).value()).containsExactly("/{id}/draft");
+        assertThat(updateDraft.getAnnotation(PutMapping.class).value()).containsExactly("/{id}");
+        assertThat(deleteDraft.getAnnotation(DeleteMapping.class).value()).containsExactly("/{id}");
+        assertThat(cancel.getAnnotation(PostMapping.class).value()).containsExactly("/{id}/cancel");
+        assertThat(draft.getAnnotation(Operation.class).summary()).contains("草稿");
+        assertThat(updateDraft.getAnnotation(Operation.class).summary()).contains("草稿");
+        assertThat(deleteDraft.getParameters()[0].getAnnotation(Parameter.class)).isNotNull();
+        assertThat(cancel.getAnnotation(Operation.class).summary()).contains("待发送");
     }
 
     @Test

@@ -5,6 +5,8 @@ import com.nova.admin.common.api.PageResult;
 import com.nova.admin.common.base.BaseController;
 import com.nova.admin.modules.system.dto.NotificationSummaryDTO;
 import com.nova.admin.modules.system.dto.NotificationPublishRequest;
+import com.nova.admin.modules.system.dto.NotificationPublishResultDTO;
+import com.nova.admin.modules.system.dto.NotificationDraftDTO;
 import com.nova.admin.modules.system.dto.NotificationRecipientOptionsDTO;
 import com.nova.admin.modules.system.dto.NotificationPageQuery;
 import com.nova.admin.modules.system.dto.NotificationRecipientPageQuery;
@@ -22,6 +24,7 @@ import lombok.RequiredArgsConstructor;
 import jakarta.validation.Valid;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -78,8 +81,35 @@ public class NotificationController extends BaseController {
     @PostMapping("/publish")
     @PreAuthorize("hasRole('super_admin') or hasAuthority('system:notification:publish')")
     @Operation(summary = "发布站内消息")
-    public R<Integer> publish(@Valid @RequestBody NotificationPublishRequest request) {
-        return ok(notificationPublishService.publish(request, SecurityUtils.requireUserId()));
+    public R<NotificationPublishResultDTO> publish(
+            @Valid @RequestBody NotificationPublishRequest request) {
+        return ok(notificationPublishService.submit(request, SecurityUtils.requireUserId()));
+    }
+
+    @GetMapping("/{id}/draft")
+    @PreAuthorize("hasRole('super_admin') or hasAuthority('system:notification:publish')")
+    @Operation(summary = "获取可编辑消息草稿")
+    public R<NotificationDraftDTO> draft(
+            @Parameter(description = "草稿 ID", required = true) @PathVariable Long id) {
+        return ok(notificationPublishService.getDraft(id));
+    }
+
+    @PutMapping("/{id}")
+    @PreAuthorize("hasRole('super_admin') or hasAuthority('system:notification:publish')")
+    @Operation(summary = "更新消息草稿")
+    public R<NotificationPublishResultDTO> updateDraft(
+            @Parameter(description = "草稿 ID", required = true) @PathVariable Long id,
+            @Valid @RequestBody NotificationPublishRequest request) {
+        return ok(notificationPublishService.updateDraft(id, request, SecurityUtils.requireUserId()));
+    }
+
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('super_admin') or hasAuthority('system:notification:publish')")
+    @Operation(summary = "删除消息草稿")
+    public R<Void> deleteDraft(
+            @Parameter(description = "草稿 ID", required = true) @PathVariable Long id) {
+        notificationPublishService.deleteDraft(id);
+        return ok();
     }
 
     @GetMapping("/page")
@@ -95,6 +125,15 @@ public class NotificationController extends BaseController {
     public R<NotificationRecordSummaryDTO> detail(
             @Parameter(description = "消息 ID", required = true) @PathVariable Long id) {
         return ok(notificationService.getRecord(id));
+    }
+
+    @PostMapping("/{id}/cancel")
+    @PreAuthorize("hasRole('super_admin') or hasAuthority('system:notification:publish')")
+    @Operation(summary = "取消待发送消息")
+    public R<Void> cancel(
+            @Parameter(description = "消息 ID", required = true) @PathVariable Long id) {
+        notificationPublishService.cancel(id);
+        return ok();
     }
 
     @GetMapping("/{id}/recipients")

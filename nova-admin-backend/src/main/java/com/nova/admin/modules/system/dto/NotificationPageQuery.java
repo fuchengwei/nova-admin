@@ -16,4 +16,7 @@ public class NotificationPageQuery extends PageQuery {
 
     @Schema(description = "消息类型")
     private String type;
+
+    @Schema(description = "消息状态：DRAFT、SCHEDULED、SENDING、SENT、CANCELED、FAILED")
+    private String status;
 }
