@@ -1,6 +1,8 @@
 package com.nova.admin.modules.system.service;
 
 import com.nova.admin.modules.system.dto.NotificationPublishRequest;
+import com.nova.admin.modules.system.dto.NotificationRecipientPreviewDTO;
+import com.nova.admin.modules.system.dto.NotificationRecipientPreviewRequest;
 import com.nova.admin.modules.system.enums.NotificationRecipientType;
 import com.nova.admin.modules.system.mapper.SysRoleMapper;
 import com.nova.admin.modules.system.mapper.SysUserMapper;
@@ -96,6 +98,47 @@ class NotificationPublishServiceImplTest {
 
         assertThatThrownBy(() -> service.publish(request(NotificationRecipientType.ALL)))
                 .hasMessage("没有可接收消息的启用用户");
+    }
+
+    @Test
+    void preview_whenSelectedUsersResolved_returnsCountAndSamples() {
+        NotificationPublishService service = new NotificationPublishServiceImpl(
+                userMapper, roleMapper, notificationService);
+        when(userMapper.selectEnabledUserIdsByIds(any())).thenReturn(List.of(2L, 3L));
+        com.nova.admin.modules.system.entity.SysUser first = new com.nova.admin.modules.system.entity.SysUser();
+        first.setId(2L);
+        first.setAccount("zhangsan");
+        first.setNickname("张三");
+        com.nova.admin.modules.system.entity.SysUser second = new com.nova.admin.modules.system.entity.SysUser();
+        second.setId(3L);
+        second.setAccount("lisi");
+        when(userMapper.selectEnabledUsersByIds(any())).thenReturn(List.of(first, second));
+
+        NotificationRecipientPreviewRequest request = new NotificationRecipientPreviewRequest();
+        request.setRecipientType(NotificationRecipientType.USER);
+        request.setRecipientIds(List.of(2L, 3L));
+
+        NotificationRecipientPreviewDTO result = service.previewRecipients(request);
+
+        assertThat(result.getRecipientCount()).isEqualTo(2);
+        assertThat(result.getSamples()).extracting("label")
+                .containsExactly("张三 (zhangsan)", "lisi");
+    }
+
+    @Test
+    void preview_whenRoleHasNoEnabledUsers_returnsZeroWithoutSamples() {
+        NotificationPublishService service = new NotificationPublishServiceImpl(
+                userMapper, roleMapper, notificationService);
+        when(userMapper.selectEnabledUserIdsByRoleIds(any())).thenReturn(List.of());
+
+        NotificationRecipientPreviewRequest request = new NotificationRecipientPreviewRequest();
+        request.setRecipientType(NotificationRecipientType.ROLE);
+        request.setRecipientIds(List.of(10L));
+
+        NotificationRecipientPreviewDTO result = service.previewRecipients(request);
+
+        assertThat(result.getRecipientCount()).isZero();
+        assertThat(result.getSamples()).isEmpty();
     }
 
     private NotificationPublishRequest request(NotificationRecipientType recipientType) {

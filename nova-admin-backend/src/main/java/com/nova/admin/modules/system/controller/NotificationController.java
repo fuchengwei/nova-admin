@@ -9,6 +9,8 @@ import com.nova.admin.modules.system.dto.NotificationRecipientOptionsDTO;
 import com.nova.admin.modules.system.dto.NotificationPageQuery;
 import com.nova.admin.modules.system.dto.NotificationRecipientPageQuery;
 import com.nova.admin.modules.system.dto.NotificationRecipientRecordDTO;
+import com.nova.admin.modules.system.dto.NotificationRecipientPreviewDTO;
+import com.nova.admin.modules.system.dto.NotificationRecipientPreviewRequest;
 import com.nova.admin.modules.system.dto.NotificationRecordSummaryDTO;
 import com.nova.admin.modules.system.service.NotificationPublishService;
 import com.nova.admin.modules.system.service.NotificationService;
@@ -63,6 +65,14 @@ public class NotificationController extends BaseController {
     @Operation(summary = "获取站内消息接收对象")
     public R<NotificationRecipientOptionsDTO> getRecipientOptions() {
         return ok(notificationPublishService.getRecipientOptions());
+    }
+
+    @PostMapping("/recipients/preview")
+    @PreAuthorize("hasRole('super_admin') or hasAuthority('system:notification:publish')")
+    @Operation(summary = "预览站内消息接收人")
+    public R<NotificationRecipientPreviewDTO> previewRecipients(
+            @Valid @RequestBody NotificationRecipientPreviewRequest request) {
+        return ok(notificationPublishService.previewRecipients(request));
     }
 
     @PostMapping("/publish")

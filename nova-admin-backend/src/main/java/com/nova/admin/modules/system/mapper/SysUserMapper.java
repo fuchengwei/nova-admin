@@ -54,6 +54,9 @@ public interface SysUserMapper extends BaseMapper<SysUser> {
     /** 查询指定 ID 中仍处于启用状态的用户。 */
     List<Long> selectEnabledUserIdsByIds(@Param("userIds") Collection<Long> userIds);
 
+    /** 查询指定 ID 中仍处于启用状态的用户信息。 */
+    List<SysUser> selectEnabledUsersByIds(@Param("userIds") Collection<Long> userIds);
+
     /** 查询指定启用角色下的启用用户，结果按用户去重。 */
     List<Long> selectEnabledUserIdsByRoleIds(@Param("roleIds") Collection<Long> roleIds);
 }

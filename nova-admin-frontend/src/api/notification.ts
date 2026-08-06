@@ -36,6 +36,16 @@ export interface NotificationPublishRequest {
   recipientIds?: string[];
 }
 
+export interface NotificationRecipientPreviewRequest {
+  recipientType: NotificationRecipientType;
+  recipientIds?: string[];
+}
+
+export interface NotificationRecipientPreview {
+  recipientCount: number;
+  samples: NotificationRecipientOption[];
+}
+
 export interface NotificationHistoryRecord {
   id: string;
   type: string;
@@ -89,6 +99,13 @@ export const getNotificationRecipientOptions = () =>
   request<R<NotificationRecipientOptions>>({
     url: '/system/notification/recipients',
     method: 'GET',
+  });
+
+export const previewNotificationRecipients = (data: NotificationRecipientPreviewRequest) =>
+  request<R<NotificationRecipientPreview>>({
+    url: '/system/notification/recipients/preview',
+    method: 'POST',
+    data,
   });
 
 export const publishNotification = (data: NotificationPublishRequest) =>

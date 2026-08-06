@@ -83,6 +83,18 @@
         </foreach>
     </select>
 
+    <select id="selectEnabledUsersByIds" resultType="com.nova.admin.modules.system.entity.SysUser">
+        SELECT u.id, u.account, u.nickname
+        FROM sys_user u
+        WHERE u.deleted = 0
+          AND u.status = 1
+          AND u.id IN
+        <foreach collection="userIds" item="userId" open="(" separator="," close=")">
+            #{userId}
+        </foreach>
+        ORDER BY u.account
+    </select>
+
     <select id="selectEnabledUserIdsByRoleIds" resultType="long">
         SELECT DISTINCT u.id
         FROM sys_user u

@@ -9,17 +9,21 @@ import {
 } from '@ant-design/pro-components';
 import { GlobalOutlined, TeamOutlined, UserOutlined } from '@ant-design/icons';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import {
   getNotificationRecipientOptions,
+  previewNotificationRecipients,
   publishNotification,
   type NotificationPublishRequest,
   type NotificationRecipientOption,
+  type NotificationRecipientPreviewRequest,
   type NotificationRecipientType,
 } from '@/api/notification';
 import { message } from '@/utils/message';
+
+import NotificationRecipientPreview from './NotificationRecipientPreview';
 
 interface NotificationPublishFormProps {
   onPublished: () => void;
@@ -33,6 +37,8 @@ const toSelectOptions = (options: NotificationRecipientOption[]) =>
 export default function NotificationPublishForm({ onPublished }: NotificationPublishFormProps) {
   const { t } = useTranslation();
   const formRef = useRef<ProFormInstance<NotificationPublishRequest> | undefined>(undefined);
+  const [recipientPreviewRequest, setRecipientPreviewRequest] =
+    useState<NotificationRecipientPreviewRequest>({ recipientType: 'ALL' });
   const { data: recipientOptions = { users: [], roles: [] }, isLoading: recipientOptionsLoading } =
     useQuery({
       queryKey: ['notification', 'recipient-options'],
@@ -42,6 +48,31 @@ export default function NotificationPublishForm({ onPublished }: NotificationPub
       },
     });
   const publishMutation = useMutation({ mutationFn: publishNotification });
+  const hasRecipientSelection =
+    recipientPreviewRequest.recipientType === 'ALL' ||
+    Boolean(recipientPreviewRequest.recipientIds?.length);
+  const recipientPreviewQuery = useQuery({
+    queryKey: [
+      'notification',
+      'recipient-preview',
+      recipientPreviewRequest.recipientType,
+      recipientPreviewRequest.recipientIds ?? [],
+    ],
+    queryFn: async () => {
+      const result = await previewNotificationRecipients(recipientPreviewRequest);
+      if (result.code !== 0) {
+        throw new Error(result.msg || t('notification.recipientPreviewFailed'));
+      }
+      return result.data;
+    },
+    enabled: hasRecipientSelection,
+  });
+  const recipientPreview = recipientPreviewQuery.data;
+  const canPublish =
+    hasRecipientSelection &&
+    !recipientPreviewQuery.isFetching &&
+    !recipientPreviewQuery.isError &&
+    Boolean(recipientPreview?.recipientCount);
   const recipientTypeLabels: Record<NotificationRecipientType, string> = {
     ALL: t('notification.recipientAll'),
     ROLE: t('notification.recipientRole'),
@@ -57,7 +88,19 @@ export default function NotificationPublishForm({ onPublished }: NotificationPub
       submitter={{
         resetButtonProps: false,
         searchConfig: { submitText: t('notification.publish') },
-        submitButtonProps: { size: 'middle', className: 'mt-2' },
+        submitButtonProps: {
+          size: 'middle',
+          className: 'mt-2',
+          disabled: !canPublish,
+          loading: recipientPreviewQuery.isFetching,
+        },
+      }}
+      onValuesChange={(changedValues, values) => {
+        if (!('recipientType' in changedValues) && !('recipientIds' in changedValues)) return;
+        setRecipientPreviewRequest({
+          recipientType: values.recipientType ?? 'ALL',
+          recipientIds: values.recipientIds,
+        });
       }}
       onFinish={async (values) => {
         const result = await publishMutation.mutateAsync(values);
@@ -182,6 +225,12 @@ export default function NotificationPublishForm({ onPublished }: NotificationPub
               );
             }}
           </ProFormDependency>
+          <NotificationRecipientPreview
+            data={recipientPreview}
+            hasSelection={hasRecipientSelection}
+            isError={recipientPreviewQuery.isError}
+            isFetching={recipientPreviewQuery.isFetching}
+          />
         </section>
       </div>
     </ProForm>

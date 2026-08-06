@@ -6,6 +6,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.security.access.prepost.PreAuthorize;
 
@@ -52,5 +53,16 @@ class NotificationControllerTest {
                 .isEqualTo("hasRole('super_admin') or hasAuthority('system:notification:publish')");
         assertThat(detail.getAnnotation(Operation.class).summary()).contains("详情");
         assertThat(recipients.getParameters()[0].getAnnotation(Parameter.class)).isNotNull();
+    }
+
+    @Test
+    void previewRecipientsEndpoint_requiresPublishPermissionAndUsesPreviewRoute() throws NoSuchMethodException {
+        Method preview = NotificationController.class.getMethod(
+                "previewRecipients", com.nova.admin.modules.system.dto.NotificationRecipientPreviewRequest.class);
+
+        assertThat(preview.getAnnotation(PostMapping.class).value()).containsExactly("/recipients/preview");
+        assertThat(preview.getAnnotation(PreAuthorize.class).value())
+                .isEqualTo("hasRole('super_admin') or hasAuthority('system:notification:publish')");
+        assertThat(preview.getAnnotation(Operation.class).summary()).contains("预览");
     }
 }

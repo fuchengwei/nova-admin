@@ -68,7 +68,7 @@
 
 ## 站内消息
 
-Header 通知铃铛展示当前用户最近 10 条站内消息和未读数量，支持单条已读与全部已读，并通过现有 SSE 会话事件连接实时刷新角标。管理员可在「消息发布」菜单向全部启用用户、指定角色或指定用户发布站内消息。消息按用户收件记录隔离，定时任务执行失败时也会向启用的超级管理员投递消息；点击消息可直接打开对应执行详情。基础接口为 `GET /api/system/notification/summary`、`PUT /api/system/notification/{id}/read`、`PUT /api/system/notification/read-all` 和 `POST /api/system/notification/publish`。
+Header 通知铃铛展示当前用户最近 10 条站内消息和未读数量，支持单条已读与全部已读，并通过现有 SSE 会话事件连接实时刷新角标。管理员可在「消息发布」菜单向全部启用用户、指定角色或指定用户发布站内消息；选择范围后会先预览实际启用用户数量和示例接收人，没有可接收用户时不能发布。消息按用户收件记录隔离，定时任务执行失败时也会向启用的超级管理员投递消息；点击消息可直接打开对应执行详情。基础接口为 `GET /api/system/notification/summary`、`PUT /api/system/notification/{id}/read`、`PUT /api/system/notification/read-all`、`POST /api/system/notification/recipients/preview` 和 `POST /api/system/notification/publish`。
 
 消息发布页同时提供发布记录和送达明细，可查看发布人、接收人数、已读/未读统计及分页收件人状态。已有 PostgreSQL 数据卷需执行迁移脚本 nova-admin-backend/sql/migrations/2026-08-06-notification-history.sql，以增加消息发布人字段和查询索引。
 

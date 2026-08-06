@@ -6,6 +6,8 @@ import com.nova.admin.common.exception.BizException;
 import com.nova.admin.modules.system.dto.NotificationPublishRequest;
 import com.nova.admin.modules.system.dto.NotificationRecipientOptionDTO;
 import com.nova.admin.modules.system.dto.NotificationRecipientOptionsDTO;
+import com.nova.admin.modules.system.dto.NotificationRecipientPreviewDTO;
+import com.nova.admin.modules.system.dto.NotificationRecipientPreviewRequest;
 import com.nova.admin.modules.system.entity.SysRole;
 import com.nova.admin.modules.system.entity.SysUser;
 import com.nova.admin.modules.system.enums.NotificationRecipientType;
@@ -53,6 +55,22 @@ public class NotificationPublishServiceImpl implements NotificationPublishServic
                 .map(role -> new NotificationRecipientOptionDTO(role.getId(), role.getName() + " (" + role.getCode() + ")"))
                 .toList());
         return options;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public NotificationRecipientPreviewDTO previewRecipients(NotificationRecipientPreviewRequest request) {
+        Set<Long> userIds = resolveRecipientUserIds(request.getRecipientType(), request.getRecipientIds());
+        NotificationRecipientPreviewDTO preview = new NotificationRecipientPreviewDTO();
+        preview.setRecipientCount(userIds.size());
+        if (userIds.isEmpty()) {
+            preview.setSamples(java.util.List.of());
+            return preview;
+        }
+        preview.setSamples(userMapper.selectEnabledUsersByIds(userIds).stream()
+                .map(user -> new NotificationRecipientOptionDTO(user.getId(), userLabel(user)))
+                .toList());
+        return preview;
     }
 
     @Override
