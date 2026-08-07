@@ -7,6 +7,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { getCaptcha, login } from '@/api/auth';
 import { useUserStore } from '@/stores/userStore';
+import { useAppStore } from '@/stores/appStore';
 import { getToken } from '@/utils/request';
 
 const { Title, Text } = Typography;
@@ -27,6 +28,7 @@ export default function LoginPage() {
   const [params] = useSearchParams();
   const { t } = useTranslation();
   const { token } = antdTheme.useToken();
+  const theme = useAppStore((state) => state.theme);
   const loadingRef = useRef(false);
   const setUserInfo = useUserStore((state) => state.setUserInfo);
   const resetUser = useUserStore((state) => state.reset);
@@ -100,7 +102,7 @@ export default function LoginPage() {
     <div
       className="flex min-h-screen items-center justify-center p-4"
       style={{
-        background: `linear-gradient(135deg, ${token.colorPrimary} 0%, #69b1ff 100%)`,
+        background: `linear-gradient(135deg, ${token.colorPrimary} 0%, ${theme === 'dark' ? '#102a43' : '#69b1ff'} 100%)`,
       }}
     >
       <Card className="!w-full !max-w-md !shadow-2xl" styles={{ body: { padding: 32 } }}>

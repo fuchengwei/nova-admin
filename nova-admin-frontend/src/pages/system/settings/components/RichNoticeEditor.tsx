@@ -78,7 +78,7 @@ export default function RichNoticeEditor({ value, onChange }: RichNoticeEditorPr
     editorProps: {
       attributes: {
         class: [
-          'min-h-[290px] p-[18px] text-sm leading-[1.8] text-slate-700 outline-none max-md:min-h-[220px]',
+          'min-h-[290px] p-[18px] text-sm leading-[1.8] text-[var(--color-text-primary)] outline-none max-md:min-h-[220px]',
           styles.content,
         ].join(' '),
       },
@@ -107,9 +107,9 @@ export default function RichNoticeEditor({ value, onChange }: RichNoticeEditorPr
   const canRedo = editor.can().chain().focus().redo().run();
 
   return (
-    <div className="overflow-hidden rounded-md border border-slate-300 bg-white transition-[border-color,box-shadow] duration-150 focus-within:border-amber-600 focus-within:shadow-[0_0_0_3px_rgb(217_119_6_/_12%)]">
+    <div className="overflow-hidden rounded-xl border border-[var(--color-border-strong)] bg-[var(--color-surface)] transition-[border-color,box-shadow] duration-150 focus-within:border-[var(--ant-color-primary)] focus-within:shadow-[0_0_0_3px_var(--color-accent-soft)]">
       <div
-        className="flex flex-wrap gap-0.5 border-b border-slate-200 bg-slate-50 px-2 py-[7px]"
+        className="flex flex-wrap gap-0.5 border-b border-[var(--color-border)] bg-[var(--color-surface-elevated)] px-2 py-[7px]"
         role="toolbar"
         aria-label={t('settings.noticeToolbar')}
       >
@@ -148,7 +148,7 @@ export default function RichNoticeEditor({ value, onChange }: RichNoticeEditorPr
         >
           <StrikethroughOutlined />
         </ToolbarButton>
-        <span className="mx-1 my-px h-5 w-px bg-slate-200" />
+        <span className="mx-1 my-px h-5 w-px bg-[var(--color-border)]" />
         <ToolbarButton
           label={t('settings.noticeAlignLeft')}
           active={editor.isActive({ textAlign: 'left' })}
@@ -177,7 +177,7 @@ export default function RichNoticeEditor({ value, onChange }: RichNoticeEditorPr
         >
           <MenuOutlined />
         </ToolbarButton>
-        <span className="mx-1 my-px h-5 w-px bg-slate-200" />
+        <span className="mx-1 my-px h-5 w-px bg-[var(--color-border)]" />
         <ToolbarButton
           label={t('settings.noticeBulletList')}
           active={editor.isActive('bulletList')}
@@ -234,7 +234,7 @@ export default function RichNoticeEditor({ value, onChange }: RichNoticeEditorPr
         >
           <MinusOutlined />
         </ToolbarButton>
-        <span className="mx-1 my-px h-5 w-px bg-slate-200" />
+        <span className="mx-1 my-px h-5 w-px bg-[var(--color-border)]" />
         <ToolbarButton
           disabled={!canUndo}
           label={t('settings.noticeUndo')}

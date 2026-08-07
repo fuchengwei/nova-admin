@@ -24,25 +24,25 @@ export default function ProfileSummary({
   const { t } = useTranslation();
 
   return (
-    <ProCard className="overflow-hidden shadow-sm">
-      <div className="rounded-2xl bg-gradient-to-br from-blue-500 via-indigo-500 to-violet-600 p-6 text-white">
+    <ProCard className="overflow-hidden border-[var(--color-border)]! bg-[var(--color-surface)]! shadow-sm">
+      <div className="border-l-4 border-[var(--ant-color-primary)] bg-[var(--color-surface-elevated)] p-6 text-[var(--color-text-primary)]">
         <div className="flex flex-col items-center gap-4 text-center">
           <Avatar
             size={104}
             src={avatarSrc}
             icon={<UserOutlined />}
-            className="ring-4 ring-white/20"
+            className="ring-4 ring-[var(--ant-color-primary)]/20"
           />
           <div>
             <div className="text-xl font-semibold">
               {userInfo?.nickname ?? userInfo?.account ?? '-'}
             </div>
-            <div className="mt-1 text-sm text-white/80">
+            <div className="mt-1 text-sm text-[var(--color-text-secondary)]">
               {userInfo?.realName || userInfo?.account || '-'}
             </div>
           </div>
           <Upload {...uploadProps}>
-            <Button ghost icon={<UploadOutlined />} loading={avatarLoading}>
+            <Button type="primary" ghost icon={<UploadOutlined />} loading={avatarLoading}>
               {t('profile.uploadAvatar')}
             </Button>
           </Upload>

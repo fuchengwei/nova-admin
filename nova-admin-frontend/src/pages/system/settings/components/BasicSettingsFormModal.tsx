@@ -51,7 +51,7 @@ export default function BasicSettingsFormModal({
       onFinish={onSubmit}
     >
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-[220px_1fr]">
-        <div className="rounded-[24px] bg-slate-50 p-4 text-center">
+        <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface-elevated)] p-4 text-center">
           <Avatar shape="square" size={96} src={safeLogoSrc} icon={<SettingOutlined />} />
           <div className="mt-3">
             <Upload {...logoUploadProps}>

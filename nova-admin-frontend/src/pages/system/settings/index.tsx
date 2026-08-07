@@ -263,17 +263,16 @@ export default function SystemSettingsPage() {
             />
           ) : null}
 
-          <div className="relative overflow-hidden rounded-[32px] bg-slate-950 px-6 py-7 text-white">
-            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,_rgba(59,130,246,0.24),_transparent_38%),radial-gradient(circle_at_bottom_left,_rgba(16,185,129,0.2),_transparent_34%)]" />
+          <div className="relative overflow-hidden rounded-2xl border border-l-4 border-[var(--color-border)] border-l-[var(--ant-color-primary)] bg-[var(--color-surface-elevated)] px-6 py-7 text-[var(--color-text-primary)]">
             <div className="relative grid gap-6 xl:grid-cols-[1.2fr_0.8fr] xl:items-end">
               <div>
-                <div className="text-[11px] tracking-[0.34em] text-white/55 uppercase">
+                <div className="text-[11px] tracking-[0.34em] text-[var(--color-text-muted)] uppercase">
                   {t('settings.overviewLabel')}
                 </div>
-                <h1 className="mt-3 text-3xl font-semibold tracking-tight text-white">
+                <h1 className="mt-3 text-3xl font-semibold tracking-tight text-[var(--color-text-primary)]">
                   {t('settings.title')}
                 </h1>
-                <p className="mt-3 max-w-2xl text-sm leading-7 text-white/72">
+                <p className="mt-3 max-w-2xl text-sm leading-7 text-[var(--color-text-secondary)]">
                   {t('settings.subtitle')}
                 </p>
               </div>
@@ -286,11 +285,13 @@ export default function SystemSettingsPage() {
                 ].map((item) => (
                   <div
                     key={item.label}
-                    className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 backdrop-blur-sm"
+                    className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-3"
                   >
                     <div className="flex items-center gap-3">
                       <span className={`h-2.5 w-2.5 rounded-full ${item.tone}`} />
-                      <span className="text-sm font-medium text-white/88">{item.label}</span>
+                      <span className="text-sm font-medium text-[var(--color-text-primary)]">
+                        {item.label}
+                      </span>
                     </div>
                   </div>
                 ))}
@@ -299,7 +300,7 @@ export default function SystemSettingsPage() {
           </div>
 
           {basicLoading || securityLoading || uploadLoading || noticeLoading ? (
-            <div className="rounded-[30px] bg-white p-6 shadow-[0_18px_48px_-32px_rgba(15,23,42,0.22)]">
+            <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-6">
               <Skeleton active paragraph={{ rows: 8 }} />
             </div>
           ) : null}
@@ -484,17 +485,17 @@ export default function SystemSettingsPage() {
               }
             >
               <div className="grid gap-4 lg:grid-cols-[260px_1fr]">
-                <div className="rounded-[24px] bg-slate-50 p-5 text-center">
+                <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface-elevated)] p-5 text-center">
                   <Avatar
                     shape="square"
                     size={104}
                     src={safeBasicLogoSrc}
                     icon={<SettingOutlined />}
                   />
-                  <div className="mt-4 text-lg font-semibold text-slate-900">
+                  <div className="mt-4 text-lg font-semibold text-[var(--color-text-primary)]">
                     {displayText(basicData?.systemName)}
                   </div>
-                  <div className="mt-1 text-sm text-slate-500">
+                  <div className="mt-1 text-sm text-[var(--color-text-secondary)]">
                     {displayText(basicData?.browserTitle)}
                   </div>
                 </div>
@@ -681,7 +682,7 @@ export default function SystemSettingsPage() {
                       t('menu.disabled'),
                     )}
                   />
-                  <div className="rounded-2xl border border-slate-200/70 bg-white px-4 py-3 text-sm text-slate-600">
+                  <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-elevated)] px-4 py-3 text-sm text-[var(--color-text-secondary)]">
                     {noticeData?.content ? (
                       <RichTextContent content={noticeData.content} />
                     ) : (

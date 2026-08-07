@@ -50,21 +50,21 @@ export default function NotificationAudienceFields({
   };
 
   return (
-    <section className="min-w-0 rounded-[10px] border border-slate-200 bg-[#fbfdff] px-[18px] pt-4 pb-1 max-[560px]:px-[13px] max-[560px]:pt-3.5">
+    <section className="min-w-0 rounded-[10px] border border-[var(--color-border)] bg-[var(--color-surface)] px-[18px] pt-4 pb-1 max-[560px]:px-[13px] max-[560px]:pt-3.5">
       <div className="mb-3.5 flex items-start justify-between gap-3">
         <div>
-          <div className="text-[10px] leading-[1.4] font-bold tracking-[0.12em] text-slate-500 uppercase">
+          <div className="text-[10px] leading-[1.4] font-bold tracking-[0.12em] text-[var(--color-text-muted)] uppercase">
             {t('notification.audienceKicker')}
           </div>
-          <h2 className="mt-[3px] mb-[3px] text-[15px] font-bold text-slate-800">
+          <h2 className="mt-[3px] mb-[3px] text-[15px] font-bold text-[var(--color-text-primary)]">
             {t('notification.audienceTitle')}
           </h2>
-          <p className="m-0 max-w-[42ch] text-xs leading-[1.55] text-slate-500">
+          <p className="m-0 max-w-[42ch] text-xs leading-[1.55] text-[var(--color-text-secondary)]">
             {t('notification.audienceHint')}
           </p>
         </div>
         <span
-          className="grid h-[30px] w-[30px] shrink-0 place-items-center rounded-lg bg-blue-50 text-blue-600"
+          className="grid h-[30px] w-[30px] shrink-0 place-items-center rounded-lg bg-[var(--color-accent-soft)] text-[var(--ant-color-primary)]"
           aria-hidden="true"
         >
           <GlobalOutlined />
@@ -136,7 +136,7 @@ export default function NotificationAudienceFields({
             );
           }
           return (
-            <div className="mt-[7px] mb-[13px] flex items-center gap-[9px] rounded-lg border border-dashed border-blue-200 bg-blue-50 p-3 text-xs text-blue-700">
+            <div className="mt-[7px] mb-[13px] flex items-center gap-[9px] rounded-lg border border-dashed border-[var(--ant-color-primary)] bg-[var(--color-accent-soft)] p-3 text-xs text-[var(--ant-color-primary)]">
               <GlobalOutlined />
               <span>{t('notification.recipientAllHint')}</span>
             </div>

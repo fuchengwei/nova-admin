@@ -51,14 +51,14 @@ export default function ApiPermissionRoleModal({
     <Modal
       title={
         <div className="flex items-start gap-3">
-          <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-slate-100 text-slate-600">
+          <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] bg-[var(--color-accent-soft)] text-[var(--ant-color-primary)]">
             <ApiOutlined />
           </span>
           <div className="min-w-0">
-            <div className="text-base font-semibold text-slate-900">
+            <div className="text-base font-semibold text-[var(--color-text-primary)]">
               {t('menu.apiPermissionConfigureAccess')}
             </div>
-            <code className="mt-1 block truncate text-xs font-normal text-slate-500">
+            <code className="mt-1 block truncate font-mono text-xs font-normal text-[var(--color-text-secondary)]">
               {permission?.permission}
             </code>
           </div>
@@ -74,7 +74,7 @@ export default function ApiPermissionRoleModal({
       onOk={onSave}
     >
       <div className="space-y-4">
-        <div className="rounded-md border border-slate-200 bg-slate-50 px-3.5 py-3 text-sm leading-5 text-slate-600">
+        <div className="rounded-[10px] border border-[var(--color-border)] bg-[var(--color-surface-elevated)] px-3.5 py-3 text-sm leading-5 text-[var(--color-text-secondary)]">
           {t('menu.apiPermissionAccessModalHint')}
         </div>
 
@@ -83,26 +83,30 @@ export default function ApiPermissionRoleModal({
             <span className="text-[11px] font-semibold tracking-[0.12em] text-slate-400 uppercase">
               {t('menu.apiPermissionAccessMode')}
             </span>
-            <span className="h-px flex-1 bg-slate-200" />
+            <span className="h-px flex-1 bg-[var(--color-border)]" />
           </div>
           <div
             className={`flex items-center justify-between gap-4 rounded-md border px-3.5 py-3 transition-colors ${
-              publicAccess ? 'border-emerald-200 bg-emerald-50/70' : 'border-slate-200 bg-white'
+              publicAccess
+                ? 'border-emerald-500/60 bg-emerald-500/10'
+                : 'border-[var(--color-border)] bg-[var(--color-surface)]'
             }`}
           >
             <div className="flex min-w-0 items-start gap-3">
               <span
-                className={`mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-md ${
-                  publicAccess ? 'bg-emerald-100 text-emerald-600' : 'bg-slate-100 text-slate-500'
+                className={`mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] ${
+                  publicAccess
+                    ? 'bg-emerald-500/15 text-emerald-400'
+                    : 'bg-[var(--color-surface-elevated)] text-[var(--color-text-secondary)]'
                 }`}
               >
                 {publicAccess ? <CheckCircleFilled /> : <GlobalOutlined />}
               </span>
               <div className="min-w-0">
-                <div className="text-sm font-medium text-slate-800">
+                <div className="text-sm font-medium text-[var(--color-text-primary)]">
                   {t('menu.apiPermissionPublicAccess')}
                 </div>
-                <div className="mt-0.5 text-xs text-slate-500">
+                <div className="mt-0.5 text-xs text-[var(--color-text-secondary)]">
                   {t('menu.apiPermissionPublicAccessHint')}
                 </div>
               </div>
@@ -116,16 +120,16 @@ export default function ApiPermissionRoleModal({
             <span className="text-[11px] font-semibold tracking-[0.12em] text-slate-400 uppercase">
               {t('menu.apiPermissionTargetedAccess')}
             </span>
-            <span className="h-px flex-1 bg-slate-200" />
+            <span className="h-px flex-1 bg-[var(--color-border)]" />
           </div>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <div className="rounded-md border border-slate-200 bg-white p-3">
+            <div className="rounded-[10px] border border-[var(--color-border)] bg-[var(--color-surface)] p-3">
               <div className="mb-2 flex items-center justify-between gap-2">
-                <div className="flex items-center gap-2 text-sm font-medium text-slate-700">
-                  <TeamOutlined className="text-blue-500" />
+                <div className="flex items-center gap-2 text-sm font-medium text-[var(--color-text-primary)]">
+                  <TeamOutlined className="text-[var(--ant-color-primary)]" />
                   {t('menu.apiPermissionRoles')}
                 </div>
-                <span className="text-xs text-slate-400">
+                <span className="font-mono text-xs text-[var(--color-text-muted)]">
                   {t('menu.apiPermissionSelectedCount', { count: selectedRoleIds.length })}
                 </span>
               </div>
@@ -145,13 +149,13 @@ export default function ApiPermissionRoleModal({
                 onChange={(values) => onRoleIdsChange(values.map(String))}
               />
             </div>
-            <div className="rounded-md border border-slate-200 bg-white p-3">
+            <div className="rounded-[10px] border border-[var(--color-border)] bg-[var(--color-surface)] p-3">
               <div className="mb-2 flex items-center justify-between gap-2">
-                <div className="flex items-center gap-2 text-sm font-medium text-slate-700">
-                  <UserOutlined className="text-cyan-500" />
+                <div className="flex items-center gap-2 text-sm font-medium text-[var(--color-text-primary)]">
+                  <UserOutlined className="text-cyan-400" />
                   {t('menu.apiPermissionUsers')}
                 </div>
-                <span className="text-xs text-slate-400">
+                <span className="font-mono text-xs text-[var(--color-text-muted)]">
                   {t('menu.apiPermissionSelectedCount', { count: selectedUserIds.length })}
                 </span>
               </div>

@@ -105,6 +105,7 @@ export default function SessionList() {
 
   return (
     <ProCard
+      className="border-[var(--color-border)]! bg-[var(--color-surface)]!"
       title={t('profile.sessionTitle')}
       extra={
         <div className="flex gap-2">

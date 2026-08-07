@@ -221,6 +221,12 @@ export default {
     profile: '个人中心',
     logout: '退出登录',
     switchLang: '切换语言',
+    themePreference: '主题偏好',
+    themeLight: '浅色模式',
+    themeDark: '暗黑模式',
+    themeSystem: '跟随系统',
+    switchToLight: '切换到浅色模式',
+    switchToDark: '切换到暗黑模式',
   },
   dept: {
     name: '部门名称',

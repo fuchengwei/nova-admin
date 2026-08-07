@@ -44,20 +44,20 @@ export default function NotificationHistoryDrawer({
     >
       {record && (
         <div className="space-y-5">
-          <div className="flex items-start justify-between gap-3.5 border-b border-slate-200 pb-[17px]">
+          <div className="flex items-start justify-between gap-3.5 border-b border-[var(--color-border)] pb-[17px]">
             <div>
-              <div className="text-[10px] leading-[1.4] font-bold tracking-[0.12em] text-slate-500 uppercase">
+              <div className="text-[10px] leading-[1.4] font-bold tracking-[0.12em] text-[var(--color-text-muted)] uppercase">
                 {t('notification.detailKicker')}
               </div>
-              <h2 className="mt-[3px] mb-[5px] text-[19px] leading-[1.4] font-bold text-slate-800">
+              <h2 className="mt-[3px] mb-[5px] text-[19px] leading-[1.4] font-bold text-[var(--color-text-primary)]">
                 {record.title}
               </h2>
-              <div className="flex flex-wrap gap-x-3.5 gap-y-2 text-xs text-slate-500">
+              <div className="flex flex-wrap gap-x-3.5 gap-y-2 text-xs text-[var(--color-text-secondary)]">
                 <span>{record.publisherName}</span>
                 <span>{formatDateTime(record.createTime)}</span>
               </div>
             </div>
-            <span className="shrink-0 rounded-full bg-blue-50 px-[9px] py-1 text-[11px] font-semibold text-blue-700">
+            <span className="shrink-0 rounded-full bg-[var(--color-accent-soft)] px-[9px] py-1 text-[11px] font-semibold text-[var(--ant-color-primary)]">
               {record.type === 'system'
                 ? t('notification.typeSystem')
                 : record.type === 'permission'
@@ -67,7 +67,7 @@ export default function NotificationHistoryDrawer({
                     : record.type}
             </span>
           </div>
-          <div className="flex flex-wrap items-center gap-2 text-sm text-slate-500">
+          <div className="flex flex-wrap items-center gap-2 text-sm text-[var(--color-text-secondary)]">
             <Tag
               color={
                 record.status === 'SENT' ? 'green' : record.status === 'FAILED' ? 'red' : 'blue'
@@ -82,7 +82,7 @@ export default function NotificationHistoryDrawer({
             )}
             {record.errorMsg && <span className="text-red-500">{record.errorMsg}</span>}
           </div>
-          <div className="rounded-[9px] border border-slate-200 bg-slate-50 p-[3px]">
+          <div className="rounded-[9px] border border-[var(--color-border)] bg-[var(--color-surface-elevated)] p-[3px]">
             <div className="grid grid-cols-3">
               {[
                 [t('notification.recipientCount'), record.recipientCount, 'total'],
@@ -94,26 +94,26 @@ export default function NotificationHistoryDrawer({
                   className={`flex min-w-0 flex-col items-center gap-px px-1.5 pt-2 pb-[7px] ${styles.detailDeliveryStat}`}
                 >
                   <strong
-                    className={`text-lg leading-[1.1] font-bold ${tone === 'read' ? 'text-emerald-600' : tone === 'unread' ? 'text-amber-600' : 'text-slate-800'}`}
+                    className={`text-lg leading-[1.1] font-bold ${tone === 'read' ? 'text-emerald-600' : tone === 'unread' ? 'text-amber-600' : 'text-[var(--color-text-primary)]'}`}
                   >
                     {value}
                   </strong>
-                  <span className="text-[11px] leading-[1.4] whitespace-nowrap text-slate-500">
+                  <span className="text-[11px] leading-[1.4] whitespace-nowrap text-[var(--color-text-secondary)]">
                     {label}
                   </span>
                 </div>
               ))}
             </div>
           </div>
-          <div className="rounded-r-lg border-l-[3px] border-blue-600 bg-slate-50 px-3.5 py-3">
-            <div className="text-[10px] font-bold tracking-[0.1em] text-slate-500 uppercase">
+          <div className="rounded-r-lg border-l-[3px] border-[var(--ant-color-primary)] bg-[var(--color-surface-elevated)] px-3.5 py-3">
+            <div className="text-[10px] font-bold tracking-[0.1em] text-[var(--color-text-muted)] uppercase">
               {t('notification.messageContent')}
             </div>
-            <div className="mt-1.5 text-[13px] leading-[1.7] whitespace-pre-wrap text-slate-700">
+            <div className="mt-1.5 text-[13px] leading-[1.7] whitespace-pre-wrap text-[var(--color-text-primary)]">
               {displayText(record.content)}
             </div>
             {record.link && (
-              <div className="mt-2 font-mono text-[11px] break-all text-blue-600">
+              <div className="mt-2 font-mono text-[11px] break-all text-[var(--ant-color-primary)]">
                 {record.link}
               </div>
             )}

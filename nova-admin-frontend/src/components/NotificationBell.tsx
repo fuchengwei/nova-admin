@@ -197,8 +197,8 @@ export default function NotificationBell() {
       >
         <Button
           type="text"
-          className={`${styles.bellButton}`}
-          icon={<BellOutlined className="!h-5 !w-5 !text-xl" />}
+          className={`headerIconButton ${styles.bellButton} !h-10 !w-10 !min-w-10 !rounded-[10px] !p-0`}
+          icon={<BellOutlined />}
           aria-label={t('notification.open')}
           title={t('notification.open')}
         />

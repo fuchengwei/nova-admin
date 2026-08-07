@@ -57,50 +57,52 @@ export default function DashboardStatCards({ available, runtime, stats }: Dashbo
         {cards.map((card) => (
           <article
             key={card.key}
-            className="flex min-h-27 items-center gap-3 rounded-lg border border-slate-200 bg-white p-4 shadow-sm transition-colors hover:border-blue-200"
+            className="flex min-h-27 items-center gap-3 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] p-4 shadow-sm transition-colors hover:border-[var(--ant-color-primary)]"
           >
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-blue-50 text-lg text-blue-600">
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-[var(--color-accent-soft)] text-lg text-[var(--ant-color-primary)]">
               {card.icon}
             </span>
             <div>
-              <div className="text-sm font-medium text-slate-500">{card.label}</div>
-              <div className="mt-1 font-mono text-2xl leading-none font-semibold text-slate-950 tabular-nums">
+              <div className="text-sm font-medium text-[var(--color-text-secondary)]">
+                {card.label}
+              </div>
+              <div className="mt-1 font-mono text-2xl leading-none font-semibold text-[var(--color-text-primary)] tabular-nums">
                 {available && card.value !== undefined ? card.value : '-'}
               </div>
             </div>
           </article>
         ))}
       </div>
-      <div className="flex flex-wrap items-center gap-x-5 gap-y-2 rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm text-slate-600 shadow-sm">
+      <div className="flex flex-wrap items-center gap-x-5 gap-y-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-3 text-sm text-[var(--color-text-secondary)] shadow-sm">
         <span className="flex items-center gap-2 font-medium text-emerald-700">
           <CheckCircleFilled />
           {runtime?.online ? t('dashboard.online') : t('dashboard.offline')}
         </span>
-        <span className="h-4 border-l border-slate-200" />
+        <span className="h-4 border-l border-[var(--color-border)]" />
         <span className="flex items-center gap-2">
-          <DesktopOutlined className="text-slate-400" />
+          <DesktopOutlined className="text-[var(--color-text-muted)]" />
           {t('dashboard.onlineUsers')}
-          <strong className="font-mono font-semibold text-slate-800 tabular-nums">
+          <strong className="font-mono font-semibold text-[var(--color-text-primary)] tabular-nums">
             {onlineUserCount}
           </strong>
         </span>
         <span className="flex items-center gap-2">
-          <FundOutlined className="text-slate-400" />
+          <FundOutlined className="text-[var(--color-text-muted)]" />
           {t('dashboard.cpu')}
-          <strong className="font-mono font-semibold text-slate-800 tabular-nums">
+          <strong className="font-mono font-semibold text-[var(--color-text-primary)] tabular-nums">
             {cpuUsage}
           </strong>
         </span>
         <span className="flex items-center gap-2">
-          <HddOutlined className="text-slate-400" />
+          <HddOutlined className="text-[var(--color-text-muted)]" />
           {t('dashboard.memory')}
-          <strong className="font-mono font-semibold text-slate-800 tabular-nums">
+          <strong className="font-mono font-semibold text-[var(--color-text-primary)] tabular-nums">
             {memoryUsage}
           </strong>
         </span>
         <span className="flex items-center gap-2">
           {t('dashboard.jobs')}
-          <strong className="font-mono font-semibold text-slate-800 tabular-nums">
+          <strong className="font-mono font-semibold text-[var(--color-text-primary)] tabular-nums">
             {jobCount}
           </strong>
         </span>

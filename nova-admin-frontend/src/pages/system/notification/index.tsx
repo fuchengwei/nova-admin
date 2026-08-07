@@ -33,27 +33,27 @@ export default function NotificationPage() {
       className={`${layoutStyles.pageFill} ${layoutStyles.notificationPageScroll}`}
       title={
         <span className="flex items-center gap-2">
-          <NotificationOutlined className="text-blue-600" />
+          <NotificationOutlined className="text-[var(--ant-color-primary)]" />
           {t('notification.publishTitle')}
         </span>
       }
     >
-      <div className="flex flex-col rounded-[14px] border border-slate-200 bg-slate-50 p-6">
-        <div className="flex items-start gap-3.5 border-b border-slate-200 bg-white px-6 pt-5 pb-[17px] max-[900px]:px-4 max-[900px]:pb-3.5">
+      <div className="flex flex-col overflow-hidden rounded-[14px] border border-[var(--color-border)] bg-[var(--color-surface-elevated)] p-6">
+        <div className="flex items-start gap-3.5 rounded-[10px] border-b border-[var(--color-border)] bg-[var(--color-surface)] px-6 pt-5 pb-[17px] max-[900px]:px-4 max-[900px]:pb-3.5">
           <div
-            className="grid h-[38px] w-[38px] shrink-0 place-items-center rounded-[10px] bg-blue-50 text-lg text-blue-600"
+            className="grid h-[38px] w-[38px] shrink-0 place-items-center rounded-[10px] bg-[var(--color-accent-soft)] text-lg text-[var(--ant-color-primary)]"
             aria-hidden="true"
           >
             <NotificationOutlined />
           </div>
           <div className="min-w-0">
-            <div className="text-[10px] leading-[1.4] font-bold tracking-[0.12em] text-slate-500 uppercase">
+            <div className="text-[10px] leading-[1.4] font-bold tracking-[0.12em] text-[var(--color-text-muted)] uppercase">
               {t('notification.workspaceEyebrow')}
             </div>
-            <h1 className="mt-[3px] text-xl leading-[1.35] font-bold text-slate-800 max-[560px]:text-lg">
+            <h1 className="mt-[3px] text-xl leading-[1.35] font-bold text-[var(--color-text-primary)] max-[560px]:text-lg">
               {t('notification.workspaceTitle')}
             </h1>
-            <p className="mt-1 text-xs leading-[1.6] text-slate-500 max-[560px]:text-[11px]">
+            <p className="mt-1 text-xs leading-[1.6] text-[var(--color-text-secondary)] max-[560px]:text-[11px]">
               {t('notification.workspaceSubtitle')}
             </p>
           </div>

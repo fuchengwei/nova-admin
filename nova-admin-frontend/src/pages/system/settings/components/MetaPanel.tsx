@@ -7,8 +7,8 @@ export interface MetaPanelProps {
 
 export default function MetaPanel({ title, children }: MetaPanelProps) {
   return (
-    <div className="rounded-[24px] border border-slate-200/70 bg-slate-50/90 p-5">
-      <div className="text-xs font-semibold tracking-[0.24em] text-slate-400 uppercase">
+    <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface-elevated)] p-5">
+      <div className="text-xs font-semibold tracking-[0.24em] text-[var(--color-text-muted)] uppercase">
         {title}
       </div>
       <div className="mt-4 space-y-3">{children}</div>

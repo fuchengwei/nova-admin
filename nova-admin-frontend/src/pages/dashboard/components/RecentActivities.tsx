@@ -12,24 +12,26 @@ export default function RecentActivities({ activities, available }: RecentActivi
   const { t } = useTranslation();
 
   return (
-    <section className="h-full rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
+    <section className="h-full rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] p-5 shadow-sm">
       <div className="mb-4 flex items-start justify-between gap-4">
         <div>
-          <h2 className="m-0 text-base font-semibold text-slate-900">
+          <h2 className="m-0 text-base font-semibold text-[var(--color-text-primary)]">
             {t('dashboard.recentActivities')}
           </h2>
-          <p className="mt-1 text-sm text-slate-500">{t('dashboard.recentActivitiesDesc')}</p>
+          <p className="mt-1 text-sm text-[var(--color-text-secondary)]">
+            {t('dashboard.recentActivitiesDesc')}
+          </p>
         </div>
       </div>
       {available && activities.length > 0 ? (
-        <div className="ml-1 border-l border-slate-200 pl-6">
+        <div className="ml-1 border-l border-[var(--color-border)] pl-6">
           {activities.map((activity, index) => (
             <div
               key={`${activity.type}-${activity.occurredAt}-${index}`}
               className="relative flex items-start gap-4 py-3 first:pt-0 last:pb-0"
             >
               <span
-                className={`absolute top-5 -left-[30px] h-2.5 w-2.5 rounded-full border-2 border-white ${activity.type === 'LOGIN' ? 'bg-blue-500' : 'bg-violet-500'}`}
+                className={`absolute top-5 -left-[30px] h-2.5 w-2.5 rounded-full border-2 border-[var(--color-surface)] ${activity.type === 'LOGIN' ? 'bg-blue-500' : 'bg-violet-500'}`}
               />
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2">
@@ -48,19 +50,21 @@ export default function RecentActivities({ activities, available }: RecentActivi
                     </span>
                   ) : null}
                 </div>
-                <div className="mt-1 truncate text-sm font-medium text-slate-800">
+                <div className="mt-1 truncate text-sm font-medium text-[var(--color-text-primary)]">
                   {activity.summary || '-'}
                 </div>
-                <div className="mt-1 text-xs text-slate-500">{activity.account || '-'}</div>
+                <div className="mt-1 font-mono text-xs text-[var(--color-text-secondary)]">
+                  {activity.account || '-'}
+                </div>
               </div>
-              <time className="shrink-0 text-xs text-slate-400">
+              <time className="shrink-0 font-mono text-xs text-[var(--color-text-muted)]">
                 {activity.occurredAt ? dayjs(activity.occurredAt).format('MM-DD HH:mm') : '-'}
               </time>
             </div>
           ))}
         </div>
       ) : (
-        <div className="flex h-42 items-center justify-center text-sm text-slate-400">
+        <div className="flex h-42 items-center justify-center text-sm text-[var(--color-text-muted)]">
           {t('dashboard.noData')}
         </div>
       )}

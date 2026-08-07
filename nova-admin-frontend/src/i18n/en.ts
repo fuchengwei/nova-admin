@@ -221,6 +221,12 @@ export default {
     profile: 'Profile',
     logout: 'Logout',
     switchLang: 'Switch Language',
+    themePreference: 'Theme preference',
+    themeLight: 'Light mode',
+    themeDark: 'Dark mode',
+    themeSystem: 'Follow system',
+    switchToLight: 'Switch to light mode',
+    switchToDark: 'Switch to dark mode',
   },
   dept: {
     name: 'Department Name',

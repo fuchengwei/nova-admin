@@ -3,6 +3,7 @@ import { Line } from '@ant-design/charts';
 import { Segmented } from 'antd';
 import { useTranslation } from 'react-i18next';
 import type { DashboardRange, DashboardTrendPoint } from '@/api/dashboard';
+import { useAppStore } from '@/stores/appStore';
 
 interface ActivityTrendChartProps {
   available: boolean;
@@ -20,6 +21,7 @@ export default function ActivityTrendChart({
   onRangeChange,
 }: ActivityTrendChartProps) {
   const { t } = useTranslation();
+  const theme = useAppStore((state) => state.theme);
   const chartData = useMemo(
     () =>
       data.flatMap((point) => [
@@ -30,13 +32,15 @@ export default function ActivityTrendChart({
   );
 
   return (
-    <section className="h-full rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
+    <section className="h-full rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] p-5 shadow-sm">
       <div className="mb-5 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h2 className="m-0 text-base font-semibold text-slate-900">
+          <h2 className="m-0 text-base font-semibold text-[var(--color-text-primary)]">
             {t('dashboard.activityTrend')}
           </h2>
-          <p className="mt-1 text-sm text-slate-500">{t('dashboard.activityTrendDesc')}</p>
+          <p className="mt-1 text-sm text-[var(--color-text-secondary)]">
+            {t('dashboard.activityTrendDesc')}
+          </p>
         </div>
         <Segmented<DashboardRange>
           options={[
@@ -62,12 +66,13 @@ export default function ActivityTrendChart({
             }}
             tooltip={{ title: 'date' }}
             legend={{ color: { position: 'bottom' } }}
+            theme={theme === 'dark' ? 'classicDark' : 'classic'}
             interaction={{ tooltip: { shared: true } }}
             animate={false}
             loading={loading}
           />
         ) : (
-          <div className="flex h-full items-center justify-center text-sm text-slate-400">
+          <div className="flex h-full items-center justify-center text-sm text-[var(--color-text-muted)]">
             {t('dashboard.noData')}
           </div>
         )}

@@ -36,7 +36,7 @@ export default function NotificationRecipientPreview({
       className={`mt-2.5 mb-[13px] rounded-lg border p-3 text-xs ${
         isError || isEmpty
           ? 'border-orange-200 bg-orange-50 text-orange-700'
-          : 'border-blue-200 bg-[#f8fbff] text-blue-700'
+          : 'border-[var(--ant-color-primary)] bg-[var(--color-accent-soft)] text-[var(--ant-color-primary)]'
       }`}
     >
       {isFetching ? (
@@ -64,7 +64,7 @@ export default function NotificationRecipientPreview({
           </div>
           {visibleSamples.length > 0 && (
             <div
-              className={`mt-2 flex items-center gap-2 text-[11px] text-slate-500 ${styles.previewSamples}`}
+              className={`mt-2 flex items-center gap-2 text-[11px] text-[var(--color-text-secondary)] ${styles.previewSamples}`}
             >
               <span className="w-[72px] shrink-0 whitespace-nowrap">
                 {t('notification.recipientPreviewSamples')}

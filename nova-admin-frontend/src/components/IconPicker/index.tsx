@@ -62,7 +62,7 @@ export default function IconPicker({
         'transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500',
         disabled
           ? 'cursor-not-allowed border-gray-200 bg-gray-50 text-gray-400'
-          : 'cursor-pointer border-gray-300 bg-white hover:border-blue-400',
+          : 'cursor-pointer border-[var(--color-border-strong)] bg-[var(--color-surface)] hover:border-[var(--ant-color-primary)]',
       ].join(' ')}
       aria-haspopup="listbox"
       aria-expanded={open}

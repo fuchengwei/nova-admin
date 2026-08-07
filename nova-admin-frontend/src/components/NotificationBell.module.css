@@ -16,33 +16,25 @@
 }
 
 .bellButton:global(.ant-btn) {
-  width: 40px !important;
-  min-width: 40px !important;
-  height: 40px !important;
-  padding: 0 !important;
-  border-radius: 10px;
-  background: transparent !important;
-  color: #334155;
-  box-shadow: none !important;
-}
-
-.bellButton:hover,
-.bellButton:active,
-.bellButton:focus {
-  background: transparent !important;
-  color: #334155;
-}
-
-.bellButton:focus-visible {
-  background-color: #e8f0ff !important;
-  box-shadow: none !important;
-  outline: 2px solid var(--ant-color-primary, #1677ff);
-  outline-offset: 2px;
+  color: inherit;
 }
 
 .list {
   scrollbar-width: thin;
   scrollbar-color: #cbd5e1 transparent;
+}
+
+:global(html[data-theme='dark']) .popover :global(.ant-popover-inner) {
+  border-color: #424242;
+  box-shadow: 0 14px 32px rgb(0 0 0 / 30%);
+}
+
+:global(html[data-theme='dark']) .popoverTitle {
+  border-bottom-color: #424242;
+}
+
+:global(html[data-theme='dark']) .list {
+  scrollbar-color: #595959 transparent;
 }
 
 @media (prefers-reduced-motion: reduce) {

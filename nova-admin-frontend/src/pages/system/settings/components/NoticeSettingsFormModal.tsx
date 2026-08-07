@@ -62,10 +62,10 @@ export default function NoticeSettingsFormModal({
       title={t('settings.noticePublishTitle')}
       width={1180}
     >
-      <div className="mb-6 flex items-start justify-between gap-6 border-b border-slate-200 pb-[18px] max-md:block">
+      <div className="mb-6 flex items-start justify-between gap-6 border-b border-[var(--color-border)] pb-[18px] max-md:block">
         <div>
           <div className="text-xs font-bold text-amber-700">{t('settings.noticeWorkspace')}</div>
-          <div className="mt-1.5 text-sm text-slate-500">
+          <div className="mt-1.5 text-sm text-[var(--color-text-secondary)]">
             {t('settings.noticeWorkspaceDescription')}
           </div>
         </div>
@@ -90,7 +90,7 @@ export default function NoticeSettingsFormModal({
       </Form.Item>
 
       <Collapse
-        className={`mt-6 border-slate-200 bg-slate-50 ${styles.channelCollapse}`}
+        className={`mt-6 border-[var(--color-border)] bg-[var(--color-surface-elevated)] ${styles.channelCollapse}`}
         items={[
           {
             key: 'channels',

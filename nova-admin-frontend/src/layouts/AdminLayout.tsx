@@ -1,11 +1,23 @@
 import { useEffect, useState, useMemo, useRef } from 'react';
-import { Dropdown, Avatar, Space, Button, App as AntdApp, theme as antdTheme, Spin } from 'antd';
+import {
+  Dropdown,
+  Avatar,
+  Space,
+  Button,
+  App as AntdApp,
+  theme as antdTheme,
+  Spin,
+  Tooltip,
+} from 'antd';
 import {
   DashboardOutlined,
   UserOutlined,
   LogoutOutlined,
   GlobalOutlined,
   SettingOutlined,
+  MoonOutlined,
+  SunOutlined,
+  BgColorsOutlined,
 } from '@ant-design/icons';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -15,7 +27,7 @@ import { getPublicBasicSettings } from '@/api/settings';
 import NotificationBell from '@/components/NotificationBell';
 import SystemNotice from '@/components/SystemNotice';
 import PasswordChangeGate from '@/components/PasswordChangeGate';
-import { useAppStore, type Locale } from '@/stores/appStore';
+import { useAppStore, type Locale, type ThemePreference } from '@/stores/appStore';
 import { useUserStore } from '@/stores/userStore';
 import { clearTokens, getToken } from '@/utils/request';
 import { getUserInfo, getUserMenus, logout as apiLogout } from '@/api/auth';
@@ -33,7 +45,8 @@ export default function AdminLayout() {
   const navigate = useNavigate();
   const location = useLocation();
   const { t, i18n } = useTranslation();
-  const { locale, sidebarCollapsed, setLocale, theme } = useAppStore();
+  const { locale, sidebarCollapsed, setLocale, theme, themePreference, setThemePreference } =
+    useAppStore();
   const { setUserInfo, menus, setMenus, permissions, reset } = useUserStore();
   const userInfo = useUserStore((s) => s.userInfo);
   const { modal } = AntdApp.useApp();
@@ -125,6 +138,16 @@ export default function AdminLayout() {
       setLocale(next);
       i18n.changeLanguage(next);
     },
+  };
+
+  const themeMenu = {
+    items: [
+      { key: 'light', icon: <SunOutlined />, label: t('header.themeLight') },
+      { key: 'dark', icon: <MoonOutlined />, label: t('header.themeDark') },
+      { key: 'system', icon: <BgColorsOutlined />, label: t('header.themeSystem') },
+    ],
+    selectedKeys: [themePreference],
+    onClick: ({ key }: { key: string }) => setThemePreference(key as ThemePreference),
   };
 
   const canOpenSettings =
@@ -239,6 +262,30 @@ export default function AdminLayout() {
           ? []
           : [
               <NotificationBell key="notifications" />,
+              <Tooltip
+                key="theme-toggle"
+                title={theme === 'dark' ? t('header.switchToLight') : t('header.switchToDark')}
+              >
+                <Button
+                  type="text"
+                  className="headerIconButton !h-10 !w-10 !min-w-10 !rounded-[10px] !p-0"
+                  aria-label={
+                    theme === 'dark' ? t('header.switchToLight') : t('header.switchToDark')
+                  }
+                  icon={theme === 'dark' ? <SunOutlined /> : <MoonOutlined />}
+                  onClick={() => setThemePreference(theme === 'dark' ? 'light' : 'dark')}
+                />
+              </Tooltip>,
+              <Dropdown key="theme-menu" menu={themeMenu} placement="bottomRight">
+                <Tooltip title={t('header.themePreference')}>
+                  <Button
+                    type="text"
+                    className="headerIconButton !h-10 !w-10 !min-w-10 !rounded-[10px] !p-0"
+                    aria-label={t('header.themePreference')}
+                    icon={<BgColorsOutlined />}
+                  />
+                </Tooltip>
+              </Dropdown>,
               <Dropdown key="lang" menu={langMenu} placement="bottomRight">
                 <Button type="text" icon={<GlobalOutlined />}>
                   {locale === 'zh_CN' ? '中文' : 'English'}

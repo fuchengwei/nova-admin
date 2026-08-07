@@ -21,7 +21,7 @@ export default function DetailSection({
   title,
 }: DetailSectionProps) {
   return (
-    <ProCard className="overflow-hidden rounded-[30px] border border-slate-200/80 shadow-[0_24px_70px_-44px_rgba(15,23,42,0.35)]">
+    <ProCard className="overflow-hidden rounded-2xl border border-[var(--color-border)]! bg-[var(--color-surface)]!">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="flex items-start gap-4">
           <div
@@ -30,9 +30,15 @@ export default function DetailSection({
             {icon}
           </div>
           <div>
-            <div className="text-[11px] tracking-[0.28em] text-slate-400 uppercase">{eyebrow}</div>
-            <div className="mt-2 text-xl font-semibold text-slate-900">{title}</div>
-            <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-500">{description}</p>
+            <div className="text-[11px] tracking-[0.28em] text-[var(--color-text-muted)] uppercase">
+              {eyebrow}
+            </div>
+            <div className="mt-2 text-xl font-semibold text-[var(--color-text-primary)]">
+              {title}
+            </div>
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-[var(--color-text-secondary)]">
+              {description}
+            </p>
           </div>
         </div>
         {action}

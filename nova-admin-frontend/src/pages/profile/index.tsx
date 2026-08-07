@@ -145,6 +145,7 @@ export default function ProfilePage() {
 
         <div className="grid gap-6">
           <ProCard
+            className="border-[var(--color-border)]! bg-[var(--color-surface)]!"
             title={t('profile.basicInfo')}
             extra={
               <Button
@@ -183,6 +184,7 @@ export default function ProfilePage() {
           </ProCard>
 
           <ProCard
+            className="border-[var(--color-border)]! bg-[var(--color-surface)]!"
             title={t('profile.securityInfo')}
             extra={
               <Button icon={<LockOutlined />} onClick={() => setPasswordModalOpen(true)}>

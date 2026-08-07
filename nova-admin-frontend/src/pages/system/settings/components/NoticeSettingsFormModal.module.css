@@ -1,5 +1,5 @@
 .channelCollapse :global(.ant-collapse-header) {
-  color: #475569;
+  color: var(--color-text-primary);
   font-size: 14px;
   font-weight: 600;
 }
