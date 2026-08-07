@@ -7,6 +7,7 @@ import { useMutation } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { getFilePage, uploadFile, deleteFile, type FileRecord } from '@/api/file';
 import { useTableScrollY } from '@/hooks/useTableScrollY';
+import layoutStyles from '@/styles/layout.module.css';
 import { displayText, isEmptyDisplayValue } from '@/utils/display';
 import FileTypeBadge, {
   isImageFile,
@@ -193,26 +194,28 @@ export default function FilePage() {
       </div>
 
       <div ref={wrapperRef} className="min-h-0 flex-1">
-        <ProTable<FileRecord>
-          actionRef={actionRef}
-          rowKey="id"
-          columns={columns}
-          style={{ height: '100%' }}
-          scroll={{ x: 1100, y: scrollY }}
-          request={async (params) => {
-            const res = await getFilePage({
-              current: params.current ?? 1,
-              size: params.pageSize ?? 10,
-              name: params.name,
-              contentType: params.contentType,
-            });
-            if (res.code !== 0) return { data: [], success: false, total: 0 };
-            return { data: res.data.records, success: true, total: res.data.total };
-          }}
-          pagination={{ pageSize: 10, showSizeChanger: true }}
-          search={{ labelWidth: 'auto' }}
-          options={{ reload: true, density: true, setting: true }}
-        />
+        <div className={`${layoutStyles.tableFill} h-full`}>
+          <ProTable<FileRecord>
+            actionRef={actionRef}
+            rowKey="id"
+            columns={columns}
+            style={{ height: '100%' }}
+            scroll={{ x: 1100, y: scrollY }}
+            request={async (params) => {
+              const res = await getFilePage({
+                current: params.current ?? 1,
+                size: params.pageSize ?? 10,
+                name: params.name,
+                contentType: params.contentType,
+              });
+              if (res.code !== 0) return { data: [], success: false, total: 0 };
+              return { data: res.data.records, success: true, total: res.data.total };
+            }}
+            pagination={{ pageSize: 10, showSizeChanger: true }}
+            search={{ labelWidth: 'auto' }}
+            options={{ reload: true, density: true, setting: true }}
+          />
+        </div>
       </div>
 
       <Modal

@@ -36,6 +36,7 @@ import {
   type JobPageQuery,
 } from '@/api/job';
 import { useTableScrollY } from '@/hooks/useTableScrollY';
+import layoutStyles from '@/styles/layout.module.css';
 import { displayText, isEmptyDisplayValue } from '@/utils/display';
 import { useUserStore } from '@/stores/userStore';
 import { hasPermission } from '@/utils/layout';
@@ -313,27 +314,29 @@ export default function JobPage() {
       </div>
 
       <div ref={wrapperRef} className="min-h-0 flex-1">
-        <ProTable<SysJob>
-          actionRef={actionRef}
-          rowKey="id"
-          columns={columns}
-          style={{ height: '100%' }}
-          scroll={{ x: 1400, y: scrollY }}
-          request={async (params) => {
-            const payload: JobPageQuery = {
-              current: params.current ?? 1,
-              size: params.pageSize ?? 10,
-              jobName: params.jobName,
-              status: params.status,
-            };
-            const res = await getJobPage(payload);
-            if (res.code !== 0) return { data: [], success: false, total: 0 };
-            return { data: res.data.records, success: true, total: res.data.total };
-          }}
-          pagination={{ pageSize: 10, showSizeChanger: true }}
-          search={{ labelWidth: 'auto' }}
-          options={{ reload: true, density: true, setting: true }}
-        />
+        <div className={`${layoutStyles.tableFill} h-full`}>
+          <ProTable<SysJob>
+            actionRef={actionRef}
+            rowKey="id"
+            columns={columns}
+            style={{ height: '100%' }}
+            scroll={{ x: 1400, y: scrollY }}
+            request={async (params) => {
+              const payload: JobPageQuery = {
+                current: params.current ?? 1,
+                size: params.pageSize ?? 10,
+                jobName: params.jobName,
+                status: params.status,
+              };
+              const res = await getJobPage(payload);
+              if (res.code !== 0) return { data: [], success: false, total: 0 };
+              return { data: res.data.records, success: true, total: res.data.total };
+            }}
+            pagination={{ pageSize: 10, showSizeChanger: true }}
+            search={{ labelWidth: 'auto' }}
+            options={{ reload: true, density: true, setting: true }}
+          />
+        </div>
       </div>
 
       <ModalForm<SysJob>

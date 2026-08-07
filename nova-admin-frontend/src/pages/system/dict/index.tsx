@@ -24,6 +24,7 @@ import {
 } from '@/api/dict';
 import { useTableScrollY } from '@/hooks/useTableScrollY';
 import { displayText } from '@/utils/display';
+import layoutStyles from '@/styles/layout.module.css';
 import DictDataModal from './components/DictDataModal';
 
 export default function DictPage() {
@@ -175,32 +176,34 @@ export default function DictPage() {
       </div>
 
       <div ref={wrapperRef} className="min-h-0 flex-1">
-        <ProTable<DictTypeRecord>
-          actionRef={typeActionRef}
-          rowKey="id"
-          columns={columns}
-          style={{ height: '100%' }}
-          scroll={{ x: 900, y: scrollY }}
-          request={async (params) => {
-            const res = await getDictTypePage({
-              current: params.current ?? 1,
-              size: params.pageSize ?? 10,
-              name: params.name,
-              type: params.type,
-              status: params.status,
-            });
-            if (res.code !== 0) return { data: [], success: false, total: 0 };
-            return { data: res.data.records, success: true, total: res.data.total };
-          }}
-          pagination={{ pageSize: 10, showSizeChanger: true }}
-          search={{ labelWidth: 'auto' }}
-          toolBarRender={() => [
-            <Button key="add" type="primary" icon={<PlusOutlined />} onClick={handleOpenAdd}>
-              {t('dict.addType')}
-            </Button>,
-          ]}
-          options={{ reload: true, density: true, setting: true }}
-        />
+        <div className={`${layoutStyles.tableFill} h-full`}>
+          <ProTable<DictTypeRecord>
+            actionRef={typeActionRef}
+            rowKey="id"
+            columns={columns}
+            style={{ height: '100%' }}
+            scroll={{ x: 900, y: scrollY }}
+            request={async (params) => {
+              const res = await getDictTypePage({
+                current: params.current ?? 1,
+                size: params.pageSize ?? 10,
+                name: params.name,
+                type: params.type,
+                status: params.status,
+              });
+              if (res.code !== 0) return { data: [], success: false, total: 0 };
+              return { data: res.data.records, success: true, total: res.data.total };
+            }}
+            pagination={{ pageSize: 10, showSizeChanger: true }}
+            search={{ labelWidth: 'auto' }}
+            toolBarRender={() => [
+              <Button key="add" type="primary" icon={<PlusOutlined />} onClick={handleOpenAdd}>
+                {t('dict.addType')}
+              </Button>,
+            ]}
+            options={{ reload: true, density: true, setting: true }}
+          />
+        </div>
       </div>
 
       <ModalForm

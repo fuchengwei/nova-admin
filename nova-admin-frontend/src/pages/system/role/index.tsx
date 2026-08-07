@@ -258,41 +258,43 @@ export default function RolePage() {
 
   return (
     <PageContainer title={t('menu.role')} className={layoutStyles.pageFill}>
-      <div ref={wrapperRef} className="flex min-h-0 flex-1 flex-col">
-        <ProTable<RoleRecord>
-          actionRef={actionRef}
-          rowKey="id"
-          headerTitle={t('menu.role')}
-          columns={columns}
-          style={{ height: '100%' }}
-          scroll={{ x: 1000, y: scrollY }}
-          request={async (params) => {
-            const payload: RolePageParams = {
-              current: params.current ?? 1,
-              size: params.pageSize ?? 10,
-              name: params.name,
-              code: params.code,
-              status: params.status,
-            };
-            const res = await getRolePage(payload);
-            if (res.code !== 0) return { data: [], success: false, total: 0 };
-            return {
-              data: res.data.records,
-              success: true,
-              total: res.data.total,
-            };
-          }}
-          pagination={{ pageSize: 10, showSizeChanger: true }}
-          search={{ labelWidth: 'auto' }}
-          toolBarRender={() => [
-            canCreate ? (
-              <Button key="add" type="primary" icon={<PlusOutlined />} onClick={handleOpenAdd}>
-                {t('role.addRole')}
-              </Button>
-            ) : null,
-          ]}
-          options={{ reload: true, density: true, setting: true }}
-        />
+      <div ref={wrapperRef} className="min-h-0 flex-1">
+        <div className={`${layoutStyles.tableFill} h-full`}>
+          <ProTable<RoleRecord>
+            actionRef={actionRef}
+            rowKey="id"
+            headerTitle={t('menu.role')}
+            columns={columns}
+            style={{ height: '100%' }}
+            scroll={{ x: 1000, y: scrollY }}
+            request={async (params) => {
+              const payload: RolePageParams = {
+                current: params.current ?? 1,
+                size: params.pageSize ?? 10,
+                name: params.name,
+                code: params.code,
+                status: params.status,
+              };
+              const res = await getRolePage(payload);
+              if (res.code !== 0) return { data: [], success: false, total: 0 };
+              return {
+                data: res.data.records,
+                success: true,
+                total: res.data.total,
+              };
+            }}
+            pagination={{ pageSize: 10, showSizeChanger: true }}
+            search={{ labelWidth: 'auto' }}
+            toolBarRender={() => [
+              canCreate ? (
+                <Button key="add" type="primary" icon={<PlusOutlined />} onClick={handleOpenAdd}>
+                  {t('role.addRole')}
+                </Button>
+              ) : null,
+            ]}
+            options={{ reload: true, density: true, setting: true }}
+          />
+        </div>
       </div>
 
       <ModalForm

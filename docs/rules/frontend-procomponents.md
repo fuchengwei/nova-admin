@@ -70,7 +70,37 @@ const actionRef = useRef<ActionType>(null);
 actionRef.current?.reload();
 ```
 
-### 3.3 列定义（`ProColumns`）
+### 3.3 全高表格页面布局
+
+全屏列表页统一采用“页面容器 → 高度计算包裹层 → `tableFill` → `ProTable`”结构，保证搜索区、工具栏、表体和分页器都限制在页面可用高度内：
+
+```tsx
+const { wrapperRef, scrollY } = useTableScrollY();
+
+return (
+  <div className="flex h-full min-h-0 flex-col">
+    <div ref={wrapperRef} className="min-h-0 flex-1">
+      <div className={`${layoutStyles.tableFill} h-full`}>
+        <ProTable
+          style={{ height: '100%' }}
+          scroll={{ x: 1100, y: scrollY }}
+          // request / pagination / search / options
+        />
+      </div>
+    </div>
+  </div>
+);
+```
+
+规则：
+
+- 表体高度必须通过 `useTableScrollY` 计算，禁止为普通全高列表写死 `scroll.y`；
+- `wrapperRef` 绑定到 `min-h-0 flex-1` 容器，`tableFill` 绑定到其内部 `h-full` 容器；
+- 使用 `PageContainer` 时，页面根节点增加 `layoutStyles.pageFill`；
+- Tabs 内的表格使用 `layoutStyles.tabsFill`，不要把普通列表页规则与弹窗/抽屉内表格混用；
+- 表格必须设置 `style={{ height: '100%' }}`，确保 ProTable 卡片填满可用区域。
+
+### 3.4 列定义（`ProColumns`）
 
 ```tsx
 const columns: ProColumns<UserRecord>[] = [
@@ -132,7 +162,7 @@ const columns: ProColumns<UserRecord>[] = [
 
 **列定义较长（>6 列）时**，提取到同目录 `columns.tsx`，保持 `index.tsx` 简洁。
 
-### 3.4 表格 / 详情空值展示
+### 3.5 表格 / 详情空值展示
 
 **`ProTable` / `ProDescriptions` 的文本型字段，空值统一显示 `-`。**
 
