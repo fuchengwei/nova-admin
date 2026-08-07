@@ -11,14 +11,14 @@ import java.time.LocalDateTime;
 import java.util.Map;
 
 /**
- * 公共接口 - 健康检查（Phase 0）
+ * 公共接口 - 健康检查
  */
 @Tag(name = "公共 - 健康检查")
 @RestController
 @RequestMapping("/public")
 public class PingController {
 
-    @Operation(summary = "Ping - 用于前后端联调确认服务在线")
+    @Operation(summary = "Ping - 检查服务在线状态")
     @GetMapping("/ping")
     public R<Map<String, Object>> ping() {
         return R.ok(Map.of(

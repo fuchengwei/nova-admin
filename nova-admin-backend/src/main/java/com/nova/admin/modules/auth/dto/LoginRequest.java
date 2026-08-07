@@ -22,7 +22,7 @@ public class LoginRequest implements Serializable {
 
     @NotBlank
     @Size(min = 6, max = 64)
-    @Schema(description = "密码", example = "admin123")
+    @Schema(description = "密码", example = "123456")
     private String password;
 
     @Schema(description = "图形验证码 key", example = "uuid")

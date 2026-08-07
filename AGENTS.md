@@ -1,19 +1,17 @@
-# AGENTS.md — Nova Admin 开发规范
+# AGENTS.md — Nova Admin 开发入口
 
-> 本文件是 Nova Admin 的 AI 编程工具统一规则，适用于 Claude Code、Cursor、GitHub Copilot 等支持 `AGENTS.md` 的工具。**所有规则均为强制（error 级）**，违反即视为错误。
-> 详细规则已拆分到 `docs/rules/`，本文件保留快速参考与导航。
+> 本文件是 Nova Admin 的 AI 编程入口。详细规则按主题维护在 `docs/rules/`，不要在本文件复制完整实现规范。
 
 ## 📚 规则导航
 
 | 文件 | 内容 |
 |---|---|
-| [frontend-code-style.md](docs/rules/frontend-code-style.md) | TypeScript/React 命名、格式、组件拆分、文件规模限制、Tailwind 约束 |
-| [frontend-procomponents.md](docs/rules/frontend-procomponents.md) | ProTable / ModalForm / ProDescriptions / ProCard 完整用法与约束 |
-| [frontend-state-i18n.md](docs/rules/frontend-state-i18n.md) | Zustand / TanStack Query 分工，i18n key 命名与双语同步规则 |
-| [backend-java-style.md](docs/rules/backend-java-style.md) | Java 命名、格式、Lombok/MapStruct、异常处理 |
-| [backend-architecture.md](docs/rules/backend-architecture.md) | 分层职责、MyBatis-Plus、事务、数据权限、安全、Redis |
-| [api-contract.md](docs/rules/api-contract.md) | `R<T>` 响应格式、分页、URL 设计、Springdoc 注解、前端 API 层约定 |
-| [git-workflow.md](docs/rules/git-workflow.md) | Conventional Commits 格式、scope 列表、分支与 PR 规范 |
+| [00-project.md](docs/rules/00-project.md) | 全局边界、依赖、i18n、文档同步和变更原则 |
+| [10-backend.md](docs/rules/10-backend.md) | Java、分层、MyBatis-Plus、事务、安全、数据权限和存储 |
+| [20-frontend.md](docs/rules/20-frontend.md) | TypeScript/React、状态、i18n、Tailwind 和文件边界 |
+| [30-components.md](docs/rules/30-components.md) | ProComponents、ProTable、表单和页面布局 |
+| [40-api.md](docs/rules/40-api.md) | `R<T>`、分页、ID、URL、Springdoc 和前端 API 类型 |
+| [50-delivery.md](docs/rules/50-delivery.md) | Git、提交、变更说明和本地验证 |
 
 > 部署说明见 [docs/deployment.md](docs/deployment.md)
 
@@ -34,17 +32,13 @@
 
 ## Behavior Rules
 
-- 生成代码前，先读同目录已有文件，复用已有工具类/常量/枚举
-- 不确定时先提问，不猜测
-- 不生成未使用的代码，不生成无意义的注释
-- 最小化改动，不修改未要求修改的文件
-- 新增/修改后端接口必须包含 springdoc 注解（`@Operation` / `@Parameter` / `@Schema`）
-- 前端表格列表数据由 `ProTable.request` 管理；写操作用 `useMutation`
-- 用户可见文案必须走 i18n：后端 `MessageSource`，前端 `t()`；zh.ts 与 en.ts 同步更新
-- 改动公开 API 或新增模块须同步 `CHANGELOG.md` 与 `README.md`
-- **前端包管理器必须使用 pnpm**；禁止使用 npm 或 yarn（`pnpm add`、`pnpm add -D`、`pnpm remove`、`pnpm exec`）
-- **代码变更完成后不得自动提交**；展示变更摘要并等待用户明确确认后再执行 `git commit`（详见 [git-workflow.md](docs/rules/git-workflow.md)）
+- 先读目标文件和同目录实现，复用已有工具、类型、常量和组件。
+- 保持最小改动，不生成未使用的代码、依赖或注释。
+- 后端接口必须遵守 `40-api.md` 的响应、校验和 Springdoc 规则。
+- 前端列表、写操作、i18n 和页面布局必须遵守 `20-frontend.md` 与 `30-components.md`。
+- 前端包管理器只能使用 `pnpm`。
+- 改动完成后不得自动提交或推送；先展示摘要和验证结果，等待明确确认。
 
-## 扩展：模块子规则
+## 扩展规则
 
-为特定模块定制规则时，在 `docs/rules/` 下新增文件并标注 `applies_to` 路径 glob，同步在上方导航表中注册。
+新增分类规则时使用数字前缀、写明 `applies_to` 路径范围，并同步更新本文件导航。特定模块的规则只有在跨文件复用且无法归入现有分类时才单独拆分。

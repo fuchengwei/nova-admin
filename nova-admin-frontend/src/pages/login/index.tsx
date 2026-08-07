@@ -141,7 +141,7 @@ export default function LoginPage() {
             fieldProps={{
               prefix: <LockOutlined />,
               size: 'large',
-              placeholder: 'admin123',
+              placeholder: '123456',
               autoComplete: 'current-password',
             }}
           />

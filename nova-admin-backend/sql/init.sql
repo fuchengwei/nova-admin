@@ -394,8 +394,7 @@ VALUES
     (8, 1, '财务与行政部', 'ADMIN', '周敏', 3, 1, NOW()),
     (9, 8, '人力资源部', 'HR', '张妍', 0, 1, NOW());
 
--- 超级管理员角色 (BCrypt of 'admin123' - cost 10, generated)
--- 注：真实部署时通过 AdminApplication 的 CommandLineRunner 重新生成密码哈希
+-- 初始账号密码均为 123456（BCrypt 哈希，cost=10）
 INSERT INTO sys_role (id, name, code, description, data_scope, sort, status, create_time)
 VALUES
     (1, '超级管理员', 'super_admin', '系统最高权限', 1, 0, 1, NOW()),
@@ -405,7 +404,7 @@ VALUES
     (5, '审计专员', 'auditor', '只读查看日志、用户和系统配置', 1, 4, 1, NOW()),
     (6, '运营专员', 'operator', '负责任务、文件和消息运营', 6, 5, 1, NOW());
 
--- 默认菜单（占位，Phase 5 完善）
+-- 默认菜单
 INSERT INTO sys_menu (id, parent_id, name, type, perms, path, component, icon, sort, visible, status, create_time)
 VALUES
     (1, 0, '系统管理', 'M', '', '/system',  '',          'SettingOutlined',    0, 1, 1, NOW()),
