@@ -21,6 +21,7 @@ import { clearTokens, getToken } from '@/utils/request';
 import { getUserInfo, getUserMenus, logout as apiLogout } from '@/api/auth';
 import { toLayoutRoutes, findRouteNode } from '@/utils/layout';
 import { useSessionEvents } from '@/hooks/useSessionEvents';
+import defaultLogo from '@/assets/images/logo.png';
 
 const normalizeImageSrc = (value?: string | null) => {
   if (typeof value !== 'string') return undefined;
@@ -164,7 +165,7 @@ export default function AdminLayout() {
   };
 
   const safeAvatarSrc = normalizeImageSrc(userInfo?.avatar);
-  const safeLogoSrc = normalizeImageSrc(basicSettings?.logoUrl);
+  const safeLogoSrc = normalizeImageSrc(basicSettings?.logoUrl) ?? defaultLogo;
   const systemName = basicSettings?.systemName || 'Nova Admin';
 
   // 菜单未加载时显示加载器，避免 ProLayout 缓存空菜单树

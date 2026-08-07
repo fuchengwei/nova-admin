@@ -34,6 +34,7 @@ import { useAppStore, type Locale } from '@/stores/appStore';
 import { hasPermission } from '@/utils/layout';
 import layoutStyles from '@/styles/layout.module.css';
 import { displayText } from '@/utils/display';
+import defaultLogo from '@/assets/images/logo.png';
 import BasicSettingsFormModal from './components/BasicSettingsFormModal';
 import DetailSection from './components/DetailSection';
 import MetaPanel from './components/MetaPanel';
@@ -227,7 +228,7 @@ export default function SystemSettingsPage() {
   };
 
   const safeBasicLogoSrc = useMemo(
-    () => normalizeImageSrc(basicData?.logoUrl),
+    () => normalizeImageSrc(basicData?.logoUrl) ?? defaultLogo,
     [basicData?.logoUrl],
   );
 

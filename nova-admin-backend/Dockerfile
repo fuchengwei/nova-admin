@@ -11,10 +11,10 @@ COPY pom.xml .
 RUN --mount=type=cache,target=/root/.m2 \
     mvn -B dependency:go-offline
 
-# 再拷贝源码并打包（跳过测试以加快构建，CI 中应单独跑测试）
+# 再拷贝源码并打包
 COPY src ./src
 RUN --mount=type=cache,target=/root/.m2 \
-    mvn -B clean package -DskipTests
+    mvn -B clean package
 
 # ============================================================
 # Runtime stage — 仅运行 Jar

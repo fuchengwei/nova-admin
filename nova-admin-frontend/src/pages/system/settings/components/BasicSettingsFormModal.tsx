@@ -4,6 +4,7 @@ import { SettingOutlined, UploadOutlined } from '@ant-design/icons';
 import { ModalForm, ProFormRadio, ProFormSelect, ProFormText } from '@ant-design/pro-components';
 import { useTranslation } from 'react-i18next';
 import type { BasicSettings } from '@/api/settings';
+import defaultLogo from '@/assets/images/logo.png';
 
 export interface BasicSettingsFormModalProps {
   open: boolean;
@@ -31,7 +32,7 @@ export default function BasicSettingsFormModal({
   onClose,
 }: BasicSettingsFormModalProps) {
   const { t } = useTranslation();
-  const safeLogoSrc = normalizeImageSrc(logoUrl);
+  const safeLogoSrc = normalizeImageSrc(logoUrl) ?? defaultLogo;
 
   return (
     <ModalForm<BasicSettings>

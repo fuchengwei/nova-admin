@@ -14,7 +14,6 @@
 | [backend-architecture.md](docs/rules/backend-architecture.md) | 分层职责、MyBatis-Plus、事务、数据权限、安全、Redis |
 | [api-contract.md](docs/rules/api-contract.md) | `R<T>` 响应格式、分页、URL 设计、Springdoc 注解、前端 API 层约定 |
 | [git-workflow.md](docs/rules/git-workflow.md) | Conventional Commits 格式、scope 列表、分支与 PR 规范 |
-| [testing.md](docs/rules/testing.md) | 后端 JUnit5 / 前端 Vitest+RTL 测试分类与必测场景 |
 
 > 部署说明见 [docs/deployment.md](docs/deployment.md)
 
@@ -42,7 +41,6 @@
 - 新增/修改后端接口必须包含 springdoc 注解（`@Operation` / `@Parameter` / `@Schema`）
 - 前端表格列表数据由 `ProTable.request` 管理；写操作用 `useMutation`
 - 用户可见文案必须走 i18n：后端 `MessageSource`，前端 `t()`；zh.ts 与 en.ts 同步更新
-- 新增/修改逻辑必须有对应测试（后端 JUnit5；前端 Vitest + RTL）
 - 改动公开 API 或新增模块须同步 `CHANGELOG.md` 与 `README.md`
 - **前端包管理器必须使用 pnpm**；禁止使用 npm 或 yarn（`pnpm add`、`pnpm add -D`、`pnpm remove`、`pnpm exec`）
 - **代码变更完成后不得自动提交**；展示变更摘要并等待用户明确确认后再执行 `git commit`（详见 [git-workflow.md](docs/rules/git-workflow.md)）

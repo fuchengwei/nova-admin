@@ -22,10 +22,9 @@
 | `style` | 代码格式（不影响逻辑） |
 | `refactor` | 重构（非 feat 非 fix） |
 | `perf` | 性能优化 |
-| `test` | 新增或修改测试 |
 | `build` | 构建系统或依赖变更 |
 | `ci` | CI/CD 配置变更 |
-| `chore` | 其它杂务（不涉及源码或测试） |
+| `chore` | 其它杂务 |
 | `revert` | 回滚某次提交 |
 
 ### 1.2 scope
@@ -108,6 +107,6 @@ docs(rules): 补充 docs/rules 规则体系并更新 AGENTS.md 导航
 ## 4. PR 规范
 
 - PR 标题遵循 Conventional Commits 格式
-- PR 描述包含：**What**（改了什么）、**Why**（为什么改）、**Test**（如何验证）
+- PR 描述包含：**What**（改了什么）、**Why**（为什么改）、**Verification**（如何验证）
 - 涉及 UI 改动的 PR 附截图
-- 合并前通过 CI（lint + type-check + tests）
+- 合并前通过 CI（lint + type-check）

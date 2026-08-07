@@ -383,14 +383,27 @@ CREATE INDEX idx_config_group ON sys_config(config_group);
 -- =====================================================
 -- 根部门
 INSERT INTO sys_dept (id, parent_id, name, code, leader, sort, status, create_time)
-VALUES (1, 0, 'Nova 科技', 'ROOT', '超级管理员', 0, 1, NOW());
+VALUES
+    (1, 0, 'Nova 科技', 'ROOT', '超级管理员', 0, 1, NOW()),
+    (2, 1, '产品研发中心', 'RND', '李伟', 1, 1, NOW()),
+    (3, 2, '平台工程部', 'PLATFORM', '李伟', 0, 1, NOW()),
+    (4, 2, '前端研发组', 'FRONTEND', '王倩', 1, 1, NOW()),
+    (5, 2, '后端研发组', 'BACKEND', '赵磊', 2, 1, NOW()),
+    (6, 1, '运营与支持中心', 'OPS', '陈曦', 2, 1, NOW()),
+    (7, 6, '客户成功部', 'CUSTOMER_SUCCESS', '王强', 0, 1, NOW()),
+    (8, 1, '财务与行政部', 'ADMIN', '周敏', 3, 1, NOW()),
+    (9, 8, '人力资源部', 'HR', '张妍', 0, 1, NOW());
 
 -- 超级管理员角色 (BCrypt of 'admin123' - cost 10, generated)
 -- 注：真实部署时通过 AdminApplication 的 CommandLineRunner 重新生成密码哈希
 INSERT INTO sys_role (id, name, code, description, data_scope, sort, status, create_time)
 VALUES
     (1, '超级管理员', 'super_admin', '系统最高权限', 1, 0, 1, NOW()),
-    (2, '普通用户',   'user',         '默认基础角色', 5, 1, 1, NOW());
+    (2, '普通用户',   'user',         '默认基础角色', 5, 1, 1, NOW()),
+    (3, '平台管理员', 'platform_admin', '负责研发平台和基础设施管理', 2, 2, 1, NOW()),
+    (4, '人事管理员', 'hr_manager', '负责组织、用户和字典维护', 3, 3, 1, NOW()),
+    (5, '审计专员', 'auditor', '只读查看日志、用户和系统配置', 1, 4, 1, NOW()),
+    (6, '运营专员', 'operator', '负责任务、文件和消息运营', 6, 5, 1, NOW());
 
 -- 默认菜单（占位，Phase 5 完善）
 INSERT INTO sys_menu (id, parent_id, name, type, perms, path, component, icon, sort, visible, status, create_time)
@@ -423,10 +436,10 @@ VALUES
     (13, 11, '修改部门', 'F', 'system:dept:edit',   '', '', '', 1, 0, 1, NOW()),
     (14, 11, '删除部门', 'F', 'system:dept:remove', '', '', '', 2, 0, 1, NOW()),
     -- 角色管理
-    (20, 1, '角色管理', 'C', 'system:role:list',   '/system/role', 'system/role/index', 'TeamOutlined', 2, 1, 1, NOW()),
-    (21, 20, '新增角色', 'F', 'system:role:add',    '', '', '', 0, 0, 1, NOW()),
-    (22, 20, '修改角色', 'F', 'system:role:edit',   '', '', '', 1, 0, 1, NOW()),
-    (23, 20, '删除角色', 'F', 'system:role:remove', '', '', '', 2, 0, 1, NOW()),
+    (60, 1, '角色管理', 'C', 'system:role:list',   '/system/role', 'system/role/index', 'TeamOutlined', 2, 1, 1, NOW()),
+    (61, 60, '新增角色', 'F', 'system:role:add',    '', '', '', 0, 0, 1, NOW()),
+    (62, 60, '修改角色', 'F', 'system:role:edit',   '', '', '', 1, 0, 1, NOW()),
+    (63, 60, '删除角色', 'F', 'system:role:remove', '', '', '', 2, 0, 1, NOW()),
     -- 菜单管理
     (24, 1, '菜单管理', 'C', 'system:menu:list',   '/system/menu', 'system/menu/index', 'MenuOutlined', 3, 1, 1, NOW()),
     (25, 24, '新增菜单', 'F', 'system:menu:add',    '', '', '', 0, 0, 1, NOW()),
@@ -512,14 +525,43 @@ VALUES
 INSERT INTO sys_user (id, account, password, nickname, dept_id, super_admin, status, create_time)
 VALUES
     (1, 'superAdmin', '$2b$10$1HGY4CVItB50Wmfeaf09gO8LWa5eTKpF0V/0syMPc6/sxTsalYgBO', '超级管理员', 1, 1, 1, NOW()),
-    (2, 'admin',      '$2b$10$1HGY4CVItB50Wmfeaf09gO8LWa5eTKpF0V/0syMPc6/sxTsalYgBO', '管理员',   1, 0, 1, NOW());
+    (2, 'admin',      '$2b$10$1HGY4CVItB50Wmfeaf09gO8LWa5eTKpF0V/0syMPc6/sxTsalYgBO', '管理员',   1, 0, 1, NOW()),
+    (3, 'liwei',      '$2b$10$1HGY4CVItB50Wmfeaf09gO8LWa5eTKpF0V/0syMPc6/sxTsalYgBO', '李伟',     3, 0, 1, NOW()),
+    (4, 'zhangyan',   '$2b$10$1HGY4CVItB50Wmfeaf09gO8LWa5eTKpF0V/0syMPc6/sxTsalYgBO', '张妍',     9, 0, 1, NOW()),
+    (5, 'wangqiang',  '$2b$10$1HGY4CVItB50Wmfeaf09gO8LWa5eTKpF0V/0syMPc6/sxTsalYgBO', '王强',     7, 0, 1, NOW()),
+    (6, 'chenxi',     '$2b$10$1HGY4CVItB50Wmfeaf09gO8LWa5eTKpF0V/0syMPc6/sxTsalYgBO', '陈曦',     6, 0, 1, NOW()),
+    (7, 'xiaomei',    '$2b$10$1HGY4CVItB50Wmfeaf09gO8LWa5eTKpF0V/0syMPc6/sxTsalYgBO', '小梅',     4, 0, 1, NOW());
 
 -- 用户角色关联
-INSERT INTO sys_user_role (user_id, role_id) VALUES (1, 1), (2, 1);
+INSERT INTO sys_user_role (user_id, role_id)
+VALUES (1, 1), (2, 1), (3, 3), (4, 4), (5, 5), (6, 6), (7, 2);
+
+-- 自定义数据权限示例：运营专员可查看运营中心及客户成功部
+INSERT INTO sys_role_dept (role_id, dept_id) VALUES (6, 6), (6, 7);
 
 -- 角色菜单关联（全部菜单给超管）
 INSERT INTO sys_role_menu (role_id, menu_id)
 SELECT 1, id FROM sys_menu
+ON CONFLICT DO NOTHING;
+
+-- 平台管理员可管理完整后台，其他角色按职责授予菜单
+INSERT INTO sys_role_menu (role_id, menu_id)
+SELECT 3, id FROM sys_menu
+ON CONFLICT DO NOTHING;
+
+INSERT INTO sys_role_menu (role_id, menu_id)
+SELECT 4, id FROM sys_menu
+WHERE id IN (1, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 28, 29, 30, 34, 35, 36)
+ON CONFLICT DO NOTHING;
+
+INSERT INTO sys_role_menu (role_id, menu_id)
+SELECT 5, id FROM sys_menu
+WHERE id IN (1, 2, 3, 15, 11, 35, 37, 41, 52, 31)
+ON CONFLICT DO NOTHING;
+
+INSERT INTO sys_role_menu (role_id, menu_id)
+SELECT 6, id FROM sys_menu
+WHERE id IN (1, 2, 3, 31, 32, 33, 41, 45, 46, 47, 52, 53, 54, 57, 58)
 ON CONFLICT DO NOTHING;
 
 -- 将旧菜单按钮权限迁移到独立接口权限表，保留原菜单和角色菜单关联
@@ -549,7 +591,10 @@ INSERT INTO sys_dict_type (id, type, name, description, status, create_time, upd
 VALUES
     (1, 'sys_gender', '性别', '用户性别',  1, NOW(), NOW(), 0),
     (2, 'sys_yes_no', '是否', '通用是/否', 1, NOW(), NOW(), 0),
-    (3, 'sys_status', '状态', '启用/禁用', 1, NOW(), NOW(), 0);
+    (3, 'sys_status', '状态', '启用/禁用', 1, NOW(), NOW(), 0),
+    (4, 'sys_notice_level', '公告级别', '系统公告展示级别', 1, NOW(), NOW(), 0),
+    (5, 'sys_storage_type', '存储类型', '文件存储类型', 1, NOW(), NOW(), 0),
+    (6, 'sys_job_trigger', '任务触发方式', '定时任务执行触发方式', 1, NOW(), NOW(), 0);
 
 INSERT INTO sys_dict_data (id, type_id, label, value, css_class, sort, status, default_flag, create_time, update_time, deleted)
 VALUES
@@ -562,4 +607,16 @@ VALUES
     (202, 2, '否', 'NO',  NULL, 1, 1, 1, NOW(), NOW(), 0),
     -- 状态（启用/禁用）
     (301, 3, '启用', 'ENABLED',  NULL, 0, 1, 0, NOW(), NOW(), 0),
-    (302, 3, '禁用', 'DISABLED', NULL, 1, 1, 1, NOW(), NOW(), 0);
+    (302, 3, '禁用', 'DISABLED', NULL, 1, 1, 1, NOW(), NOW(), 0),
+    -- 公告级别
+    (401, 4, '普通', 'info', 'blue', 0, 1, 1, NOW(), NOW(), 0),
+    (402, 4, '成功', 'success', 'green', 1, 1, 0, NOW(), NOW(), 0),
+    (403, 4, '警告', 'warning', 'orange', 2, 1, 0, NOW(), NOW(), 0),
+    (404, 4, '错误', 'error', 'red', 3, 1, 0, NOW(), NOW(), 0),
+    -- 文件存储
+    (501, 5, '本地磁盘', 'local', NULL, 0, 1, 1, NOW(), NOW(), 0),
+    (502, 5, 'MinIO', 'minio', NULL, 1, 1, 0, NOW(), NOW(), 0),
+    -- 任务触发方式
+    (601, 6, '定时触发', 'SCHEDULED', NULL, 0, 1, 1, NOW(), NOW(), 0),
+    (602, 6, '手动执行', 'MANUAL', NULL, 1, 1, 0, NOW(), NOW(), 0),
+    (603, 6, '跳过执行', 'SKIPPED', NULL, 2, 1, 0, NOW(), NOW(), 0);
